@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, segnaPericolo, prestazioni, inv, piazza, verificaRicette,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -448,6 +448,15 @@ ogniTick(4, () => {
   const cade = bot.getVelocity().y < -0.6;
   if ((cade || sottAcqua > 50) && ultimoSicuro?.dim === bot.dimension.id && dist(l, ultimoSicuro) > 1.5) {
     bot.clearVelocity();
+    // 3 salvataggi in 30 s = il "punto sicuro" non lo è (ieri 40 cadute di fila dallo stesso punto, ogni compito fallito
+    // all'istante): via su terreno solido lontano qualche blocco, o a casa
+    salvataggi = salvataggi.filter((t) => Date.now() - t < 30000).concat(Date.now());
+    if (salvataggi.length >= 3) {
+      const casa = mem.luoghi.casa;
+      const altrove = terraSicura(bot.dimension, l) ?? (casa ? { x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 } : null);
+      if (altrove) { ultimoSicuro = { ...altrove, dim: bot.dimension.id }; evento(`Salvataggio: cadevo di continuo dallo stesso punto, mi sposto a ${Math.round(altrove.x)},${Math.round(altrove.y)},${Math.round(altrove.z)}`); }
+      salvataggi = [];
+    }
     bot.teleport(ultimoSicuro);
     sottAcqua = 0;
     const motivo = cade ? "sotto c'era il vuoto (grotta): salvato dalla caduta" : "ero sott'acqua: salvato dall'annegamento";
@@ -473,7 +482,15 @@ ogniTick(4, () => {
   eseguiCompito(bot);
 });
 let progettando = false, ultimaRonda = -1e9, soffocamenti = [];
-let ultimoSicuro = null, sottAcqua = 0;
+let ultimoSicuro = null, sottAcqua = 0, salvataggi = [];
+// terreno solido all'aperto a 8-16 blocchi, fuori dalle zone pericolose
+function terraSicura(dim, l) {
+  for (const [dx, dz] of [[8, 0], [-8, 0], [0, 8], [0, -8], [12, 12], [-12, -12], [12, -12], [-12, 12], [16, 0], [0, 16]]) {
+    const g = suolo(dim, Math.floor(l.x) + dx, Math.floor(l.z) + dz);
+    if (g && !g.liquido && !inPericolo(g)) return { x: g.x + 0.5, y: g.y, z: g.z + 0.5 };
+  }
+  return null;
+}
 
 // Cervello: decide quando chiedere a Claude.
 let ultimaDecisione = 0;
