@@ -887,6 +887,8 @@ const ESECUTORI = {
     const [ok, msg] = fabbrica(bot, c.oggetto, c.quantita);
     const m = !ok && msg.match(/manca (#?[\w:]+) \(ne servono (\d+)\)/);
     if (m && rinvia(c, m[1].startsWith("#") ? m[1] : ns(m[1]), Number(m[2]))) return;
+    // senza banco e senza assi: un tronco basta (4 assi = banco). Prima l'armatura di rame si fermava qui con 24 lingotti pronti
+    if (!ok && msg === "serve un banco da lavoro" && rinvia(c, "#tronco", 1)) return;
     finito(ok, msg);
   },
 
@@ -1244,7 +1246,17 @@ const ESECUTORI = {
 
   sistema_deposito(bot, c) {
     const s = c.stato;
-    const base = mem.luoghi.deposito ?? mem.luoghi.casa;
+    let base = mem.luoghi.deposito;
+    const casa = mem.luoghi.casa;
+    // deposito lontano dalla casa (la casa si è spostata): se ne fa uno nuovo in uno spiazzo libero accanto, mai dentro casa tua
+    if (casa && (!base || dist(base, casa) > 48)) {
+      const sp = trovaSpiazzo(bot.dimension, casa, 7, luoghiBot().filter((p) => p !== base));
+      if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il deposito");
+      base = mem.luoghi.deposito = { x: sp.x, y: sp.y, z: sp.z, nota: "deposito del bot (casse per categoria)" };
+      mem.casse = {};
+      evento(`Nuovo deposito accanto a casa a ${sp.x},${sp.y},${sp.z}`);
+    }
+    base ??= casa;
     if (!base) return finito(false, "nessuna casa o deposito dove sistemare le casse");
     mem.casse ??= {};
     if (!s.fase) s.fase = "casse";

@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.1 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.2 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -54,6 +54,10 @@ Aggiornato alla versione 2.8.1 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
 - **Mai ripetere identico ciò che è appena fallito.** Dopo un fallimento cambia almeno una cosa: posto, metodo,
   ordine, oppure fai un'altra attività per un po'.
   _Fatto: 1.131 fallimenti in 3 ore quando i passi successivi venivano eseguiti anche dopo un passo fallito._
+- **Anche gli strumenti sono prerequisiti.** Non solo i materiali: se manca lo strumento per lavorarli (il banco
+  da lavoro), va procurato come un ingrediente. _Fatto: 24 lingotti pronti e l'armatura ferma per "serve un banco"._
+- **Quando la base si sposta, tutto ciò che dipende dalla base va rifatto lì.** Riferimenti vecchi (deposito a 360
+  blocchi) fanno fallire in silenzio ogni compito che li usa.
 - **Un passo fallito invalida quelli che dipendono da lui.** In un piano a catena si scartano i passi successivi
   invece di tentarli uno per uno.
 - **Statistiche per luogo.** Lo stesso metodo può rendere in un posto e non in un altro: misura il successo per
