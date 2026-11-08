@@ -83,6 +83,8 @@ def stato(percorso_log):
         "memoria": ultimo_blocco(righe, "MEMORIA") or ultimo_blocco(righe, "BACKUP"),
         "eventi": eventi[-600:],
         "battito": battito,
+        # ora dell'ultimo STATO (ogni 5 secondi): è questa l'ora di "aggiornato", non il battito (ogni 2 minuti)
+        "aggiornato": next((f"{d} {o}" for d, o, tag, _ in reversed(righe) if tag == "STATO"), ""),
         "log": os.path.basename(percorso_log),
     }
 

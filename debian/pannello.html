@@ -128,7 +128,7 @@ function mostraStato() {
   $("punto").className = "punto " + (s ? (s.presente ? "vivo" : "morto") : "");
   $("ver").textContent = s?.v ? "v" + s.v : "";
   const notte = s && s.ora >= 13000 && s.ora < 23000;
-  $("riga").textContent = s ? (s.presente ? `${s.compito} · ${s.modalita}${s.bersaglio ? " (" + s.bersaglio + ")" : ""} · ${notte ? "notte" : "giorno"} · TPS ${s.tps}` : "Il bot non è nel mondo") + ` · aggiornato ${dati.battito ? ora(dati.battito.slice(0, 19)) : "?"}` : "Nessun dato dal bot: il server è acceso?";
+  $("riga").textContent = s ? (s.presente ? `${s.compito} · ${s.modalita}${s.bersaglio ? " (" + s.bersaglio + ")" : ""} · ${notte ? "notte" : "giorno"} · TPS ${s.tps}` : "Il bot non è nel mondo") + ` · aggiornato ${dati.aggiornato ? ora(dati.aggiornato) : "?"}` : "Nessun dato dal bot: il server è acceso?";
   if (!s) return;
   $("caselle").innerHTML = (s.presente ? casella("Vita", `${s.vita}/20`) + casella("Fame", `${s.fame}/20`) + casella("Posizione", `${s.x}, ${s.y}, ${s.z}`) : casella("Bot", "fuori dal mondo"))
     + casella("Modalità", s.modalita) + casella("Spesa oggi", `$${(s.spesa ?? 0).toFixed(3)}`) + casella("Budget", `$${s.budget ?? "?"}`) + casella("TPS server", s.tps);
