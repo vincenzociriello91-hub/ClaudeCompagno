@@ -646,6 +646,7 @@ function filtroBlocco(nome) {
 // Cerca vicino a casa uno spiazzo piano e asciutto di lato x lato, lontano dagli altri luoghi del bot
 // (casetta, bosco, fattoria, deposito) e dalle costruzioni dei giocatori. null se non c'è.
 export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
+  for (const k of Object.keys(motiviSpiazzo)) motiviSpiazzo[k] = 0;
   // anelli da 8 a 32 blocchi in 8 direzioni: con 12 posti fissi vicino alla casa (collina, acqua, base del giocatore)
   // deposito e bosco fallivano sempre con "nessuno spiazzo libero"
   const posti = [];
@@ -653,11 +654,15 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
   for (const [dx, dz] of posti) {
     const x0 = casa.x + dx, z0 = casa.z + dz;
     const angoli = [[0, 0], [lato - 1, 0], [0, lato - 1], [lato - 1, lato - 1], [Math.floor(lato / 2), Math.floor(lato / 2)]].map(([a, b]) => suolo(dim, x0 + a, z0 + b));
-    if (angoli.some((g) => !g || g.liquido || inPericolo(g))) continue;
+    // i pericoli da mostri (morti per scheletri vicino a casa) non rendono il terreno inadatto: solo grotte, acqua, soffocamento
+    const pericoloso = (g) => (mem.pericoli ?? []).some((z) => !/entityAttack|projectile|Explosion/.test(z.motivo ?? "") && Math.hypot(z.x - g.x, z.z - g.z) <= z.r && Math.abs(z.y - g.y) <= z.r);
+    if (angoli.some((g) => !g)) { motiviSpiazzo.scarico++; continue; }
+    if (angoli.some((g) => g.liquido)) { motiviSpiazzo.acqua++; continue; }
+    if (angoli.some(pericoloso)) { motiviSpiazzo.pericolo++; continue; }
     const ys = angoli.map((g) => g.y);
-    if (Math.max(...ys) - Math.min(...ys) > 1) continue; // troppo in pendenza
+    if (Math.max(...ys) - Math.min(...ys) > 2) { motiviSpiazzo.pendenza++; continue; } // fino a 2 blocchi si spiana costruendo
     const centroSp = { x: x0 + lato / 2, z: z0 + lato / 2 };
-    if (giaUsati.some((p) => p && Math.hypot(p.x - centroSp.x, p.z - centroSp.z) < lato + 4)) continue;
+    if (giaUsati.some((p) => p && Math.hypot(p.x - centroSp.x, p.z - centroSp.z) < lato + 4)) { motiviSpiazzo.usato++; continue; }
     // niente blocchi dei giocatori o del bot sopra il terreno nello spiazzo (non costruisce in casa tua)
     let occupato = false;
     for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
@@ -666,9 +671,13 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
       if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium/.test(blk.typeId)) occupato = true;
     }
     if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
+    motiviSpiazzo.occupato++;
   }
   return null;
 }
+// perché non ha trovato posto (per il rapporto: "nessuno spiazzo" da solo non diceva niente)
+export const motiviSpiazzo = { scarico: 0, acqua: 0, pericolo: 0, pendenza: 0, usato: 0, occupato: 0 };
+const perche = () => Object.entries(motiviSpiazzo).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ") || "nessun posto provato";
 // Lontano da casa i chunk non sono caricati e trovaSpiazzo dava sempre null ("nessuno spiazzo libero"): prima ci va.
 function arrivaACasa(bot, casa) {
   if (dist(bot.location, casa) <= 40) return true;
@@ -1273,7 +1282,7 @@ const ESECUTORI = {
       if (!b) {
         if (!arrivaACasa(bot, casa)) return;
         const sp = trovaSpiazzo(bot.dimension, casa, 9, luoghiBot());
-        if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il bosco");
+        if (!sp) return finito(false, `nessuno spiazzo libero vicino a casa per il bosco (${perche()})`);
         b = mem.luoghi.bosco = { x: sp.x, y: sp.y, z: sp.z, nota: "bosco del bot (alberelli ogni 3 blocchi)" };
         evento(`Nuovo bosco a ${b.x},${b.y},${b.z}`);
       }
@@ -1306,7 +1315,7 @@ const ESECUTORI = {
     if (!casa) return finito(false, "serve prima una casa");
     if (!arrivaACasa(bot, casa)) return;
     const sp = trovaSpiazzo(bot.dimension, casa, 5, luoghiBot());
-    if (!sp) return finito(false, "nessuno spiazzo libero 5x5 vicino a casa");
+    if (!sp) return finito(false, `nessuno spiazzo libero 5x5 vicino a casa (${perche()})`);
     const pietra = contaOggetti(bot, "minecraft:cobblestone");
     const passi = [];
     if (pietra < 100) passi.push({ tipo: "raccogli", blocco: "stone", quantita: 100 - pietra, routine: c.routine });
@@ -1324,7 +1333,7 @@ const ESECUTORI = {
     if (casa && (!base || dist(base, casa) > 48)) {
       if (!arrivaACasa(bot, casa)) return;
       const sp = trovaSpiazzo(bot.dimension, casa, 7, luoghiBot().filter((p) => p !== base));
-      if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il deposito");
+      if (!sp) return finito(false, `nessuno spiazzo libero vicino a casa per il deposito (${perche()})`);
       base = mem.luoghi.deposito = { x: sp.x, y: sp.y, z: sp.z, nota: "deposito del bot (casse per categoria)" };
       mem.casse = {};
       evento(`Nuovo deposito accanto a casa a ${sp.x},${sp.y},${sp.z}`);

@@ -19,7 +19,8 @@ const vivo = () => bot?.isValid === true;
 // si chiude in un rifugio dove si trova e aspetta l'alba. true = notte gestita, non assegnare altro.
 function notteFuori() {
   const ora = world.getTimeOfDay();
-  if (ora < 12500 || ora >= 23000 || !mem.luoghi.casa || dist(bot.location, mem.luoghi.casa) <= 24) return false;
+  // vicino a casa ci si ripara nella casetta; senza casetta anche lì tana o rifugio (4 morti per scheletri a casa)
+  if (ora < 12500 || ora >= 23000 || !mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
   const eq = bot.getComponent("minecraft:equippable");
   if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
@@ -29,7 +30,7 @@ function notteFuori() {
     mem.coda = [];
     // con pochi blocchi in tasca il rifugio non si chiude mai: tana scavata nel terreno, bastano 1 blocco e 1 minuto
     const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
-    evento(`Notte senza armatura e casa lontana: ${blocchi >= 34 ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    evento(`Notte senza armatura e senza casetta: ${blocchi >= 34 ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
     assegna(blocchi >= 34 ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;
