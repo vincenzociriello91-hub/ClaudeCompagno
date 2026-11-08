@@ -509,6 +509,8 @@ const PREREQ = {
 function rinvia(c, ingrediente, quantita) {
   const pre = PREREQ[ingrediente];
   if (!pre || (c.prereq ?? 0) >= 3) return false;
+  // di notte nel rifugio non si esce a cercare legna o animali (4 morti in 2 minuti andando a prendere tronchi per le torce)
+  if (c.routine === "notte_sicura" && (pre.tipo === "raccogli" || pre.tipo === "caccia")) return false;
   const { stato, t, ...orig } = c;
   orig.prereq = (orig.prereq ?? 0) + 1;
   const q = pre.tipo === "caccia" ? Math.max(1, Math.ceil(quantita / 2)) : Math.max(1, quantita);
