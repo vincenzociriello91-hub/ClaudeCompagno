@@ -261,6 +261,25 @@ salva_manuale() {
     echo "## Lezioni universali ricavate dal gioco (riflessione giornaliera, ultime in fondo)"
     echo
     jq -r '(.universali // [])[] | "- \(.t)  _(\(.g))_"' "$REP/ClaudeMinecraft_memoria.json" 2>/dev/null || echo "- (ancora nessuna)"
+    echo
+    echo "---"
+    echo
+    echo "# Tutta l'esperienza del bot (dati grezzi dal gioco, aggiornati a ogni rapporto)"
+    echo
+    echo "Chi usa il manuale sceglie cosa adottare: qui c'è tutto, anche ciò che vale solo in Minecraft."
+    echo
+    jq -r '
+      def pct(o): if ((o.ok // 0) + (o.ko // 0)) > 0 then "\((100 * (o.ok // 0) / ((o.ok // 0) + (o.ko // 0)) | floor))% su \((o.ok // 0) + (o.ko // 0))" else "mai provato" end;
+      "## Lezioni attuali del bot\n", ((.lezioni // [])[] | "- \(.)"),
+      "\n## Lezioni automatiche scritte dal codice\n", ((.lezioniAuto // [])[] | "- \(.)"),
+      "\n## Archivio delle lezioni superate o fuse (più vecchie in alto)\n", ((.lezioniArchivio // [])[] | "- \(.t)  _(\(.g))_"),
+      "\n## Esperienza per tipo di compito (tasso di successo)\n", ((.esperienza // {}) | to_entries | sort_by(-((.value.ok // 0) + (.value.ko // 0)))[] | "- \(.key): \(pct(.value))\(if .value.ultimoErrore then " — ultimo errore: \(.value.ultimoErrore)" else "" end)"),
+      "\n## Routine (successi/fallimenti)\n", ((.statRoutine // {}) | to_entries[] | "- \(.key): \(.value.ok // 0) ok / \(.value.ko // 0) ko"),
+      "\n## Priorità attuali del pilota automatico\n", "- \((.prioritaGratis // []) | join(" > "))",
+      "\n## Diario delle riflessioni giornaliere\n", ((.diario // [])[] | "- \(.g): \(.nota)"), (if .riflessione.nota then "- ultima: \(.riflessione.nota)" else empty end),
+      "\n## Voti dei giocatori\n", "- \(.voti // "nessuno" | tostring)",
+      "\n## Zone pericolose imparate\n", ((.pericoli // [])[] | "- \(.x),\(.y),\(.z) raggio \(.r): \(.motivo)")
+    ' "$REP/ClaudeMinecraft_memoria.json" 2>/dev/null
   } > "$REP/ClaudeCompagno_esperienza.md.tmp" && mv "$REP/ClaudeCompagno_esperienza.md.tmp" "$REP/ClaudeCompagno_esperienza.md"
 }
 

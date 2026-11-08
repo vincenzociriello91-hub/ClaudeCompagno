@@ -337,7 +337,7 @@ function riassuntoAssenza(nome) {
   mem.assenza = null;
 }
 // Backup della memoria nel log, a pezzi (il log tronca le righe lunghe): avvia.sh lo ricompone in Odin2_report.
-const DA_SALVARE = ["universali", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
+const DA_SALVARE = ["universali", "lezioniArchivio", "diario", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
 function scriviBackup() {
   const dati = { versione: VERSIONE, salvato: adesso() };
   for (const k of DA_SALVARE) if (mem[k] !== undefined) dati[k] = mem[k];

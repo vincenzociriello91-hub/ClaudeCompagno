@@ -7,9 +7,12 @@ successo davvero (morti, blocchi, spese, fallimenti misurati nei rapporti) e dic
 Come cresce:
 - a ogni versione del bot questo testo viene aggiornato con quello che i rapporti hanno insegnato;
 - ogni giorno la riflessione del bot aggiunge in fondo le lezioni universali nuove;
-- su Drive si trova sempre aggiornato in `Odin2_report/ClaudeCompagno_esperienza.md`.
+- su Drive si trova sempre aggiornato in `Odin2_report/ClaudeCompagno_esperienza.md`, che in fondo contiene anche
+  **tutta l'esperienza grezza del bot**: lezioni attuali, lezioni automatiche, archivio delle lezioni superate,
+  tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
+  pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.7.7 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.7.8 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 

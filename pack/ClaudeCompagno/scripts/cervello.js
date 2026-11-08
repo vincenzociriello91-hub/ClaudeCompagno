@@ -470,7 +470,14 @@ export async function riflessione() {
       const d = esito.message.content?.find((x) => x.type === "tool_use")?.input;
       if (!d) { r.stato = "errore"; r.nota = "risposta senza strumento"; return; }
       const lezioni = (d.lezioni ?? []).filter((l) => typeof l === "string" && l.trim()).map((l) => l.slice(0, 200));
-      if (lezioni.length >= 3) { mem.lezioni = lezioni.slice(0, 25); mem.lezioniAuto = []; } // le automatiche sono state fuse
+      if (lezioni.length >= 3) {
+        const nuove = new Set(lezioni.map((l) => l.toLowerCase()));
+        const archivio = (mem.lezioniArchivio ??= []);
+        const gia = new Set(archivio.map((a) => a.t.toLowerCase()));
+        for (const l of [...mem.lezioni, ...(mem.lezioniAuto ?? [])]) if (!nuove.has(l.toLowerCase()) && !gia.has(l.toLowerCase())) archivio.push({ t: l.slice(0, 300), g: oggi });
+        if (archivio.length > 300) archivio.splice(0, archivio.length - 300);
+        mem.lezioni = lezioni.slice(0, 25); mem.lezioniAuto = []; // le automatiche sono state fuse
+      }
       mem.prioritaGratis = (d.priorita ?? []).filter((n) => NOMI_PIANO.includes(n));
       // manuale di esperienza: si accumula (niente doppioni), il più vecchio esce oltre 100
       const note = new Set((mem.universali ??= []).map((u) => u.t.toLowerCase()));
@@ -479,6 +486,8 @@ export async function riflessione() {
       }
       if (mem.universali.length > 100) mem.universali.splice(0, mem.universali.length - 100);
       r.stato = "fatta"; r.nota = String(d.nota ?? "").slice(0, 300);
+      (mem.diario ??= []).push({ g: oggi, nota: r.nota, priorita: mem.prioritaGratis });
+      if (mem.diario.length > 120) mem.diario.splice(0, mem.diario.length - 120);
       evento(`Riflessione giornaliera ($${costo.toFixed(3)}): ${r.nota} | priorità: ${mem.prioritaGratis.join(" > ")}`);
       console.log(`[Claude][API] ${CFG.complesso.replace("claude-", "")} $${costo.toFixed(4)} batch | riflessione giornaliera`);
       notifica(`🧠 Riflessione di oggi: ${r.nota}`);
