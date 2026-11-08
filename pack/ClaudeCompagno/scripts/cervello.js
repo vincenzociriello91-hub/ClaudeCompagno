@@ -315,7 +315,7 @@ export async function progetta(bot, c, da) {
     // schema pronto o imparato: nessuna chiamata all'architetto
     const blocchi = blocchiSchema(c);
     if (!blocchi) { evento(`Schema sconosciuto: ${c.schema}`); avvisa(`lo schema "${c.schema}" non esiste: usa uno schema base, uno salvato o una descrizione`); return; }
-    return consegna(bot, o, blocchi, c.descrizione ?? `${c.schema} ${blocchi.length} blocchi`, da, null);
+    return consegna(bot, o, blocchi, c.descrizione ?? `${c.schema} ${blocchi.length} blocchi`, da, null, c);
   }
   const inv = riassuntoInventario(bot);
   const risposta = await chiama({
@@ -329,12 +329,14 @@ export async function progetta(bot, c, da) {
   consegna(bot, o, blocchi, c.descrizione, da, c.nome_schema ?? String(c.descrizione).split(/\s+/).slice(0, 4).join("_"));
 }
 
-function consegna(bot, o, blocchi, descrizione, da, nomeSchema) {
+function consegna(bot, o, blocchi, descrizione, da, nomeSchema, origine = {}) {
   const servono = {};
   for (const b of blocchi) servono[b[3]] = (servono[b[3]] ?? 0) + 1;
   const mancano = Object.entries(servono).filter(([id, n]) => contaOggetti(bot, id) < n).map(([id, n]) => `${id.replace("minecraft:", "")} ${n - contaOggetti(bot, id)}`);
   evento(`Progetto "${descrizione}": ${blocchi.length} blocchi${mancano.length ? ", mancano " + mancano.join(", ") : ""}`);
-  assegna({ tipo: "costruisci", x: o.x, y: o.y, z: o.z, descrizione, blocchi, ...(nomeSchema ? { nome_schema: nomeSchema } : {}) }, da);
+  // routine e luogo finale passano al compito vero (la casetta diventa un luogo quando è finita)
+  assegna({ tipo: "costruisci", x: o.x, y: o.y, z: o.z, descrizione, blocchi, ...(nomeSchema ? { nome_schema: nomeSchema } : {}),
+    ...(origine.routine ? { routine: origine.routine } : {}), ...(origine.luogoFinale ? { luogoFinale: origine.luogoFinale } : {}) }, da);
   if (mancano.length) parla(bot, `Progetto pronto (${blocchi.length} blocchi). Mi mancano: ${mancano.join(", ")}.`);
 }
 

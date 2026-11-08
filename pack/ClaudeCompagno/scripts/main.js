@@ -34,6 +34,31 @@ function notteFuori() {
 let nomeRe = /\b(claude|cloud|clod|claud|cloude|clode)\b/i;
 const reale = (p) => p && p.typeId === "minecraft:player" && !(p instanceof SimulatedPlayer);
 
+// Livello di maturazione 0-100 (gratis, dai dati): equipaggiamento 30, sopravvivenza 25, abilità 20, base 15, sapere 10.
+// Serve a vedere se cresce giorno per giorno e quando è pronto da portare in altre applicazioni.
+const GRADO = (id) => /netherite/.test(id) ? 5 : /diamond/.test(id) ? 4 : /iron/.test(id) ? 3 : /copper|chainmail|golden/.test(id) ? 2 : /stone|leather/.test(id) ? 1.5 : /wooden/.test(id) ? 1 : 0;
+function maturita() {
+  if (!vivo()) return null;
+  const eq = bot.getComponent("minecraft:equippable");
+  const armatura = ["Head", "Chest", "Legs", "Feet"].reduce((t, s) => t + GRADO(eq?.getEquipment(s)?.typeId ?? ""), 0) / 20; // 4 pezzi di netherite = 1
+  const attrezzi = ["_pickaxe", "_sword", "_axe"].reduce((t, k) => {
+    let g = 0; const c = inv(bot);
+    for (let i = 0; i < c.size; i++) { const it = c.getItem(i); if (it?.typeId.endsWith(k)) g = Math.max(g, GRADO(it.typeId)); }
+    return t + g;
+  }, 0) / 15;
+  const equip = 15 * armatura + 15 * attrezzi;
+  // sopravvivenza: minuti medi tra una morte e l'altra in questa sessione (60 minuti o più = pieno)
+  const minSess = (Date.now() - sessione.inizio) / 60000;
+  const sopr = 25 * Math.min(1, minSess / (sessione.morti.length + 1) / 60);
+  // abilità: successo medio sui compiti provati almeno 5 volte (gli ingredienti mancanti non contano)
+  const tassi = Object.entries(mem.esperienza).filter(([t, e]) => !/^(routine|fermo)$/.test(t) && e.ok + e.ko >= 5).map(([, e]) => e.ok / (e.ok + e.ko));
+  const abil = 20 * (tassi.length ? tassi.reduce((a, b) => a + b, 0) / tassi.length : 0);
+  const base = 2.5 * ["casa", "fornace", "bosco", "fattoria", "casetta"].filter((n) => mem.luoghi[n]).length + (Object.keys(mem.casse ?? {}).length >= 2 ? 2.5 : 0);
+  const sapere = 5 * Math.min(1, mem.lezioni.length / 25) + 5 * Math.min(1, (mem.universali ?? []).length / 30);
+  const r = (x) => Math.round(x);
+  return { totale: r(equip + sopr + abil + base + sapere), equipaggiamento: r(equip), sopravvivenza: r(sopr), abilita: r(abil), base: r(base), sapere: r(sapere) };
+}
+
 function statoAttuale() {
   if (!vivo()) return { Bot: "non presente nel mondo" };
   const l = bot.location;
@@ -43,6 +68,7 @@ function statoAttuale() {
     Fame: Math.round(bot.getComponent("minecraft:player.hunger")?.currentValue ?? 0),
     Inventario: riassuntoInventario(bot),
     "Giocatori online": giocatoriVeri().map((p) => p.name).join(", ") || "nessuno",
+    Maturità: (() => { const m = maturita(); return m ? `${m.totale}/100 (equipaggiamento ${m.equipaggiamento}/30, sopravvivenza ${m.sopravvivenza}/25, abilità ${m.abilita}/20, base ${m.base}/15, sapere ${m.sapere}/10)` : "-"; })(),
   };
 }
 
@@ -337,7 +363,7 @@ function riassuntoAssenza(nome) {
   mem.assenza = null;
 }
 // Backup della memoria nel log, a pezzi (il log tronca le righe lunghe): avvia.sh lo ricompone in Odin2_report.
-const DA_SALVARE = ["universali", "lezioniArchivio", "diario", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
+const DA_SALVARE = ["maturita", "universali", "lezioniArchivio", "diario", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
 function scriviBackup() {
   const dati = { versione: VERSIONE, salvato: adesso() };
   for (const k of DA_SALVARE) if (mem[k] !== undefined) dati[k] = mem[k];
@@ -478,12 +504,19 @@ ogniTick(20, () => {
       ultimaDecisione = system.currentTick;
       if (notteFuori()) return;
       const r = pianoGratis();
-      if (r === "casa") { evento("Piano gratis: è notte, torno a casa"); assegna({ tipo: "vai", x: mem.luoghi.casa.x, y: mem.luoghi.casa.y, z: mem.luoghi.casa.z }, "piano"); return; }
+      if (r === "casa") { const d = mem.luoghi.casetta ?? mem.luoghi.casa; evento(`Piano gratis: è notte, torno ${mem.luoghi.casetta ? "nella casetta" : "a casa"}`); assegna({ tipo: "vai", x: d.x, y: d.y, z: d.z }, "piano"); return; }
+      if (r === "ronda" && mem.luoghi.casetta) {
+        // con la casetta la notte la passa dentro, al riparo
+        const d = mem.luoghi.casetta;
+        if (dist(bot.location, d) > 2) assegna({ tipo: "vai", x: d.x, y: d.y, z: d.z }, "piano");
+        return;
+      }
       if (r === "ronda") {
         if (system.currentTick - ultimaRonda < 2400) return; // un giro di ronda ogni 2 minuti, non di continuo
         ultimaRonda = system.currentTick;
         const c = mem.luoghi.casa, a = Math.random() * Math.PI * 2; assegna({ tipo: "vai", x: c.x + Math.round(Math.cos(a) * 6), y: c.y, z: c.z + Math.round(Math.sin(a) * 6) }, "piano"); return; }
       if (r?.startsWith("miniera:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: "miniera_rami", minerale: r.split(":")[1], routine: r }, "piano"); return; }
+      if (r === "compito:casetta") mem.ultimaCasetta = Date.now();
       if (r?.startsWith("compito:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: r.slice(8), routine: r }, "piano"); return; }
       if (r?.startsWith("crafta:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: "crafta", oggetto: r.slice(7), routine: r }, "piano"); return; }
       if (r) { evento(`Piano gratis: routine ${r}`); assegna({ tipo: "routine", nome: r }, "piano"); return; }
@@ -522,12 +555,18 @@ function pianoGratis() {
     if (dist(bot.location, mem.luoghi.casa) > 24) return "casa";
     const sicuri = [];
     if (vuoti < 6) sicuri.push("compito:sistema_deposito");
+    // lavori accanto a casa, sicuri anche di notte
+    if (!mem.luoghi.fornace && (ha("minecraft:furnace") || ha("#pietra") >= 8)) sicuri.push("compito:fornace");
+    if (ha((id) => id.endsWith("_sapling")) >= 2 && minuti(mem.ultimoBosco) > 120) sicuri.push("compito:bosco");
     if (mem.luoghi.fattoria && minuti(mem.ultimaFattoria) > 5) sicuri.push("compito:fattoria");
     if (minuti(mem.ultimaRiproduzione) > 6 && ha("minecraft:wheat") >= 2) sicuri.push("compito:alleva");
     if (ha("minecraft:torch") >= 10 && minuti(mem.illuminata) > 24 * 60) sicuri.push("compito:illumina");
     return sicuri.find(valida) ?? "ronda";
   }
   if (vuoti < 6 && (mem.luoghi.casa || mem.luoghi.deposito)) candidati.push("compito:sistema_deposito");
+  // catena della crescita: fornace fissa (senza, fondi falliva l'80%), bosco accanto a casa (legna sempre vicina), casetta vera
+  if (mem.luoghi.casa && !mem.luoghi.fornace && (ha("minecraft:furnace") || ha("#pietra") >= 8)) candidati.push("compito:fornace");
+  if (mem.luoghi.casa && ha((id) => id.endsWith("_sapling")) >= 2 && minuti(mem.ultimoBosco) > 120) candidati.push("compito:bosco");
   if (!ha((id) => id.endsWith("_pickaxe"))) candidati.push("kit_legno");
   if (!ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))) candidati.push("attrezzi_pietra");
   if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria ? ["compito:fattoria"] : []));
@@ -541,6 +580,7 @@ function pianoGratis() {
   const corazza = bot.getComponent("minecraft:equippable")?.getEquipment("Chest")?.typeId ?? "";
   if (!corazza && !ha((id) => id.endsWith("_chestplate")) && ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8) candidati.push("armatura_rame");
   if (!ha((id) => /(iron|diamond|netherite)_chestplate$/.test(id)) && !/(iron|diamond|netherite)_chestplate$/.test(corazza)) candidati.push("armatura_ferro");
+  if (mem.luoghi.casa && !mem.luoghi.casetta && minuti(mem.ultimaCasetta) > 30) candidati.push("compito:casetta");
   if (!ha((id) => /_bed$/.test(id))) candidati.push("letto");
   if (pickFerro && ha("minecraft:diamond") < 3) candidati.push("miniera:diamanti");
   // fattoria, allevamento e base: cibo infinito vicino a casa e niente mostri intorno
@@ -604,14 +644,17 @@ ogniTick(100, () => {
     armatura: arm, inv: istantaneaInventario(bot).map((x) => `${String(x[0]).replace("minecraft:", "")}:${x[1]}`),
     compito: breve(mem.compito), coda: mem.coda.slice(0, 8).map(breve),
     modalita: mem.modalita, bersaglio: mem.bersaglio, giocatori: g, ora: world.getTimeOfDay(), tps: +prestazioni.tps.toFixed(1),
-    spesa: +mem.spesa.usd.toFixed(4), chiamate: mem.spesa.chiamate, budget: CFG.budget,
+    spesa: +mem.spesa.usd.toFixed(4), chiamate: mem.spesa.chiamate, budget: CFG.budget, maturita: maturita(),
   });
 });
 ogniTick(2400, () => {
   if (!pronto) return;
+  // andamento giornaliero della maturazione (un valore al giorno, l'ultimo del giorno)
+  const m = maturita();
+  if (m) { const g = adesso().slice(0, 10), st = (mem.maturita ??= []); if (st.at(-1)?.g === g) st.at(-1).v = m.totale; else st.push({ g, v: m.totale }); if (st.length > 365) st.shift(); }
   scriviBlocco("MEMORIA", { lezioni: mem.lezioni, lezioniAuto: mem.lezioniAuto ?? [], luoghi: mem.luoghi, risorse: mem.risorse ?? {}, pericoli: mem.pericoli ?? [],
     casse: mem.casse ?? {}, esperienza: mem.esperienza, statRoutine: mem.statRoutine ?? {}, priorita: mem.prioritaGratis ?? [], riflessione: mem.riflessione ?? null,
-    schemi: Object.keys(mem.schemi ?? {}), obiettivi: mem.obiettivi, voti: mem.voti ?? null, diagnosi: sessione.diagnosi ?? [], universali: (mem.universali ?? []).map((u) => u.t) });
+    schemi: Object.keys(mem.schemi ?? {}), obiettivi: mem.obiettivi, voti: mem.voti ?? null, diagnosi: sessione.diagnosi ?? [], universali: (mem.universali ?? []).map((u) => u.t), maturita: mem.maturita ?? [] });
 });
 // contatori cumulativi salvati ogni minuto: al prossimo avvio diventano la base
 ogniTick(1200, () => { if (pronto && vivo()) mem.ultimiContatori = contatori(); });

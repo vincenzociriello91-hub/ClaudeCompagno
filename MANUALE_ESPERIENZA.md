@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.7.8 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.0 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -83,6 +83,14 @@ Aggiornato alla versione 2.7.8 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
   hanno reso davvero, e una revisione giornaliera le riordina.
 - **Ritmo giorno e notte:** le attività rischiose nelle fasi sicure, quelle sicure (manutenzione, ordine, scorte)
   nelle fasi pericolose.
+- **Rendere vicine e rinnovabili le risorse che servono sempre.** Se ogni ciclo di lavoro richiede di andare
+  lontano a prendere la stessa materia prima, conviene "coltivarla" vicino alla base (un bosco accanto a casa)
+  invece di ripetere viaggi rischiosi. _Fatto: crafta al 5% su 750 tentativi, quasi sempre per mancanza di legna._
+- **Infrastruttura fissa per le operazioni ripetute.** Uno strumento che serve spesso (la fornace) va installato
+  una volta in un posto noto e ricordato, non cercato o ricostruito ogni volta.
+  _Fatto: fondi all'1% su 804 tentativi per "serve una fornace", con una fornace in tasca._
+- **Misurare la maturità con un numero.** Un punteggio unico (equipaggiamento, sopravvivenza, abilità, base,
+  sapere) con il suo andamento giornaliero dice se l'agente cresce davvero e quando è pronto per altri compiti.
 
 ## 5. Imparare dall'esperienza
 
@@ -99,6 +107,8 @@ Aggiornato alla versione 2.7.8 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
   lo sbaglio va fermato subito e trasformato in lezione.
 - **Esercitare le abilità mai provate** quando non c'è niente di urgente: senza tentativi non c'è esperienza.
 - **Misurare il progresso per sessione** (successi di oggi contro quelli di prima) per capire se si migliora davvero.
+- **Separare "non so farlo" da "mi manca qualcosa".** Un compito fallito per un ingrediente mancante non è
+  un'abilità fallita: contarli insieme falsa le statistiche e fa "imparare" la cosa sbagliata.
 - **La memoria va salvata fuori dall'agente** (backup periodico su un servizio esterno) e deve poter essere
   ripristinata: l'esperienza è il bene più prezioso e non deve dipendere da un solo dispositivo.
 

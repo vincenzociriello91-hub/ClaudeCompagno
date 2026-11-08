@@ -556,7 +556,10 @@ function finito(ok, msg) {
   mem.ultimoCompito = `${c.tipo}${c.blocco ?? c.oggetto ?? c.nome ?? c.minerale ? " " + (c.blocco ?? c.oggetto ?? c.nome ?? c.minerale) : ""} (${ok ? "riuscito" : "fallito"}: ${String(msg).slice(0, 80)})`;
   if (ok) sessione.compitiOk++; else sessione.compitiKo.push(`${c.tipo}: ${msg}`);
   const esp = (mem.esperienza[c.tipo] ??= { ok: 0, ko: 0 });
-  if (ok) esp.ok++; else { esp.ko++; esp.ultimoErrore = msg; }
+  // "servono tronchi", "non ho...": non è un'abilità fallita ma un ingrediente mancante, si conta a parte
+  const mancanza = !ok && /^(serv|manc|non ho|niente da)/i.test(String(msg));
+  if (ok) esp.ok++; else if (mancanza) { esp.mancanze = (esp.mancanze ?? 0) + 1; esp.ultimaMancanza = msg; } else { esp.ko++; esp.ultimoErrore = msg; }
+  if (ok && c.luogoFinale?.nome) { mem.luoghi[c.luogoFinale.nome] = c.luogoFinale.p; evento(`Nuovo luogo: ${c.luogoFinale.nome} a ${c.luogoFinale.p.x},${c.luogoFinale.p.y},${c.luogoFinale.p.z}`); }
   evento(testo);
   // il successo si segnala al cervello solo a piano finito: il prossimo passo è già in coda
   // ordine di un giocatore eseguito: torna libero di fare ciò che è utile (segui/fermo sono modalità, restano)
@@ -637,6 +640,29 @@ function filtroBlocco(nome) {
   if (n === "pietra" || n === "cobblestone" || n === "stone") return (id) => id === "minecraft:stone" || id === "minecraft:deepslate" || id === "minecraft:cobblestone";
   return (id) => id.replace("minecraft:", "").includes(n);
 }
+
+// Cerca vicino a casa uno spiazzo piano e asciutto di lato x lato, lontano dagli altri luoghi del bot
+// (casetta, bosco, fattoria, deposito) e dalle costruzioni dei giocatori. null se non c'è.
+export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
+  for (const [dx, dz] of [[10, 0], [-10, 0], [0, 10], [0, -10], [12, 12], [-12, 12], [12, -12], [-12, -12], [18, 0], [0, 18], [-18, 0], [0, -18]]) {
+    const x0 = casa.x + dx, z0 = casa.z + dz;
+    const angoli = [[0, 0], [lato - 1, 0], [0, lato - 1], [lato - 1, lato - 1], [Math.floor(lato / 2), Math.floor(lato / 2)]].map(([a, b]) => suolo(dim, x0 + a, z0 + b));
+    if (angoli.some((g) => !g || g.liquido || inPericolo(g))) continue;
+    const ys = angoli.map((g) => g.y);
+    if (Math.max(...ys) - Math.min(...ys) > 1) continue; // troppo in pendenza
+    const centroSp = { x: x0 + lato / 2, z: z0 + lato / 2 };
+    if (giaUsati.some((p) => p && Math.hypot(p.x - centroSp.x, p.z - centroSp.z) < lato + 4)) continue;
+    // niente blocchi dei giocatori o del bot sopra il terreno nello spiazzo (non costruisce in casa tua)
+    let occupato = false;
+    for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
+      const blk = dim.getBlock({ x: x0 + a, y: Math.min(...ys), z: z0 + b });
+      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves/.test(blk.typeId)) occupato = true;
+    }
+    if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
+  }
+  return null;
+}
+const luoghiBot = () => ["casetta", "bosco", "fattoria", "deposito", "fornace"].map((n) => mem.luoghi[n]);
 
 const ESECUTORI = {
   vai(bot, c) {
@@ -876,7 +902,11 @@ const ESECUTORI = {
       return finito(false, `non ho ${ingresso.replace("minecraft:", "")} da fondere`);
     }
     if (!s.fornace) {
-      s.fornace = assicuraBlocco(bot, "minecraft:furnace");
+      const f = mem.luoghi.fornace;
+      let fissa = false;
+      try { fissa = !!f && dist(f, bot.location) < 64 && /furnace/.test(bot.dimension.getBlock(f)?.typeId ?? ""); } catch {}
+      if (f && !fissa && dist(f, bot.location) < 16) delete mem.luoghi.fornace; // la fornace fissa non c'è più
+      s.fornace = fissa ? { x: f.x, y: f.y, z: f.z } : assicuraBlocco(bot, "minecraft:furnace");
       // lontano da casa: se ha 8 pietre se ne fa una al volo
       if (!s.fornace && contaOggetti(bot, "#pietra") >= 8 && fabbrica(bot, "minecraft:furnace")[0]) s.fornace = assicuraBlocco(bot, "minecraft:furnace");
       if (!s.fornace) return finito(false, "serve una fornace (o 8 pietre per farne una)");
@@ -1147,6 +1177,71 @@ const ESECUTORI = {
 
   // deposito organizzato: 5 casse in fila accanto al deposito (minerali, cibo, legna, blocchi, varie);
   // ci smista l'inventario e svuota la vecchia cassa del deposito nelle casse giuste
+  // fornace fissa vicino a casa: fondi falliva l'80% delle volte per "serve una fornace"
+  fornace(bot, c) {
+    const casa = mem.luoghi.casa;
+    if (!casa) return finito(false, "serve prima una casa");
+    const r = vaiVerso(bot, { x: casa.x + 0.5, y: casa.y, z: casa.z + 2.5 }, 3);
+    if (r === "bloccato") { bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 2.5 }); nav.meta = null; nav.bloccato = 0; return; }
+    if (r !== true) return;
+    if (contaOggetti(bot, "minecraft:furnace") < 1 && contaOggetti(bot, "#pietra") >= 8) fabbrica(bot, "minecraft:furnace");
+    const p = assicuraBlocco(bot, "minecraft:furnace");
+    if (!p) return finito(false, "non ho una fornace né 8 pietre per farla");
+    mem.luoghi.fornace = { x: p.x, y: p.y, z: p.z, nota: "fornace fissa del bot" };
+    finito(true, `fornace fissa a ${p.x},${p.y},${p.z}`);
+  },
+
+  // bosco: pianta gli alberelli accanto a casa, così la legna è sempre a due passi (i viaggi per la legna finivano nelle grotte)
+  bosco(bot, c) {
+    const s = c.stato;
+    const casa = mem.luoghi.casa;
+    if (!casa) return finito(false, "serve prima una casa");
+    if (!s.punti) {
+      let b = mem.luoghi.bosco;
+      if (!b) {
+        const sp = trovaSpiazzo(bot.dimension, casa, 9, luoghiBot());
+        if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il bosco");
+        b = mem.luoghi.bosco = { x: sp.x, y: sp.y, z: sp.z, nota: "bosco del bot (alberelli ogni 3 blocchi)" };
+        evento(`Nuovo bosco a ${b.x},${b.y},${b.z}`);
+      }
+      s.punti = [];
+      for (let a = 1; a < 9; a += 3) for (let d = 1; d < 9; d += 3) s.punti.push({ x: b.x + a, z: b.z + d });
+      s.i = 0; s.piantati = 0;
+    }
+    const alberello = ALBERELLI.find((a) => contaOggetti(bot, a) > 0);
+    if (s.i >= s.punti.length || !alberello) {
+      mem.ultimoBosco = Date.now();
+      return finito(true, `bosco: piantati ${s.piantati} alberelli`);
+    }
+    const q = s.punti[s.i];
+    const g = suolo(bot.dimension, q.x, q.z);
+    if (!g || g.liquido) { s.i++; return; }
+    const r = vaiVerso(bot, centro(g), 4);
+    if (r === "bloccato") { s.i++; return; }
+    if (r !== true) return;
+    const sotto = bot.dimension.getBlock({ x: g.x, y: g.y - 1, z: g.z });
+    if (bot.dimension.getBlock(g)?.isAir && /dirt|grass_block|podzol|moss_block/.test(sotto?.typeId ?? "") && piazza(bot, g, alberello) === "ok") {
+      protetti.delete(chiaveBlocco(bot.dimension, g)); // il tronco che crescerà deve restare tagliabile
+      s.piantati++;
+    }
+    s.i++;
+  },
+
+  // casetta vera di pietra accanto alla tua casa: di notte si ripara lì (prima faceva la ronda all'aperto)
+  casetta(bot, c) {
+    const casa = mem.luoghi.casa;
+    if (!casa) return finito(false, "serve prima una casa");
+    const sp = trovaSpiazzo(bot.dimension, casa, 5, luoghiBot());
+    if (!sp) return finito(false, "nessuno spiazzo libero 5x5 vicino a casa");
+    const pietra = contaOggetti(bot, "minecraft:cobblestone");
+    const passi = [];
+    if (pietra < 100) passi.push({ tipo: "raccogli", blocco: "stone", quantita: 100 - pietra, routine: c.routine });
+    passi.push({ tipo: "costruisci", schema: "casa", lato_x: 5, lato_z: 5, altezza: 3, materiale: "cobblestone", x: sp.x, y: sp.y, z: sp.z,
+      routine: c.routine, luogoFinale: { nome: "casetta", p: { x: sp.x + 2, y: sp.y + 1, z: sp.z + 2, nota: "casetta di pietra del bot" } } });
+    mem.coda.unshift(...passi);
+    finito(true, `casetta 5x5 di pietra a ${sp.x},${sp.y},${sp.z}: ${passi.length} passi`);
+  },
+
   sistema_deposito(bot, c) {
     const s = c.stato;
     const base = mem.luoghi.deposito ?? mem.luoghi.casa;

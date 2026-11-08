@@ -36,6 +36,10 @@ ma solo quando nessun giocatore è online: se stai giocando aspetta che esci.
 Ti arriva una notifica ntfy. Memoria, impostazioni e chiave API non vengono toccate.
 Per spegnerlo:  proot-distro login debian -- touch /root/claudemc/impostazioni/no_aggiornamenti
 
+LIVELLO DI MATURAZIONE (dalla 2.8.0)
+Un punteggio da 0 a 100 nel pannello (scheda Stato) e nei rapporti: equipaggiamento 30, sopravvivenza 25,
+abilità 20, base 15, sapere 10, con l'andamento giorno per giorno.
+
 MANUALE DI ESPERIENZA (dalla 2.7.7)
 Tutto quello che il bot impara, ripulito dai dettagli di Minecraft, per riusarlo in altre app:
 Odin2_report/ClaudeCompagno_esperienza.md (quindi anche su Drive). La parte principale viene aggiornata a ogni

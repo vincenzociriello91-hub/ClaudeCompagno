@@ -60,6 +60,7 @@
   </section>
   <section id="stato">
     <div class="griglia" id="caselle"></div>
+    <h2>Livello di maturazione</h2><div class="box" id="maturita"></div>
     <h2>Compito e piano</h2><div class="box" id="piano"></div>
     <h2>Armatura</h2><div class="box" id="armatura"></div>
     <h2>Inventario</h2><div class="box"><ul class="lista" id="inv"></ul></div>
@@ -132,8 +133,12 @@ function mostraStato() {
   const notte = s && s.ora >= 13000 && s.ora < 23000;
   $("riga").textContent = s ? (s.presente ? `${s.compito} · ${s.modalita}${s.bersaglio ? " (" + s.bersaglio + ")" : ""} · ${notte ? "notte" : "giorno"} · TPS ${s.tps}` : "Il bot non è nel mondo") + ` · aggiornato ${dati.aggiornato ? ora(dati.aggiornato) : "?"}` : "Nessun dato dal bot: il server è acceso?";
   if (!s) return;
-  $("caselle").innerHTML = (s.presente ? casella("Vita", `${s.vita}/20`) + casella("Fame", `${s.fame}/20`) + casella("Posizione", `${s.x}, ${s.y}, ${s.z}`) : casella("Bot", "fuori dal mondo"))
+  const mt = s.maturita;
+  $("caselle").innerHTML = (mt ? casella("Maturità", `${mt.totale}/100`) : "") + (s.presente ? casella("Vita", `${s.vita}/20`) + casella("Fame", `${s.fame}/20`) + casella("Posizione", `${s.x}, ${s.y}, ${s.z}`) : casella("Bot", "fuori dal mondo"))
     + casella("Modalità", s.modalita) + casella("Spesa oggi", `$${(s.spesa ?? 0).toFixed(3)}`) + casella("Budget", `$${s.budget ?? "?"}`) + casella("TPS server", s.tps);
+  $("maturita").innerHTML = mt ? [["Equipaggiamento", mt.equipaggiamento, 30], ["Sopravvivenza", mt.sopravvivenza, 25], ["Abilità", mt.abilita, 20], ["Base", mt.base, 15], ["Sapere", mt.sapere, 10]]
+    .map(([n, v, max]) => `<div style="display:flex;gap:8px;align-items:center;margin:3px 0"><span style="width:132px;flex:none;font-size:14px">${n}</span><div style="flex:1;height:8px;background:var(--linea);border-radius:4px"><div style="width:${Math.round(100 * v / max)}%;height:8px;background:var(--acc);border-radius:4px"></div></div><span style="width:46px;text-align:right">${v}/${max}</span></div>`).join("")
+    + ((dati.memoria?.maturita ?? []).length ? `<p style="margin:8px 0 0">Andamento: ${dati.memoria.maturita.slice(-14).map((d) => `${esc(d.g.slice(5))} <b>${d.v}</b>`).join(" · ")}</p>` : "") : '<span class="vuoto">bot fuori dal mondo</span>';
   $("piano").innerHTML = s.presente ? `<b>${esc(s.compito)}</b>${s.coda?.length ? "<ol>" + s.coda.map((c) => `<li>${esc(c)}</li>`).join("") + "</ol>" : '<p class="vuoto">piano vuoto</p>'}` : "";
   $("armatura").textContent = s.armatura?.length ? s.armatura.map((x) => x.replace("minecraft:", "")).join(", ") : "nessuna";
   $("inv").innerHTML = (s.inv ?? []).map((x) => `<li>${esc(x.replace("minecraft:", "").replace(/:(\d+)$/, " × $1"))}</li>`).join("") || '<li class="vuoto">vuoto</li>';
