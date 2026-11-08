@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 
-export const VERSIONE = "2.7.4";
+export const VERSIONE = "2.7.5";
 
 // Stato persistente (sopravvive ai riavvii del server)
 export const mem = {
@@ -140,7 +140,7 @@ export function rapporto(motivo, stato) {
   const r = [];
   r.push("=====RAPPORTO_INIZIO=====");
   r.push(`RAPPORTO CLAUDE COMPAGNO v${VERSIONE} — ${adesso()} — motivo: ${motivo}`);
-  r.push("Missione: sopravvivere, adattarsi, trovare una soluzione, non fermarsi, costruire, esplorare, evolversi");
+  r.push("Missione: sopravvivere, trovare una soluzione, adattarsi, evolversi, costruire, esplorare — e mai fermarsi");
   r.push(`Durata sessione: ${durata} min`);
   r.push("");
   r.push("== STATO ATTUALE");
