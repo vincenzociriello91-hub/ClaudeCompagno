@@ -14,6 +14,7 @@ cp "$SRC/debian/avvia.sh" "$SRC/debian/patch_level.py" "$SRC/debian/pannello.py"
 chmod +x "$BASE/avvia.sh"
 # versione installata: l'aggiornamento automatico da GitHub scarica solo se ne esce una più nuova
 cp "$SRC/VERSIONE" "$BASE/.versione" 2>/dev/null || true
+cp "$SRC/MANUALE_ESPERIENZA.md" "$BASE/" 2>/dev/null || true
 
 if [ "${AGGIORNA:-0}" = 1 ]; then
   echo "[✓] File aggiornati. Le impostazioni restano quelle di prima."

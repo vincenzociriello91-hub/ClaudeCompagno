@@ -36,6 +36,11 @@ ma solo quando nessun giocatore è online: se stai giocando aspetta che esci.
 Ti arriva una notifica ntfy. Memoria, impostazioni e chiave API non vengono toccate.
 Per spegnerlo:  proot-distro login debian -- touch /root/claudemc/impostazioni/no_aggiornamenti
 
+MANUALE DI ESPERIENZA (dalla 2.7.7)
+Tutto quello che il bot impara, ripulito dai dettagli di Minecraft, per riusarlo in altre app:
+Odin2_report/ClaudeCompagno_esperienza.md (quindi anche su Drive). La parte principale viene aggiornata a ogni
+versione del bot (MANUALE_ESPERIENZA.md su GitHub); in fondo la riflessione giornaliera aggiunge le lezioni nuove.
+
 VEDERE COSA FA IL BOT DAL TELEFONO (dalla 2.7.0, gratis)
 Pannello in diretta: col telefono sulla stessa Wi-Fi apri nel browser  http://IP-DELLA-ODIN:8080
 (l'indirizzo esatto è scritto in cima a ogni rapporto). Si aggiorna ogni 2 secondi e mostra:

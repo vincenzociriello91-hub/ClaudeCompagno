@@ -413,6 +413,7 @@ const RIFLESSIONE = {
       lezioni: { type: "array", items: { type: "string" }, maxItems: 25, description: "Lezioni riscritte: brevi, concrete, le più utili prima. Unisci doppie, togli le superate. Tieni sempre quelle su sicurezza e preferenze dei giocatori." },
       priorita: { type: "array", items: { type: "string", enum: NOMI_PIANO }, maxItems: 8, description: "Ordine in cui il pilota automatico gratis deve preferire le attività di riempimento, in base a cosa ha reso di più." },
       nota: { type: "string", description: "Cosa hai capito della giornata, una o due frasi." },
+      universali: { type: "array", items: { type: "string" }, maxItems: 6, description: "Lezioni UNIVERSALI ricavate dalla giornata, utili a qualsiasi agente o applicazione fuori da Minecraft (pianificazione, gestione degli errori, rischio, risorse, collaborazione con le persone, costi). Senza parole del gioco, una frase ciascuna con il perché. Solo quelle nuove rispetto al manuale già scritto." },
     },
     required: ["lezioni", "priorita", "nota"],
   },
@@ -447,6 +448,7 @@ function datiGiornata() {
     `Inventario: ${(mem.inventario ?? []).map((x) => `${String(x[0]).replace("minecraft:", "")} x${x[1]}`).join(", ")}`,
     `Risorse note: ${Object.entries(mem.risorse ?? {}).map(([k, l]) => `${k} x${l.length}`).join(", ") || "nessuna"}`,
     `Obiettivi: ${mem.obiettivi.join(" | ") || "nessuno"}`,
+    `Manuale di esperienza universale già scritto (non ripetere): ${(mem.universali ?? []).map((u) => u.t).join(" | ") || "vuoto"}`,
     `Ultime operazioni:\n${sessione.operazioni.slice(-150).join("\n")}`,
   ].join("\n\n");
 }
@@ -470,6 +472,12 @@ export async function riflessione() {
       const lezioni = (d.lezioni ?? []).filter((l) => typeof l === "string" && l.trim()).map((l) => l.slice(0, 200));
       if (lezioni.length >= 3) { mem.lezioni = lezioni.slice(0, 25); mem.lezioniAuto = []; } // le automatiche sono state fuse
       mem.prioritaGratis = (d.priorita ?? []).filter((n) => NOMI_PIANO.includes(n));
+      // manuale di esperienza: si accumula (niente doppioni), il più vecchio esce oltre 100
+      const note = new Set((mem.universali ??= []).map((u) => u.t.toLowerCase()));
+      for (const t of (d.universali ?? []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().slice(0, 300))) {
+        if (!note.has(t.toLowerCase())) { mem.universali.push({ t, g: oggi }); note.add(t.toLowerCase()); }
+      }
+      if (mem.universali.length > 100) mem.universali.splice(0, mem.universali.length - 100);
       r.stato = "fatta"; r.nota = String(d.nota ?? "").slice(0, 300);
       evento(`Riflessione giornaliera ($${costo.toFixed(3)}): ${r.nota} | priorità: ${mem.prioritaGratis.join(" > ")}`);
       console.log(`[Claude][API] ${CFG.complesso.replace("claude-", "")} $${costo.toFixed(4)} batch | riflessione giornaliera`);

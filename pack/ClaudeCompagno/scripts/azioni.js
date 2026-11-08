@@ -976,23 +976,30 @@ const ESECUTORI = {
       for (const e of bot.dimension.getEntities({ type: "minecraft:item", location: s.ultima, maxDistance: 4 })) e.teleport(bot.location);
     }
     if (s.fatti >= (c.quantita ?? 2)) return finito(true, `cacciati ${s.fatti} ${tipo.replace("minecraft:", "")}`);
+    // per il cibo va bene qualsiasi animale: la mappa ne ricorda di tutti i tipi, le mucche spesso non ci sono più
+    const tipi = c.routine === "cibo" ? [...new Set([tipo, "minecraft:cow", "minecraft:pig", "minecraft:sheep", "minecraft:chicken"])] : [tipo];
     if (!preda?.isValid) {
       // mai animali con nome o addomesticati
-      preda = bot.dimension.getEntities({ type: tipo, location: bot.location, maxDistance: 40 })
+      preda = tipi.flatMap((t) => bot.dimension.getEntities({ type: t, location: bot.location, maxDistance: 40 }))
         .filter((e) => !e.nameTag && !e.getComponent("minecraft:is_tamed"))
         // lascia sempre almeno una coppia per la riproduzione
-        .filter((e) => bot.dimension.getEntities({ type: tipo, location: e.location, maxDistance: 16 }).length > 2)
+        .filter((e) => bot.dimension.getEntities({ type: e.typeId, location: e.location, maxDistance: 16 }).length > 2)
         .sort((a, b) => dist(a.location, bot.location) - dist(b.location, bot.location))[0];
       if (!preda) {
         // nessuno qui: va dove ne aveva visti (mappa delle risorse), poi riprova
         const cat = tipo.replace("minecraft:", "");
         if (!s.verso) {
-          s.verso = risorsaVicina(bot, cat, s.escluse ?? []);
-          if (s.verso) evento(`Vado a cercare ${cat} dove li avevo visti a ${s.verso.x},${s.verso.y},${s.verso.z}`);
+          for (const t of tipi) { s.verso = risorsaVicina(bot, t.replace("minecraft:", ""), s.escluse ?? []); if (s.verso) { s.cat = t.replace("minecraft:", ""); break; } }
+          if (s.verso) evento(`Vado a cercare ${s.cat} dove li avevo visti a ${s.verso.x},${s.verso.y},${s.verso.z}`);
+          else if ((s.giri = (s.giri ?? 0) + 1) <= 2) {
+            // mappa esaurita: perlustra 40 blocchi in una direzione a caso, lontano dalle zone pericolose
+            const a = Math.random() * Math.PI * 2, g = suolo(bot.dimension, Math.floor(bot.location.x + Math.cos(a) * 40), Math.floor(bot.location.z + Math.sin(a) * 40));
+            if (g && !g.liquido && !inPericolo(g)) { s.verso = g; s.cat = cat; evento(`Perlustro verso ${g.x},${g.z} in cerca di animali`); }
+          }
         }
         if (s.verso) {
           const r = vaiVerso(bot, s.verso, 4);
-          if (r === true || r === "bloccato") { dimenticaRisorsa(cat, s.verso); (s.escluse ??= []).push(s.verso); s.verso = null; }
+          if (r === true || r === "bloccato") { dimenticaRisorsa(s.cat ?? cat, s.verso); (s.escluse ??= []).push(s.verso); s.verso = null; }
           return;
         }
         return finito(s.fatti > 0, `trovati solo ${s.fatti} ${cat} qui intorno`);

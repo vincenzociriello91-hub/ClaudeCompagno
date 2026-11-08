@@ -55,6 +55,7 @@ aggiorna_bot() {
   # mv e non cp: avvia.sh è in esecuzione e bash lo legge a pezzi, sovrascriverlo sul posto lo romperebbe
   for f in avvia.sh patch_level.py pannello.py pannello.html; do cp "$tmp/debian/$f" "$BASE/$f.nuovo" && mv -f "$BASE/$f.nuovo" "$BASE/$f"; done
   chmod +x "$BASE/avvia.sh"
+  cp "$tmp/MANUALE_ESPERIENZA.md" "$BASE/MANUALE_ESPERIENZA.md" 2>/dev/null || true
   echo "$nuova" > "$BASE/.versione"
   rm -rf "$tmp"
   log "Bot aggiornato alla versione $nuova (da GitHub)"
@@ -247,6 +248,20 @@ salva_backup() {
   else
     rm -f "$REP/ClaudeMinecraft_memoria.json.tmp"
   fi
+  salva_manuale
+}
+
+# Manuale di esperienza su Drive: la parte scritta a ogni versione (MANUALE_ESPERIENZA.md, da GitHub)
+# più le lezioni universali che il bot ricava ogni giorno con la riflessione di Opus.
+salva_manuale() {
+  [ -f "$BASE/MANUALE_ESPERIENZA.md" ] || return 0
+  {
+    cat "$BASE/MANUALE_ESPERIENZA.md"
+    echo
+    echo "## Lezioni universali ricavate dal gioco (riflessione giornaliera, ultime in fondo)"
+    echo
+    jq -r '(.universali // [])[] | "- \(.t)  _(\(.g))_"' "$REP/ClaudeMinecraft_memoria.json" 2>/dev/null || echo "- (ancora nessuna)"
+  } > "$REP/ClaudeCompagno_esperienza.md.tmp" && mv "$REP/ClaudeCompagno_esperienza.md.tmp" "$REP/ClaudeCompagno_esperienza.md"
 }
 
 # ---------- flusso principale ----------

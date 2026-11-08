@@ -146,6 +146,7 @@ world.afterEvents.worldLoad.subscribe(() => {
   caricaConfig();
   carica();
   ripristinaBackup();
+  mem.baseContatori = mem.ultimiContatori ?? mem.baseContatori ?? {};
   mem.proprietario = CFG.proprietario;
   sessione.espInizio = JSON.parse(JSON.stringify(mem.esperienza)); // per misurare i progressi di questa sessione
   if (CFG.nome.toLowerCase() !== "claude") nomeRe = new RegExp(`\\b${CFG.nome.replace(/[^\w]/g, "")}\\b`, "i");
@@ -207,7 +208,16 @@ world.afterEvents.entityHurt.subscribe(({ hurtEntity, damage, damageSource }) =>
     // soffoca dentro un blocco (è morto così a 110,64,350): esce subito sul terreno libero sopra
     if (damageSource.cause === "suffocation") {
       const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
-      if (g) { bot.teleport({ x: g.x + 0.5, y: g.y, z: g.z + 0.5 }); evento("Salvataggio: stavo soffocando in un blocco"); }
+      soffocamenti = soffocamenti.filter((t) => Date.now() - t < 30000).concat(Date.now());
+      const casa = mem.luoghi.casa;
+      if (soffocamenti.length >= 3 && (ultimoSicuro || casa)) {
+        // il salvataggio sul posto non basta (ieri 9 di fila e poi morto): via di lì e compito cambiato
+        bot.teleport(ultimoSicuro ?? { x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 });
+        segnaPericolo(bot.location, 8, "soffocamento");
+        if (mem.compito) interrompi("soffocavo di continuo in quel punto: cambio strada");
+        soffocamenti = [];
+        evento("Salvataggio: soffocavo di continuo, mi sposto in un punto sicuro");
+      } else if (g) { bot.teleport({ x: g.x + 0.5, y: g.y, z: g.z + 0.5 }); evento("Salvataggio: stavo soffocando in un blocco"); }
     }
   }
 });
@@ -307,9 +317,11 @@ system.beforeEvents.shutdown.subscribe(() => {
 
 // ---------- riassunto, backup, aiuto ----------
 const somma = (o) => Object.values(o ?? {}).reduce((a, b) => a + b, 0);
+// i contatori della sessione ripartono da zero a ogni riavvio: la base porta avanti quelli delle sessioni precedenti
 function contatori() {
-  return { minati: somma(sessione.minati), piazzati: somma(sessione.piazzati), craftati: somma(sessione.craftati), fusi: somma(sessione.fusi),
-    uccisi: somma(sessione.uccisi), morti: sessione.morti.length, ok: sessione.compitiOk, lezioni: mem.lezioni.length + (mem.lezioniAuto?.length ?? 0),
+  const b = mem.baseContatori ?? {}, piu = (k, v) => (b[k] ?? 0) + v;
+  return { minati: piu("minati", somma(sessione.minati)), piazzati: piu("piazzati", somma(sessione.piazzati)), craftati: piu("craftati", somma(sessione.craftati)),
+    fusi: piu("fusi", somma(sessione.fusi)), uccisi: piu("uccisi", somma(sessione.uccisi)), morti: piu("morti", sessione.morti.length), ok: piu("ok", sessione.compitiOk), lezioni: mem.lezioni.length + (mem.lezioniAuto?.length ?? 0),
     usd: mem.spesa.usd, giorno: mem.spesa.giorno, ferro: contaOggetti(bot, (id) => /iron_ingot|raw_iron/.test(id)), diamanti: contaOggetti(bot, "minecraft:diamond") };
 }
 // Quando il proprietario rientra: cosa ha fatto mentre era via, coi numeri veri (gratis, niente IA).
@@ -325,7 +337,7 @@ function riassuntoAssenza(nome) {
   mem.assenza = null;
 }
 // Backup della memoria nel log, a pezzi (il log tronca le righe lunghe): avvia.sh lo ricompone in Odin2_report.
-const DA_SALVARE = ["lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
+const DA_SALVARE = ["universali", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
 function scriviBackup() {
   const dati = { versione: VERSIONE, salvato: adesso() };
   for (const k of DA_SALVARE) if (mem[k] !== undefined) dati[k] = mem[k];
@@ -405,7 +417,11 @@ ogniTick(4, () => {
     const motivo = cade ? "sotto c'era il vuoto (grotta): salvato dalla caduta" : "ero sott'acqua: salvato dall'annegamento";
     evento(`Salvataggio: ${motivo}`);
     segnaPericolo(l, 8, cade ? "grotta (caduta)" : "acqua (annegamento)");
-    if (mem.compito) interrompi(`${motivo} a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}; scava altrove`);
+    const c = mem.compito;
+    if (c && /raccogli|caccia/.test(c.tipo) && (c.stato.cadute = (c.stato.cadute ?? 0) + 1) < 3) {
+      // quella meta porta in una grotta: la si scarta e si cerca la prossima (prima falliva tutto il compito)
+      Object.assign(c.stato, { esplora: null, verso: null, galleria: null, lista: [] });
+    } else if (c) interrompi(`${motivo} a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}; scava altrove`);
     return;
   }
   const inLotta = difendi(bot);
@@ -420,7 +436,7 @@ ogniTick(4, () => {
   }
   eseguiCompito(bot);
 });
-let progettando = false;
+let progettando = false, ultimaRonda = -1e9, soffocamenti = [];
 let ultimoSicuro = null, sottAcqua = 0;
 
 // Cervello: decide quando chiedere a Claude.
@@ -463,7 +479,10 @@ ogniTick(20, () => {
       if (notteFuori()) return;
       const r = pianoGratis();
       if (r === "casa") { evento("Piano gratis: è notte, torno a casa"); assegna({ tipo: "vai", x: mem.luoghi.casa.x, y: mem.luoghi.casa.y, z: mem.luoghi.casa.z }, "piano"); return; }
-      if (r === "ronda") { const c = mem.luoghi.casa, a = Math.random() * Math.PI * 2; assegna({ tipo: "vai", x: c.x + Math.round(Math.cos(a) * 6), y: c.y, z: c.z + Math.round(Math.sin(a) * 6) }, "piano"); return; }
+      if (r === "ronda") {
+        if (system.currentTick - ultimaRonda < 2400) return; // un giro di ronda ogni 2 minuti, non di continuo
+        ultimaRonda = system.currentTick;
+        const c = mem.luoghi.casa, a = Math.random() * Math.PI * 2; assegna({ tipo: "vai", x: c.x + Math.round(Math.cos(a) * 6), y: c.y, z: c.z + Math.round(Math.sin(a) * 6) }, "piano"); return; }
       if (r?.startsWith("miniera:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: "miniera_rami", minerale: r.split(":")[1], routine: r }, "piano"); return; }
       if (r?.startsWith("compito:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: r.slice(8), routine: r }, "piano"); return; }
       if (r?.startsWith("crafta:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: "crafta", oggetto: r.slice(7), routine: r }, "piano"); return; }
@@ -592,8 +611,10 @@ ogniTick(2400, () => {
   if (!pronto) return;
   scriviBlocco("MEMORIA", { lezioni: mem.lezioni, lezioniAuto: mem.lezioniAuto ?? [], luoghi: mem.luoghi, risorse: mem.risorse ?? {}, pericoli: mem.pericoli ?? [],
     casse: mem.casse ?? {}, esperienza: mem.esperienza, statRoutine: mem.statRoutine ?? {}, priorita: mem.prioritaGratis ?? [], riflessione: mem.riflessione ?? null,
-    schemi: Object.keys(mem.schemi ?? {}), obiettivi: mem.obiettivi, voti: mem.voti ?? null, diagnosi: sessione.diagnosi ?? [] });
+    schemi: Object.keys(mem.schemi ?? {}), obiettivi: mem.obiettivi, voti: mem.voti ?? null, diagnosi: sessione.diagnosi ?? [], universali: (mem.universali ?? []).map((u) => u.t) });
 });
+// contatori cumulativi salvati ogni minuto: al prossimo avvio diventano la base
+ogniTick(1200, () => { if (pronto && vivo()) mem.ultimiContatori = contatori(); });
 // Backup della memoria ogni 30 minuti (avvia.sh lo salva in Odin2_report, quindi anche su Drive)
 ogniTick(36000, () => { if (pronto) scriviBackup(); });
 ogniTick(18000, () => stampaRapporto("periodico", statoAttuale()));

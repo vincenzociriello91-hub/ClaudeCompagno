@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 
-export const VERSIONE = "2.7.6";
+export const VERSIONE = "2.7.7";
 
 // Stato persistente (sopravvive ai riavvii del server)
 export const mem = {
@@ -181,6 +181,7 @@ export function rapporto(motivo, stato) {
   if (!sessione.diagnosi) r.push("non ancora eseguita");
   for (const [nome, ok, det] of sessione.diagnosi ?? []) r.push(`${ok ? "OK" : "KO"}  ${nome}${det ? " — " + det : ""}`);
   r.push("");
+  r.push(`Manuale di esperienza universale: ${(mem.universali ?? []).length} lezioni dal gioco${(mem.universali ?? []).length ? " | ultime: " + mem.universali.slice(-3).map((u) => u.t).join(" | ") : ""}`);
   r.push("== APPRENDIMENTO (missione principale)");
   const perc = (ok, ko) => (ok + ko ? `${Math.round((100 * ok) / (ok + ko))}%` : "-");
   for (const [t, e] of Object.entries(mem.esperienza)) {

@@ -76,6 +76,7 @@
   </section>
   <section id="memoria">
     <h2>Missione principale</h2><div class="box">1. Sopravvivere · 2. Trovare una soluzione · 3. Adattarsi · 4. Evolversi · 5. Costruire · 6. Esplorare · e sempre: non fermarsi</div>
+    <h2>Manuale di esperienza universale</h2><div class="box"><ol id="universali"></ol></div>
     <h2>Lezioni imparate</h2><div class="box"><ol id="lezioni"></ol></div>
     <h2>Lezioni scritte dal codice</h2><div class="box"><ul id="auto"></ul></div>
     <h2>Riflessione giornaliera e priorità</h2><div class="box" id="rifl"></div>
@@ -144,6 +145,7 @@ function mostraStato() {
 function mostraMemoria() {
   const m = dati?.memoria; if (!m) return;
   $("lezioni").innerHTML = (m.lezioni ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  $("universali").innerHTML = (m.universali ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">si riempie con la riflessione giornaliera</li>';
   $("auto").innerHTML = (m.lezioniAuto ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
   const r = m.riflessione;
   $("rifl").innerHTML = (r ? `<p><b>${esc(r.giorno)}</b> — ${esc(r.stato)}${r.nota ? ": " + esc(r.nota) : ""}</p>` : '<p class="vuoto">mai fatta</p>') + `<p>Priorità del piano gratis: ${esc((m.priorita ?? []).join(" › ") || "non ancora decise")}</p>`;
