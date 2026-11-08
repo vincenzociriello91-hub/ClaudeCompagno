@@ -2,7 +2,7 @@ import { world, system } from "@minecraft/server";
 import { http, HttpRequest, HttpHeader, HttpRequestMethod } from "@minecraft/server-net";
 import { secrets, variables } from "@minecraft/server-admin";
 import { mem, sessione, evento, errore, adesso, notifica } from "./memoria.js";
-import { RICETTE, FUSIONI } from "./ricette.js";
+import { RICETTE, FUSIONI, ESSENZIALI } from "./ricette.js";
 import { MANUALE } from "./manuale.js";
 import { SCHEMI_BASE, ROUTINE, blocchiSchema } from "./schemi.js";
 import { assegna, avvisa, dist, giocatoriVeri, riassuntoInventario, descriviCompito, cercaBlocchi, contaOggetti } from "./azioni.js";
@@ -217,7 +217,7 @@ COMPITI (campo compito.tipo e parametri):
 - costruisci {x,y,z, schema, lato_x, lato_z, altezza, materiale, materiale2} — USA PRIMA GLI SCHEMI: sono gratis e immediati. Schemi base: ${Object.entries(SCHEMI_BASE).map(([n, d]) => `${n} (${d})`).join("; ")}. Gli schemi salvati sono elencati nel messaggio.
 - costruisci {x,y,z, descrizione, nome_schema} — solo per costruzioni che nessuno schema copre: un architetto le disegna (costa di più); se riescono vengono salvate col nome_schema e poi le riusi gratis con schema. Se mancano materiali, la costruzione resta sospesa.
 - riprendi {indice?} — riprende una costruzione sospesa.
-- crafta {oggetto, quantita} — se manca un ingrediente (lingotti, pietra, carne...) lo procura da solo prima di craftare. Ricette disponibili: planks (assi dai tronchi), ${Object.keys(RICETTE).map((k) => k.replace("minecraft:", "")).join(", ")}. Banco e fornace li piazza da solo se li ha in inventario.
+- crafta {oggetto, quantita} — se manca un ingrediente (lingotti, pietra, carne...) lo procura da solo prima di craftare. Ricettario completo (${Object.keys(RICETTE).length} ricette, nomi Minecraft standard): planks, attrezzi e armature di ogni materiale (legno, pietra, rame, ferro, oro, diamante, cuoio, netherite), ${ESSENZIALI.join(", ")}; e per ogni legno scale, lastre, porte, botole, staccionate, cancelli, cartelli, barche; scale/lastre/muri di ogni pietra; tinture, lana, letti, tappeti, vetri, terracotta, cemento e candele di ogni colore; blocchi di minerale e ritorno; redstone e binari. Banco e fornace li piazza da solo se li ha in inventario.
 - fondi {oggetto, quantita} — fornace: ${Object.entries(FUSIONI).map(([a, b]) => `${a.replace("minecraft:", "")}→${b.replace("minecraft:", "")}`).join(", ")}. Serve combustibile (carbone, tronchi o assi).
 - deposita {x?,y?,z?, tieni?} — svuota l'inventario in una cassa (tiene attrezzi migliori, armatura, cibo e torce).
 - prendi {x?,y?,z?, oggetto, quantita} — prende da una cassa.

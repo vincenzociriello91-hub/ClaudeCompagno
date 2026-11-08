@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.7 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.8 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -71,6 +71,12 @@ Aggiornato alla versione 2.8.7 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
   scarta quella meta e scegli la prossima: il compito continua.
 - **Tempo massimo per ogni compito.** Oltre 10 minuti (30 per i lavori lunghi) senza finire si abbandona e si
   cambia strada: così nessun compito può bloccare l'agente per sempre.
+- **Risali la catena delle cause fino a ciò che puoi procurarti.** "Manca la fornace" non è il problema vero se
+  hai la pietra: manca il banco, e al banco manca il legno. Il compito deve rinviare se stesso e andare a prendere
+  la cosa più a monte, invece di fallire ripetendo il sintomo.
+  _Fatto: 808 fusioni al 2% di successo con 81 ciottoli in tasca, perché senza banco la fornace non si poteva fare._
+- **Prima di cercare intorno a un posto, vai in quel posto.** I dati di una zona lontana possono non essere
+  caricati: cercare uno spazio libero vicino a casa da 300 blocchi di distanza dava sempre "nessuno spazio".
 - **Muoversi a tappe.** Verso mete lontane si va a passi brevi (16 unità), verificando ogni tappa. Puntare dritto
   alla meta lontana falliva sempre ("percorso bloccato").
   _Fatto: 166 esplorazioni consecutive "niente di speciale" senza mai spostarsi davvero._
@@ -200,6 +206,8 @@ Aggiornato alla versione 2.8.7 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
 | 6 morti in 20 minuti di notte | lungo viaggio verso casa al buio senza armatura | di notte, senza protezione, rifugio sul posto |
 | Riassunto "0 blocchi" | contatori azzerati dai riavvii | contatori cumulativi salvati |
 | Caccia all'1% | posti ricordati ormai vuoti, un solo tipo di preda | dimenticare i posti vuoti, allargare l'obiettivo, esplorare |
+| Fusioni al 2% con 81 ciottoli | la fornace richiede il banco, il banco il legno: si fermava al primo anello | rinviare al prerequisito più a monte |
+| Bosco, casetta e deposito "nessuno spiazzo" | ricerca fatta da lontano in zone non caricate | andare sul posto prima di cercare |
 
 ---
 
@@ -207,7 +215,8 @@ Aggiornato alla versione 2.8.7 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
 
 Queste lezioni valgono solo nel gioco e restano qui per completezza:
 - ferro a y 16, diamanti a y -58 con piccone di ferro; miniera a rami alla quota giusta;
-- fornace: servono 8 cobblestone (diorite, granito e andesite non contano); torce: carbone o carbonella più bastoni;
+- fornace: servono 8 cobblestone (diorite, granito e andesite non contano) e un banco da lavoro; torce: carbone o carbonella più bastoni;
+- ricettario completo (circa 680 ricette e 68 fusioni): tutte le famiglie di legno, pietra e colore, redstone, binari, cibi composti, netherite; gli id che la versione del gioco non conosce vengono scartati all'avvio;
 - i drowned stanno in acqua e possono uscire sulla riva anche di giorno; di notte zombie, scheletri e creeper;
 - nelle grotte si cade: pavimento sulle cavità, acqua e lava tappate prima di scavare;
 - la casa del bot va vicino a quella del giocatore ("casa qui"): fattoria, deposito e rifugio si fanno lì.

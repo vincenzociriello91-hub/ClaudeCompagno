@@ -662,6 +662,13 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
   }
   return null;
 }
+// Lontano da casa i chunk non sono caricati e trovaSpiazzo dava sempre null ("nessuno spiazzo libero"): prima ci va.
+function arrivaACasa(bot, casa) {
+  if (dist(bot.location, casa) <= 40) return true;
+  const r = vaiVerso(bot, { x: casa.x + 0.5, y: casa.y, z: casa.z + 0.5 }, 3);
+  if (r === "bloccato") { bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 }); nav.meta = null; nav.bloccato = 0; }
+  return false;
+}
 const luoghiBot = () => ["casetta", "bosco", "fattoria", "deposito", "fornace"].map((n) => mem.luoghi[n]);
 
 const ESECUTORI = {
@@ -889,6 +896,12 @@ const ESECUTORI = {
     if (m && rinvia(c, m[1].startsWith("#") ? m[1] : ns(m[1]), Number(m[2]))) return;
     // senza banco e senza assi: un tronco basta (4 assi = banco). Prima l'armatura di rame si fermava qui con 24 lingotti pronti
     if (!ok && msg === "serve un banco da lavoro" && rinvia(c, "#tronco", 1)) return;
+    // "crafta iron_ingot" con il ferro grezzo in tasca: si fa in fornace, non al banco
+    const grezzo = !ok && Object.keys(FUSIONI).find((k) => FUSIONI[k] === ns(c.oggetto) && !k.startsWith("#") && contaOggetti(bot, k) > 0);
+    if (grezzo) {
+      mem.coda.unshift({ tipo: "fondi", oggetto: grezzo.replace("minecraft:", ""), quantita: c.quantita ?? 1, ...(c.routine ? { routine: c.routine } : {}) });
+      return finito(true, `${ns(c.oggetto).replace("minecraft:", "")} si fa in fornace: fondo ${grezzo.replace("minecraft:", "")}`);
+    }
     finito(ok, msg);
   },
 
@@ -910,7 +923,13 @@ const ESECUTORI = {
       if (f && !fissa && dist(f, bot.location) < 16) delete mem.luoghi.fornace; // la fornace fissa non c'è più
       s.fornace = fissa ? { x: f.x, y: f.y, z: f.z } : assicuraBlocco(bot, "minecraft:furnace");
       // lontano da casa: se ha 8 pietre se ne fa una al volo
-      if (!s.fornace && contaOggetti(bot, "#pietra") >= 8 && fabbrica(bot, "minecraft:furnace")[0]) s.fornace = assicuraBlocco(bot, "minecraft:furnace");
+      if (!s.fornace && contaOggetti(bot, "#pietra") >= 8) {
+        const [ok, msg] = fabbrica(bot, "minecraft:furnace");
+        if (ok) s.fornace = assicuraBlocco(bot, "minecraft:furnace");
+        // 81 ciottoli e nessun banco: prima falliva qui per sempre ("serve una fornace"); ora va a prendere un tronco
+        else if (msg === "serve un banco da lavoro" && rinvia(c, "#tronco", 1)) return;
+      }
+      if (!s.fornace && contaOggetti(bot, "#pietra") < 8 && rinvia(c, "#pietra", 8 - contaOggetti(bot, "#pietra"))) return;
       if (!s.fornace) return finito(false, "serve una fornace (o 8 pietre per farne una)");
       s.fatti = 0; s.carica = 0; s.t = tick();
     }
@@ -1186,7 +1205,11 @@ const ESECUTORI = {
     const r = vaiVerso(bot, { x: casa.x + 0.5, y: casa.y, z: casa.z + 2.5 }, 3);
     if (r === "bloccato") { bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 2.5 }); nav.meta = null; nav.bloccato = 0; return; }
     if (r !== true) return;
-    if (contaOggetti(bot, "minecraft:furnace") < 1 && contaOggetti(bot, "#pietra") >= 8) fabbrica(bot, "minecraft:furnace");
+    if (contaOggetti(bot, "minecraft:furnace") < 1) {
+      if (contaOggetti(bot, "#pietra") < 8 && rinvia(c, "#pietra", 8 - contaOggetti(bot, "#pietra"))) return;
+      const [ok, msg] = fabbrica(bot, "minecraft:furnace");
+      if (!ok && msg === "serve un banco da lavoro" && rinvia(c, "#tronco", 1)) return;
+    }
     const p = assicuraBlocco(bot, "minecraft:furnace");
     if (!p) return finito(false, "non ho una fornace né 8 pietre per farla");
     mem.luoghi.fornace = { x: p.x, y: p.y, z: p.z, nota: "fornace fissa del bot" };
@@ -1201,6 +1224,7 @@ const ESECUTORI = {
     if (!s.punti) {
       let b = mem.luoghi.bosco;
       if (!b) {
+        if (!arrivaACasa(bot, casa)) return;
         const sp = trovaSpiazzo(bot.dimension, casa, 9, luoghiBot());
         if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il bosco");
         b = mem.luoghi.bosco = { x: sp.x, y: sp.y, z: sp.z, nota: "bosco del bot (alberelli ogni 3 blocchi)" };
@@ -1233,6 +1257,7 @@ const ESECUTORI = {
   casetta(bot, c) {
     const casa = mem.luoghi.casa;
     if (!casa) return finito(false, "serve prima una casa");
+    if (!arrivaACasa(bot, casa)) return;
     const sp = trovaSpiazzo(bot.dimension, casa, 5, luoghiBot());
     if (!sp) return finito(false, "nessuno spiazzo libero 5x5 vicino a casa");
     const pietra = contaOggetti(bot, "minecraft:cobblestone");
@@ -1250,6 +1275,7 @@ const ESECUTORI = {
     const casa = mem.luoghi.casa;
     // deposito lontano dalla casa (la casa si è spostata): se ne fa uno nuovo in uno spiazzo libero accanto, mai dentro casa tua
     if (casa && (!base || dist(base, casa) > 48)) {
+      if (!arrivaACasa(bot, casa)) return;
       const sp = trovaSpiazzo(bot.dimension, casa, 7, luoghiBot().filter((p) => p !== base));
       if (!sp) return finito(false, "nessuno spiazzo libero vicino a casa per il deposito");
       base = mem.luoghi.deposito = { x: sp.x, y: sp.y, z: sp.z, nota: "deposito del bot (casse per categoria)" };
@@ -1371,8 +1397,11 @@ export function fabbrica(bot, oggetto, quantita = 1, livello = 0) {
     conta(sessione.craftati, "planks", fatti);
     return [fatti > 0, fatti ? `fatte ${fatti} assi` : "servono tronchi"];
   }
-  const r = RICETTE[id];
-  if (!r) return [false, `non conosco la ricetta di ${id}`];
+  const r0 = RICETTE[id];
+  if (!r0) return [false, `non conosco la ricetta di ${id}`];
+  // alternative (es. tintura rossa da papavero, tulipano o barbabietola): la prima che ha tutti gli ingredienti
+  const varianti = [r0, ...(r0.alt ?? []).map((a) => ({ ...r0, ing: a.ing, out: a.out ?? r0.out }))];
+  const r = varianti.find((v) => Object.entries(v.ing).every(([ing, n]) => contaOggetti(bot, ing) >= n)) ?? r0;
   if (r.banco && !assicuraBlocco(bot, "minecraft:crafting_table")) {
     // un banco nuovo solo se non ne ha già uno in tasca (stanotte ne aveva 12: ne craftava uno a ogni tentativo fallito)
     const giaInTasca = contaOggetti(bot, "minecraft:crafting_table") > 0;
@@ -1383,6 +1412,7 @@ export function fabbrica(bot, oggetto, quantita = 1, livello = 0) {
     for (const [ing, n] of Object.entries(r.ing)) {
       const manca = n - contaOggetti(bot, ing);
       if (manca > 0 && livello < 2 && (ing === "#assi" || ing === "minecraft:stick")) fabbrica(bot, ing === "#assi" ? "minecraft:planks" : ing, manca, livello + 1);
+      else if (manca > 0 && /_planks$/.test(ing)) assiDelTipo(bot, ing, manca); // scale di abete: servono assi di abete, dai suoi tronchi
     }
     const manca = Object.entries(r.ing).find(([ing, n]) => contaOggetti(bot, ing) < n);
     if (manca) { if (!fatti) return [false, `manca ${manca[0]} (ne servono ${manca[1]})`]; break; }
@@ -1392,6 +1422,30 @@ export function fabbrica(bot, oggetto, quantita = 1, livello = 0) {
   conta(sessione.craftati, id, fatti);
   indossaArmatura(bot);
   return [true, `craftati ${fatti} ${id.replace("minecraft:", "")}`];
+}
+
+// assi di un legno preciso dai tronchi dello stesso legno (fabbrica("planks") usa il primo tronco che trova)
+function assiDelTipo(bot, assi, quante) {
+  const legno = assi.replace("minecraft:", "").replace(/_planks$/, "");
+  for (const t of [`${legno}_log`, `${legno}_wood`, `stripped_${legno}_log`, `${legno}_stem`, `${legno}_hyphae`]) {
+    while (quante > 0 && togli(bot, `minecraft:${t}`, 1)[0]) { aggiungi(bot, assi, 4); quante -= 4; conta(sessione.craftati, "planks", 4); }
+  }
+}
+
+// Scarta le ricette con id che questa versione del gioco non conosce (il ricettario è grande: un nome sbagliato
+// non deve mai far fallire il crafting con un'eccezione). Va chiamata dopo il caricamento del mondo.
+export function verificaRicette() {
+  const esiste = (id) => { if (id.startsWith("#")) return true; try { new ItemStack(id, 1); return true; } catch { return false; } };
+  let tolte = 0;
+  for (const [id, r] of Object.entries(RICETTE)) {
+    if (r.alt) r.alt = r.alt.filter((a) => Object.keys(a.ing).every(esiste));
+    if (!esiste(id) || !Object.keys(r.ing).every(esiste)) {
+      if (r.alt?.length) { const [a, ...resto] = r.alt; RICETTE[id] = { ...r, ing: a.ing, out: a.out ?? r.out, alt: resto }; if (esiste(id)) continue; }
+      delete RICETTE[id]; tolte++;
+    }
+  }
+  for (const [a, b] of Object.entries(FUSIONI)) if (!esiste(a) || !esiste(b)) { delete FUSIONI[a]; tolte++; }
+  return { ricette: Object.keys(RICETTE).length, fusioni: Object.keys(FUSIONI).length, tolte };
 }
 
 // Riflesso gratuito: spada, piccone o ascia mancanti (o rotti) li rifà col materiale migliore che ha.

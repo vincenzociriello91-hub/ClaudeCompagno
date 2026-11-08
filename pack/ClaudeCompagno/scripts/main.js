@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, segnaPericolo, prestazioni, inv, piazza,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, segnaPericolo, prestazioni, inv, piazza, verificaRicette,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -86,6 +86,7 @@ function generaBot(vicino) {
     evento(`${CFG.nome} entra nel mondo a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}`);
     // autodiagnosi gratis una volta per sessione, 10 secondi dopo l'ingresso (il risultato va nel rapporto)
     if (!sessione.diagnosi) system.runTimeout(() => { if (vivo()) { try { autodiagnosi(bot); } catch (e) { errore("autodiagnosi", e); } } }, 200);
+    if (!sessione.ricettario) { try { const v = verificaRicette(); sessione.ricettario = v; evento(`Ricettario: ${v.ricette} ricette e ${v.fusioni} fusioni${v.tolte ? ` (${v.tolte} non esistono in questa versione, scartate)` : ""}`); } catch (e) { errore("ricettario", e); } }
   } catch (e) { errore("generazione del bot", e); }
 }
 
