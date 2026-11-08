@@ -1,0 +1,140 @@
+CLAUDE COMPAGNO PER MINECRAFT BEDROCK
+=====================================
+Claude entra nel tuo mondo come giocatore: difende te e gli amici, scava, costruisce,
+crafta, caccia e ragiona da solo. Il server gira sulla Odin, tu giochi dal Pixel.
+
+COSA SERVE
+- Termux sulla Odin (quello di F-Droid o GitHub, non quello del Play Store).
+- Una chiave API di Claude: console.anthropic.com > API Keys (serve credito prepagato).
+- Il tuo gamertag esatto di Minecraft.
+
+INSTALLAZIONE (una volta sola, 10-20 minuti)
+1. Scarica ClaudeMinecraft.zip sulla Odin: finisce in Download.
+2. Apri Termux e incolla:
+   pkg install -y unzip && unzip -o /sdcard/Download/ClaudeMinecraft.zip -d ~ && bash ~/ClaudeMinecraft/installa.sh
+3. Rispondi a 3 domande: gamertag, chiave API (non si vede mentre la incolli), budget al giorno.
+Il log dell'installazione è in Download/ClaudeMinecraft_installazione.txt.
+
+OGNI VOLTA CHE GIOCHI
+1. Odin in carica, Termux aperto:  mc-avvia
+2. Sul Pixel, stessa rete Wi-Fi: Minecraft > Gioca > Server > Aggiungi server
+   Indirizzo = IP della Odin (Impostazioni > Wi-Fi > la tua rete > Indirizzo IP), porta 19132.
+3. Per spegnere: apri una seconda sessione di Termux (scorri dal bordo sinistro > New session) e scrivi  mc-ferma
+Consiglio: Impostazioni Android > App > Termux > Batteria > Senza restrizioni, così Android non lo chiude.
+
+AMICI FUORI CASA
+La prima volta sola, in una seconda sessione di Termux:  mc-tunnel
+Compare un link: aprilo, crea l'account gratuito playit.gg e collega il tunnel, poi chiudi con Ctrl+C.
+Dalla 2.7.0 il tunnel parte da solo a ogni mc-avvia: non serve più rilanciarlo.
+Ti dà un indirizzo pubblico da passare agli amici.
+
+AGGIORNAMENTI AUTOMATICI (dalla 2.7.1, gratis)
+Non serve più scaricare lo zip: le versioni nuove escono su github.com/vincenzociriello91-hub/ClaudeCompagno
+e la Odin le installa da sola. Controlla a ogni mc-avvia e poi ogni 10 minuti; se ne trova una nuova la scarica,
+la verifica (se il download è rotto la scarta e il bot vecchio continua) e riavvia il server in circa un minuto.
+Ti arriva una notifica ntfy. Memoria, impostazioni e chiave API non vengono toccate.
+Per spegnerlo:  proot-distro login debian -- touch /root/claudemc/impostazioni/no_aggiornamenti
+
+VEDERE COSA FA IL BOT DAL TELEFONO (dalla 2.7.0, gratis)
+Pannello in diretta: col telefono sulla stessa Wi-Fi apri nel browser  http://IP-DELLA-ODIN:8080
+(l'indirizzo esatto è scritto in cima a ogni rapporto). Si aggiorna ogni 2 secondi e mostra:
+- Diretta: ogni azione, pensiero, lezione, pericolo, chat, chiamata all'IA, errore (con filtri);
+- Stato: vita, fame, armatura, posizione, compito e piano, inventario completo, giocatori, autodiagnosi;
+- Mappa vista dall'alto: bot, giocatori, casa e luoghi, risorse trovate, zone pericolose, percorso fatto;
+- Memoria: lezioni, riflessione di Opus, esperienza e statistiche delle routine, schemi e obiettivi;
+- Costi: spesa di oggi e costo di ogni singola chiamata all'IA;
+- Rapporti: tutti i rapporti salvati in Odin2_report, da leggere uno per uno.
+Il pannello legge soltanto: non comanda il bot e non tocca il mondo.
+Notifiche sul telefono: installa l'app gratuita "ntfy" (Play Store), tocca + e iscriviti all'argomento
+scritto in cima al rapporto (claude-mc-...). Arrivano: avvio/arresto del server, crash, morte del bot,
+diamanti trovati, budget finito, riflessione fatta, autodiagnosi fallita, script ricaricato.
+L'argomento è segreto come una password: chi lo conosce legge le notifiche, quindi non condividerlo.
+
+PARLARE CON CLAUDE
+Il proprietario scrive e basta, senza nome: ogni suo messaggio è per Claude.
+Gli amici devono scrivere "Claude" nel messaggio.
+Comandi immediati:  Claude fermo | Claude seguimi | Claude vieni | Claude difendimi
+                    Claude autonomo | Claude stato | Claude rapporto
+Casa (gratis):      casa qui                       -> la casa del bot diventa il punto dove sei (solo il proprietario)
+Voti (gratis):      bravo / ben fatto / perfetto   -> si segna che quello che ha appena fatto ti piace
+                    sbagliato [perché] / non così   -> smette subito, corregge e scrive la lezione
+Tutto il resto lo capisce ragionando, per esempio:
+  "Claude costruiscimi una casetta di legno 7x7 qui accanto"
+  "Claude scava una miniera a scala verso nord e cerca diamanti"
+  "Claude portami 20 assi e 2 picconi di pietra"
+  "Claude fai un tunnel verso est lungo 50 blocchi"
+I tuoi ordini valgono più di quelli degli amici. I blocchi costruiti da voi non li rompe mai,
+a meno che non glielo chiediate esplicitamente.
+
+COMANDI VOCALI
+Minecraft per telefono non manda la voce al server, quindi si usa la dettatura:
+apri la chat di gioco, tocca il microfono della tastiera (Gboard) e parla, es. "Claude difendimi".
+Claude capisce anche le storpiature della dettatura ("cloud", "clod", "claud").
+Consiglio: Gboard > Impostazioni > Digitazione vocale > attiva "Digitazione vocale più veloce".
+
+IMPARA DAGLI ERRORI
+Quando un compito fallisce, quando muore o quando lo correggi in chat ("sbagliato, la prossima volta
+usa la pietra"), Claude scrive una lezione e la rispetta da lì in poi, anche dopo i riavvii.
+Tiene anche il conto di riusciti/falliti per ogni tipo di compito e cambia strategia se qualcosa
+fallisce spesso. Lezioni ed esperienza sono nel rapporto di fine sessione.
+Dalla 2.4.0 impara anche senza spendere:
+- mappa delle risorse: si segna dove ha visto alberi, minerali e animali e ci torna quando servono;
+- se manca un ingrediente lo procura da solo prima (es. niente lingotti -> fonde; niente minerale -> va a scavare);
+- miniera a rami alla quota giusta (ferro y16, diamanti y-58), con pavimento sulle grotte e acqua/lava tappate;
+- statistiche per routine e per zona: il pilota automatico sceglie quello che rende di più;
+- una volta al giorno Opus (a metà prezzo, Batch API) rilegge la giornata e riscrive lezioni e priorità.
+Dalla 2.5.0, sempre gratis:
+- modalità zero: senza giocatori online non chiama mai l'IA, le lezioni sugli errori le scrive il codice;
+- fattoria 5x5 accanto a casa (grano, carote, patate, pane) e riproduzione degli animali; lascia sempre una coppia;
+- ripianta gli alberi che taglia;
+- dopo una morte torna a riprendersi gli oggetti (entro 5 minuti);
+- butta la roba inutile e i doppioni (tiene l'attrezzo migliore + uno di scorta);
+- torce intorno alla base e muro di pietra 25x25 attorno alla casa;
+- copia le vostre costruzioni: dopo 5 minuti di pausa le salva da solo, oppure scrivete
+  "salva questa costruzione come torre"; poi "rifai torre" e la ricostruisce;
+- in combattimento attacca prima creeper e scheletri, si ritira a vita bassa per mangiare, usa lo scudo.
+Dalla 2.6.0, sempre gratis:
+- di notte (se ha una casa) torna a casa e fa solo lavori sicuri lì vicino (fattoria, deposito, torce), poi la ronda;
+- zone pericolose: dove è morto o è stato salvato non scava, non esplora e non raccoglie;
+- quando rientri ti dice in chat cosa ha fatto mentre eri via, coi numeri veri;
+- se non hai piccone o torce te li porta; se scavi al buio ti mette una torcia accanto;
+- deposito organizzato: 5 casse (minerali, cibo, legna, blocchi, varie) e smistamento automatico;
+- server: battito ogni 2 minuti, e se lo script si blocca lo ricarica da solo; misura i TPS e alleggerisce il lavoro se il server rallenta.
+
+AUTODIAGNOSI (dalla 2.6.1)
+Ogni volta che entra nel mondo il bot prova da solo le sue abilità (inventario, crafting, piazzare/scavare,
+terreno, luce, scudo, animali, navigazione, giocatori) senza consumare niente e senza IA: il risultato
+OK/KO è nel rapporto, sezione AUTODIAGNOSI.
+
+BACKUP DELLA MEMORIA DEL BOT
+Ogni 30 minuti e alla chiusura il bot salva lezioni, esperienza, mappa, schemi e zone pericolose in
+Download/Odin2_report/ClaudeMinecraft_memoria.json (quindi anche su Drive).
+Per ripristinarla (mondo nuovo o rovinato): copia quel file nella stessa cartella con il nome
+ClaudeMinecraft_ripristina.json e lancia mc-avvia. Il file viene usato una volta e poi rinominato.
+
+RAPPORTI (Download/Odin2_report, si sincronizzano su Drive)
+- ClaudeMinecraft_in_corso.txt      aggiornato ogni minuto mentre il server gira
+- ClaudeMinecraft_<data>.txt        rapporto completo a fine sessione
+- ClaudeMinecraft_crash_<data>.txt  se il server si chiude per errore (riparte da solo, max 5 volte)
+
+AGGIORNAMENTI
+- Minecraft si aggiorna dal Play Store: mc-avvia scarica da solo il server della stessa versione
+  e fa un backup dei mondi prima di aggiornare (ultimi 5 in /root/claudemc/backup dentro Debian).
+- Nuova versione del pacchetto: scompatta il nuovo zip come al punto 2 dell'installazione,
+  ma lancia  bash ~/ClaudeMinecraft/installa.sh --aggiorna
+- Cambiare chiave API:  mc-chiave
+
+COSTI
+Usa tre modelli: Sonnet 5.5 per i tuoi messaggi, per le morti e per pianificare (al massimo ogni
+15 minuti), Haiku 5.5 per avvisi ed errori, Opus 5.5 solo per progettare costruzioni nuove e per la
+riflessione giornaliera (Batch, metà prezzo). Il resto lo decide il codice gratis. Senza giocatori
+online (modalità zero) non chiama l'IA: solo la riflessione, pochi centesimi al giorno.
+Pannello, notifiche ntfy e tunnel playit sono gratuiti e non fanno chiamate all'IA.
+Superato il budget del giorno (budget_giornaliero_usd), Claude smette di
+ragionare ma continua a lavorare coi riflessi gratis, seguirti e difenderti fino al giorno dopo.
+
+LIMITI DI QUESTA VERSIONE
+- Usa una funzione sperimentale di Minecraft: un aggiornamento del gioco può romperla finché non
+  si aggiorna il pacchetto (il rapporto lo dice).
+- Crafting e fornace sono simulati (il bot non può aprire l'interfaccia), con le ricette del gioco.
+- Non dorme nei letti, non usa portali né redstone; nelle costruzioni evita porte e scale orientate.

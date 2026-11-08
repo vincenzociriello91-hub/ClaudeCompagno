@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Compagno</title>
+<style>
+  :root { --sfondo:#f6f5f2; --carta:#fff; --testo:#1d1d1b; --tenue:#6b6a66; --linea:#e3e1dc; --acc:#c45a2c;
+          --ok:#2f7d4f; --ko:#b3261e; --pensiero:#5a4fcf; --api:#8a6d00; --chat:#1f6fb2; }
+  @media (prefers-color-scheme: dark) { :root { --sfondo:#161615; --carta:#21201e; --testo:#ecebe7; --tenue:#a19f99;
+          --linea:#34332f; --acc:#e07a4b; --ok:#5cb37f; --ko:#ef6b62; --pensiero:#9d93ff; --api:#d9b440; --chat:#6fb0ea; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--sfondo); color:var(--testo); }
+  header { position:sticky; top:0; z-index:2; background:var(--carta); border-bottom:1px solid var(--linea); padding:10px 16px 0; }
+  h1 { margin:0; font-size:17px; display:flex; gap:8px; align-items:center; }
+  .punto { width:10px; height:10px; border-radius:50%; background:var(--tenue); display:inline-block; }
+  .vivo { background:var(--ok); } .morto { background:var(--ko); }
+  .sotto { color:var(--tenue); font-size:13px; margin:2px 0 8px; }
+  nav { display:flex; gap:4px; overflow-x:auto; }
+  nav button { border:0; background:none; color:var(--tenue); font:inherit; padding:8px 10px; border-bottom:2px solid transparent; white-space:nowrap; }
+  nav button.on { color:var(--testo); border-color:var(--acc); font-weight:600; }
+  main { padding:12px 16px 40px; max-width:960px; margin:0 auto; }
+  section { display:none; } section.on { display:block; }
+  .griglia { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-bottom:12px; }
+  .box { background:var(--carta); border:1px solid var(--linea); border-radius:10px; padding:10px 12px; }
+  .box b { display:block; font-size:12px; color:var(--tenue); font-weight:500; }
+  .box span { font-size:17px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .filtri { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .filtri button { border:1px solid var(--linea); background:var(--carta); color:var(--testo); border-radius:16px; padding:4px 10px; font:inherit; font-size:13px; }
+  .filtri button.on { border-color:var(--acc); color:var(--acc); }
+  .ev { display:grid; grid-template-columns:62px 1fr; gap:8px; padding:6px 0; border-bottom:1px solid var(--linea); font-size:14px; }
+  .ev time { color:var(--tenue); font-variant-numeric:tabular-nums; font-size:12px; padding-top:2px; }
+  .ev.pensiero div { color:var(--pensiero); font-style:italic; } .ev.api div { color:var(--api); }
+  .ev.chat div { color:var(--chat); } .ev.errore div, .ev.pericolo div { color:var(--ko); } .ev.lezione div { color:var(--ok); }
+  .ev.notifica div { font-weight:600; }
+  ul { margin:0; padding-left:18px; } li { margin:3px 0; }
+  .lista { columns:2 160px; font-size:14px; }
+  canvas { width:100%; height:auto; background:var(--carta); border:1px solid var(--linea); border-radius:10px; touch-action:none; }
+  .leg { display:flex; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--tenue); margin:6px 0; }
+  .leg i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
+  pre { white-space:pre-wrap; word-break:break-word; font:12px/1.4 ui-monospace,Menlo,monospace; background:var(--carta); border:1px solid var(--linea); border-radius:10px; padding:10px; max-height:70vh; overflow:auto; }
+  a { color:var(--acc); }
+  h2 { font-size:15px; margin:16px 0 6px; }
+  .vuoto { color:var(--tenue); font-style:italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1><i class="punto" id="punto"></i> Claude Compagno <small id="ver" style="font-weight:400;color:var(--tenue)"></small></h1>
+  <div class="sotto" id="riga">In attesa del server…</div>
+  <nav id="nav">
+    <button data-s="diretta" class="on">Diretta</button><button data-s="stato">Stato</button><button data-s="mappa">Mappa</button>
+    <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="rapporti">Rapporti</button>
+  </nav>
+</header>
+<main>
+  <section id="diretta" class="on">
+    <div class="filtri" id="filtri"></div>
+    <div id="eventi"></div>
+  </section>
+  <section id="stato">
+    <div class="griglia" id="caselle"></div>
+    <h2>Compito e piano</h2><div class="box" id="piano"></div>
+    <h2>Armatura</h2><div class="box" id="armatura"></div>
+    <h2>Inventario</h2><div class="box"><ul class="lista" id="inv"></ul></div>
+    <h2>Giocatori</h2><div class="box" id="giocatori"></div>
+    <h2>Autodiagnosi</h2><div class="box" id="diagnosi"></div>
+  </section>
+  <section id="mappa">
+    <canvas id="tela" width="900" height="900"></canvas>
+    <div class="leg"><span><i style="background:#c45a2c"></i>Claude</span><span><i style="background:#1f6fb2"></i>giocatori</span>
+      <span><i style="background:#2f7d4f"></i>luoghi</span><span><i style="background:#8a6d00"></i>risorse</span>
+      <span><i style="background:#b3261e"></i>zone pericolose</span><span><i style="background:#888"></i>percorso</span></div>
+    <div class="sotto">Vista dall'alto: nord in alto, est a destra. Pizzica o usa i pulsanti per lo zoom.</div>
+    <div class="filtri"><button id="zp">+</button><button id="zm">−</button><button id="zc">centra su Claude</button></div>
+  </section>
+  <section id="memoria">
+    <h2>Lezioni imparate</h2><div class="box"><ol id="lezioni"></ol></div>
+    <h2>Lezioni scritte dal codice</h2><div class="box"><ul id="auto"></ul></div>
+    <h2>Riflessione giornaliera e priorità</h2><div class="box" id="rifl"></div>
+    <h2>Esperienza per compito</h2><div class="box"><ul class="lista" id="esp"></ul></div>
+    <h2>Routine</h2><div class="box"><ul class="lista" id="rout"></ul></div>
+    <h2>Luoghi</h2><div class="box"><ul class="lista" id="luoghi"></ul></div>
+    <h2>Schemi salvati e obiettivi</h2><div class="box" id="schemi"></div>
+  </section>
+  <section id="costi">
+    <div class="griglia" id="costibox"></div>
+    <h2>Ogni chiamata all'IA</h2><div id="chiamate"></div>
+  </section>
+  <section id="rapporti">
+    <div class="box"><ul id="elenco"></ul></div>
+    <pre id="testo" class="vuoto">Tocca un rapporto per leggerlo.</pre>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+// il log del server è in UTC: l'ora si mostra in quella del telefono
+const ora = (t) => { const d = new Date(String(t).replace(" ", "T") + "Z"); return isNaN(d) ? String(t).slice(11, 19) : d.toLocaleTimeString("it-IT"); };
+// i compiti nel log sono JSON grezzo: diventano "raccogli legna x2 a 84,65,21"
+const breve = (c) => [c.tipo, c.nome ?? c.blocco ?? c.oggetto ?? c.minerale ?? c.schema, c.quantita ? "x" + c.quantita : "", c.x !== undefined && c.tipo !== "routine" ? `a ${c.x},${c.y},${c.z}` : ""].filter(Boolean).join(" ");
+const bello = (t) => String(t).replace(/\{"tipo".*\}/, (m) => { try { return breve(JSON.parse(m)); } catch { return m; } });
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let dati = null, filtro = "tutto", percorso = [], zoom = 6, centro = null;
+try { filtro = localStorage.getItem("filtro") || "tutto"; } catch {}
+
+// schede
+$("nav").onclick = (e) => {
+  const s = e.target.dataset.s; if (!s) return;
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.s === s));
+  document.querySelectorAll("section").forEach((x) => x.classList.toggle("on", x.id === s));
+  if (s === "rapporti") caricaRapporti();
+  if (s === "mappa") disegna();
+};
+const FILTRI = { tutto: "Tutto", azione: "Azioni", pensiero: "Pensieri", lezione: "Lezioni", pericolo: "Pericoli", chat: "Chat", api: "IA e costi", errore: "Errori" };
+$("filtri").innerHTML = Object.entries(FILTRI).map(([k, v]) => `<button data-f="${k}">${v}</button>`).join("");
+$("filtri").onclick = (e) => { if (!e.target.dataset.f) return; filtro = e.target.dataset.f; try { localStorage.setItem("filtro", filtro); } catch {} mostraEventi(); };
+
+function mostraEventi() {
+  document.querySelectorAll("#filtri button").forEach((b) => b.classList.toggle("on", b.dataset.f === filtro));
+  const ev = (dati?.eventi ?? []).filter((e) => filtro === "tutto" || e.tipo === filtro || (filtro === "pericolo" && e.tipo === "notifica")).slice(-300).reverse();
+  $("eventi").innerHTML = ev.length ? ev.map((e) => `<div class="ev ${e.tipo}"><time>${esc(ora(e.t))}</time><div>${esc(bello(e.testo))}</div></div>`).join("") : '<p class="vuoto">Ancora niente.</p>';
+}
+
+function casella(n, v) { return `<div class="box"><b>${n}</b><span>${esc(v)}</span></div>`; }
+
+function mostraStato() {
+  const s = dati?.stato, m = dati?.memoria;
+  $("punto").className = "punto " + (s ? (s.presente ? "vivo" : "morto") : "");
+  $("ver").textContent = s?.v ? "v" + s.v : "";
+  const notte = s && s.ora >= 13000 && s.ora < 23000;
+  $("riga").textContent = s ? (s.presente ? `${s.compito} · ${s.modalita}${s.bersaglio ? " (" + s.bersaglio + ")" : ""} · ${notte ? "notte" : "giorno"} · TPS ${s.tps}` : "Il bot non è nel mondo") + ` · aggiornato ${dati.battito ? ora(dati.battito.slice(0, 19)) : "?"}` : "Nessun dato dal bot: il server è acceso?";
+  if (!s) return;
+  $("caselle").innerHTML = (s.presente ? casella("Vita", `${s.vita}/20`) + casella("Fame", `${s.fame}/20`) + casella("Posizione", `${s.x}, ${s.y}, ${s.z}`) : casella("Bot", "fuori dal mondo"))
+    + casella("Modalità", s.modalita) + casella("Spesa oggi", `$${(s.spesa ?? 0).toFixed(3)}`) + casella("Budget", `$${s.budget ?? "?"}`) + casella("TPS server", s.tps);
+  $("piano").innerHTML = s.presente ? `<b>${esc(s.compito)}</b>${s.coda?.length ? "<ol>" + s.coda.map((c) => `<li>${esc(c)}</li>`).join("") + "</ol>" : '<p class="vuoto">piano vuoto</p>'}` : "";
+  $("armatura").textContent = s.armatura?.length ? s.armatura.map((x) => x.replace("minecraft:", "")).join(", ") : "nessuna";
+  $("inv").innerHTML = (s.inv ?? []).map((x) => `<li>${esc(x.replace("minecraft:", "").replace(/:(\d+)$/, " × $1"))}</li>`).join("") || '<li class="vuoto">vuoto</li>';
+  $("giocatori").innerHTML = (s.giocatori ?? []).map((g) => `${esc(g.n)} — ${g.x}, ${g.y}, ${g.z} · vita ${g.v}/20`).join("<br>") || '<span class="vuoto">nessuno online</span>';
+  $("diagnosi").innerHTML = (m?.diagnosi ?? []).map(([n, ok, d]) => `<div style="color:var(--${ok ? "ok" : "ko"})">${ok ? "OK" : "KO"} · ${esc(n)}${d ? " — " + esc(d) : ""}</div>`).join("") || '<span class="vuoto">non ancora eseguita</span>';
+  if (s.presente) { const ultimo = percorso[percorso.length - 1]; if (!ultimo || ultimo.x !== s.x || ultimo.z !== s.z) percorso.push({ x: s.x, z: s.z }); if (percorso.length > 400) percorso.shift(); }
+}
+
+function mostraMemoria() {
+  const m = dati?.memoria; if (!m) return;
+  $("lezioni").innerHTML = (m.lezioni ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  $("auto").innerHTML = (m.lezioniAuto ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  const r = m.riflessione;
+  $("rifl").innerHTML = (r ? `<p><b>${esc(r.giorno)}</b> — ${esc(r.stato)}${r.nota ? ": " + esc(r.nota) : ""}</p>` : '<p class="vuoto">mai fatta</p>') + `<p>Priorità del piano gratis: ${esc((m.priorita ?? []).join(" › ") || "non ancora decise")}</p>`;
+  $("esp").innerHTML = Object.entries(m.esperienza ?? {}).sort((a, b) => (b[1].ok + b[1].ko) - (a[1].ok + a[1].ko)).map(([t, e]) => `<li>${esc(t)}: ${Math.round(100 * e.ok / Math.max(1, e.ok + e.ko))}% su ${e.ok + e.ko}</li>`).join("");
+  $("rout").innerHTML = Object.entries(m.statRoutine ?? {}).map(([t, e]) => `<li>${esc(t)}: ${e.ok} ok / ${e.ko} ko</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  $("luoghi").innerHTML = Object.entries(m.luoghi ?? {}).map(([n, p]) => `<li><b>${esc(n)}</b> ${p.x}, ${p.y}, ${p.z}${p.nota ? " — " + esc(p.nota) : ""}</li>`).join("");
+  $("schemi").innerHTML = `<p>Schemi: ${esc((Array.isArray(m.schemi) ? m.schemi : Object.keys(m.schemi ?? {})).join(", ") || "nessuno")}</p><p>Obiettivi:</p><ul>${(m.obiettivi ?? []).map((o) => `<li>${esc(o)}</li>`).join("")}</ul>`;
+}
+
+function mostraCosti() {
+  const api = (dati?.eventi ?? []).filter((e) => e.tipo === "api");
+  const per = {};
+  for (const e of api) { const m = e.testo.match(/^(\S+) \$([\d.]+)/); if (m) { per[m[1]] ??= { n: 0, usd: 0 }; per[m[1]].n++; per[m[1]].usd += +m[2]; } }
+  const s = dati?.stato;
+  $("costibox").innerHTML = casella("Spesa oggi", `$${(s?.spesa ?? 0).toFixed(3)}`) + casella("Chiamate oggi", s?.chiamate ?? "?") + casella("Budget", `$${s?.budget ?? "?"}`)
+    + Object.entries(per).map(([k, v]) => casella(k + " (sessione)", `${v.n} · $${v.usd.toFixed(3)}`)).join("");
+  $("chiamate").innerHTML = api.slice(-200).reverse().map((e) => `<div class="ev api"><time>${esc(ora(e.t))}</time><div>${esc(e.testo)}</div></div>`).join("") || '<p class="vuoto">Nessuna chiamata in questa sessione: tutto gratis finora.</p>';
+}
+
+// mappa vista dall'alto
+const tela = $("tela"), ctx = tela.getContext("2d");
+function disegna() {
+  const s = dati?.stato, m = dati?.memoria; if (!s) return;
+  const css = getComputedStyle(document.documentElement);
+  if (!centro && s.presente) centro = { x: s.x, z: s.z };
+  const c = centro ?? { x: 0, z: 0 }, W = tela.width, H = tela.height;
+  const px = (x) => W / 2 + (x - c.x) * zoom, pz = (z) => H / 2 + (z - c.z) * zoom;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = css.getPropertyValue("--linea"); ctx.lineWidth = 1;
+  const passo = zoom >= 4 ? 16 : zoom >= 1.5 ? 64 : 128;
+  for (let x = Math.floor((c.x - W / 2 / zoom) / passo) * passo; x < c.x + W / 2 / zoom; x += passo) { ctx.beginPath(); ctx.moveTo(px(x), 0); ctx.lineTo(px(x), H); ctx.stroke(); }
+  for (let z = Math.floor((c.z - H / 2 / zoom) / passo) * passo; z < c.z + H / 2 / zoom; z += passo) { ctx.beginPath(); ctx.moveTo(0, pz(z)); ctx.lineTo(W, pz(z)); ctx.stroke(); }
+  const punto = (x, z, r, col, etichetta) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(px(x), pz(z), r, 0, 7); ctx.fill(); if (etichetta) { ctx.fillStyle = css.getPropertyValue("--testo"); ctx.font = "22px system-ui"; ctx.fillText(etichetta, px(x) + r + 3, pz(z) + 7); } };
+  for (const z of m?.pericoli ?? []) { ctx.fillStyle = "rgba(179,38,30,.18)"; ctx.beginPath(); ctx.arc(px(z.x), pz(z.z), z.r * zoom, 0, 7); ctx.fill(); }
+  for (const [cat, l] of Object.entries(m?.risorse ?? {})) for (const q of l) punto(q.x, q.z, 4, "#8a6d00", zoom >= 3 ? cat.replace("_ore", "") : "");
+  for (const [n, q] of Object.entries(m?.luoghi ?? {})) if (!/^ultima_morte/.test(n)) punto(q.x, q.z, 6, "#2f7d4f", n);
+  ctx.strokeStyle = "#888"; ctx.lineWidth = 2; ctx.beginPath(); percorso.forEach((q, i) => (i ? ctx.lineTo(px(q.x), pz(q.z)) : ctx.moveTo(px(q.x), pz(q.z)))); ctx.stroke();
+  for (const g of s.giocatori ?? []) punto(g.x, g.z, 8, "#1f6fb2", g.n);
+  if (s.presente) punto(s.x, s.z, 10, "#c45a2c", "Claude");
+}
+$("zp").onclick = () => { zoom = Math.min(16, zoom * 1.6); disegna(); };
+$("zm").onclick = () => { zoom = Math.max(0.2, zoom / 1.6); disegna(); };
+$("zc").onclick = () => { if (dati?.stato?.presente) centro = { x: dati.stato.x, z: dati.stato.z }; disegna(); };
+let tocco = null;
+tela.addEventListener("pointerdown", (e) => { tocco = { x: e.clientX, y: e.clientY }; });
+tela.addEventListener("pointermove", (e) => { if (!tocco || !centro) return; const k = tela.width / tela.clientWidth / zoom; centro.x -= (e.clientX - tocco.x) * k; centro.z -= (e.clientY - tocco.y) * k; tocco = { x: e.clientX, y: e.clientY }; disegna(); });
+addEventListener("pointerup", () => { tocco = null; });
+tela.addEventListener("wheel", (e) => { e.preventDefault(); zoom = Math.max(0.2, Math.min(16, zoom * (e.deltaY < 0 ? 1.2 : 1 / 1.2))); disegna(); }, { passive: false });
+
+// rapporti (storico)
+async function caricaRapporti() {
+  try {
+    const l = await (await fetch("/api/rapporti")).json();
+    $("elenco").innerHTML = l.map((r) => `<li><a href="#" data-f="${esc(r.nome)}">${esc(r.nome)}</a> <small>${r.kb} KB</small></li>`).join("") || '<li class="vuoto">nessun rapporto</li>';
+  } catch { $("elenco").innerHTML = '<li class="vuoto">non raggiungibile</li>'; }
+}
+$("elenco").onclick = async (e) => {
+  const f = e.target.dataset.f; if (!f) return; e.preventDefault();
+  $("testo").className = ""; $("testo").textContent = "Carico…";
+  $("testo").textContent = await (await fetch("/api/rapporto?f=" + encodeURIComponent(f))).text();
+};
+
+// aggiornamento ogni 2 secondi
+async function aggiorna() {
+  try {
+    dati = await (await fetch("/api/stato")).json();
+    mostraStato(); mostraEventi(); mostraMemoria(); mostraCosti();
+    if ($("mappa").classList.contains("on")) disegna();
+  } catch { $("riga").textContent = "Pannello non raggiungibile: la Odin è accesa e sulla stessa Wi-Fi?"; $("punto").className = "punto morto"; }
+}
+aggiorna(); setInterval(aggiorna, 2000);
+</script>
+</body>
+</html>
