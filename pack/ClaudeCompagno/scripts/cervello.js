@@ -455,6 +455,11 @@ function datiGiornata() {
   ].join("\n\n");
 }
 
+// Prova alternata dall'8 al 15 novembre 2026: Opus nei giorni pari, Fable nei dispari. Il giorno dopo si confrontano
+// maturità e successo dei compiti (diario + andamenti) per decidere con i dati quale modello tenere. Poi Opus.
+const PROVA_FINE = "2026-11-15";
+export const modelloRiflessione = (giorno) => (giorno <= PROVA_FINE && Number(giorno.slice(8, 10)) % 2 === 1 ? "claude-fable-5-1" : CFG.complesso);
+
 export async function riflessione() {
   const oggi = adesso().slice(0, 10);
   const r = mem.riflessione;
@@ -466,7 +471,7 @@ export async function riflessione() {
       const esito = righe.find((x) => x.custom_id === "riflessione")?.result;
       if (esito?.type !== "succeeded") { r.stato = "errore"; r.nota = `batch ${esito?.type ?? "senza risultato"}`; evento(`Riflessione fallita: ${r.nota}`); return; }
       const u = esito.message.usage ?? {};
-      const p = PREZZI[CFG.complesso] ?? PREZZI["claude-fable-5-1"];
+      const p = PREZZI[r.modello ?? CFG.complesso] ?? PREZZI["claude-fable-5-1"];
       const costo = 0.5 * ((u.input_tokens ?? 0) * p[0] + (u.output_tokens ?? 0) * p[1]) / 1e6; // Batch: metà prezzo
       mem.spesa.usd += costo; mem.spesa.chiamate++; sessione.usd += costo; sessione.chiamate++;
       const d = esito.message.content?.find((x) => x.type === "tool_use")?.input;
@@ -488,10 +493,10 @@ export async function riflessione() {
       }
       if (mem.universali.length > 100) mem.universali.splice(0, mem.universali.length - 100);
       r.stato = "fatta"; r.nota = String(d.nota ?? "").slice(0, 300);
-      (mem.diario ??= []).push({ g: oggi, nota: r.nota, priorita: mem.prioritaGratis });
+      (mem.diario ??= []).push({ g: r.giorno ?? oggi, modello: (r.modello ?? CFG.complesso).replace("claude-", ""), costo: +costo.toFixed(4), nota: r.nota, priorita: mem.prioritaGratis });
       if (mem.diario.length > 120) mem.diario.splice(0, mem.diario.length - 120);
       evento(`Riflessione giornaliera ($${costo.toFixed(3)}): ${r.nota} | priorità: ${mem.prioritaGratis.join(" > ")}`);
-      console.log(`[Claude][API] ${CFG.complesso.replace("claude-", "")} $${costo.toFixed(4)} batch | riflessione giornaliera`);
+      console.log(`[Claude][API] ${(r.modello ?? CFG.complesso).replace("claude-", "")} $${costo.toFixed(4)} batch | riflessione giornaliera`);
       notifica(`🧠 Riflessione di oggi: ${r.nota}`);
       return;
     }
@@ -501,15 +506,15 @@ export async function riflessione() {
       requests: [{
         custom_id: "riflessione",
         params: {
-          model: CFG.complesso, max_tokens: 8000,
+          model: modelloRiflessione(oggi), max_tokens: 8000,
           system: `Sei l'allenatore di ${CFG.nome}, un bot che gioca a Minecraft Bedrock in sopravvivenza con il suo proprietario ${CFG.proprietario}. Ogni giorno rileggi come è andata e lo rendi più bravo: riscrivi le sue lezioni (le regole che legge prima di ogni decisione) e scegli le priorità del suo pilota automatico gratis. La sua missione, in ordine: sopravvivere, trovare una soluzione, adattarsi, evolversi, costruire, esplorare, e sempre non fermarsi; giudica la giornata su questi sette punti. Basati solo sui dati, niente lezioni inventate.`,
           tools: [RIFLESSIONE], tool_choice: { type: "auto" },
           messages: [{ role: "user", content: `${datiGiornata()}\n\nRispondi chiamando lo strumento "riflessione".` }],
         },
       }],
     }));
-    mem.riflessione = { giorno: oggi, stato: "inviata", id: b.id, nota: "", t: Date.now() };
-    evento(`Riflessione giornaliera inviata a Opus (batch ${b.id})`);
+    mem.riflessione = { giorno: oggi, stato: "inviata", id: b.id, nota: "", t: Date.now(), modello: modelloRiflessione(oggi) };
+    evento(`Riflessione giornaliera inviata a ${modelloRiflessione(oggi).replace("claude-", "")} (batch ${b.id})`);
   } catch (e) {
     errore("riflessione", e);
     if (r?.stato === "inviata" && Date.now() - (r.t ?? Date.now()) > 26 * 3600000) r.stato = "errore";

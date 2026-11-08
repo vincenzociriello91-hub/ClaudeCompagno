@@ -363,7 +363,7 @@ function riassuntoAssenza(nome) {
   mem.assenza = null;
 }
 // Backup della memoria nel log, a pezzi (il log tronca le righe lunghe): avvia.sh lo ricompone in Odin2_report.
-const DA_SALVARE = ["maturita", "universali", "lezioniArchivio", "diario", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
+const DA_SALVARE = ["successoGiorno", "maturita", "universali", "lezioniArchivio", "diario", "lezioni", "lezioniAuto", "esperienza", "statRoutine", "risorse", "luoghi", "schemi", "obiettivi", "prioritaGratis", "voti", "riflessione", "pericoli", "casse", "spesa", "contaKo"];
 function scriviBackup() {
   const dati = { versione: VERSIONE, salvato: adesso() };
   for (const k of DA_SALVARE) if (mem[k] !== undefined) dati[k] = mem[k];
@@ -651,6 +651,12 @@ ogniTick(2400, () => {
   if (!pronto) return;
   // andamento giornaliero della maturazione (un valore al giorno, l'ultimo del giorno)
   const m = maturita();
+  {
+    const g = adesso().slice(0, 10), tot = Object.entries(mem.esperienza).filter(([t]) => !/^(routine|fermo)$/.test(t)).reduce((a, [, e]) => [a[0] + e.ok, a[1] + e.ko], [0, 0]);
+    const sg = (mem.successoGiorno ??= []);
+    if (sg.at(-1)?.g === g) { sg.at(-1).ok = tot[0]; sg.at(-1).ko = tot[1]; } else sg.push({ g, ok: tot[0], ko: tot[1] });
+    if (sg.length > 365) sg.shift();
+  }
   if (m) { const g = adesso().slice(0, 10), st = (mem.maturita ??= []); if (st.at(-1)?.g === g) st.at(-1).v = m.totale; else st.push({ g, v: m.totale }); if (st.length > 365) st.shift(); }
   scriviBlocco("MEMORIA", { lezioni: mem.lezioni, lezioniAuto: mem.lezioniAuto ?? [], luoghi: mem.luoghi, risorse: mem.risorse ?? {}, pericoli: mem.pericoli ?? [],
     casse: mem.casse ?? {}, esperienza: mem.esperienza, statRoutine: mem.statRoutine ?? {}, priorita: mem.prioritaGratis ?? [], riflessione: mem.riflessione ?? null,

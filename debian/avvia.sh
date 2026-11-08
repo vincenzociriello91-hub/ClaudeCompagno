@@ -276,9 +276,10 @@ salva_manuale() {
       "\n## Esperienza per tipo di compito (tasso di successo)\n", ((.esperienza // {}) | to_entries | sort_by(-((.value.ok // 0) + (.value.ko // 0)))[] | "- \(.key): \(pct(.value))\(if .value.ultimoErrore then " — ultimo errore: \(.value.ultimoErrore)" else "" end)"),
       "\n## Routine (successi/fallimenti)\n", ((.statRoutine // {}) | to_entries[] | "- \(.key): \(.value.ok // 0) ok / \(.value.ko // 0) ko"),
       "\n## Priorità attuali del pilota automatico\n", "- \((.prioritaGratis // []) | join(" > "))",
-      "\n## Diario delle riflessioni giornaliere\n", ((.diario // [])[] | "- \(.g): \(.nota)"), (if .riflessione.nota then "- ultima: \(.riflessione.nota)" else empty end),
+      "\n## Diario delle riflessioni giornaliere\n", ((.diario // [])[] | "- \(.g)\(if .modello then " [\(.modello), $\(.costo)]" else "" end): \(.nota)"), (if .riflessione.nota then "- ultima: \(.riflessione.nota)" else empty end),
       "\n## Voti dei giocatori\n", "- \(.voti // "nessuno" | tostring)",
       "\n## Andamento del livello di maturazione (0-100)\n", ((.maturita // [])[] | "- \(.g): \(.v)"),
+      "\n## Compiti riusciti/falliti (totali a fine giornata)\n", ((.successoGiorno // [])[] | "- \(.g): \(.ok) ok / \(.ko) ko"),
       "\n## Zone pericolose imparate\n", ((.pericoli // [])[] | "- \(.x),\(.y),\(.z) raggio \(.r): \(.motivo)")
     ' "$REP/ClaudeMinecraft_memoria.json" 2>/dev/null
   } > "$REP/ClaudeCompagno_esperienza.md.tmp" && mv "$REP/ClaudeCompagno_esperienza.md.tmp" "$REP/ClaudeCompagno_esperienza.md"
