@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.4 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.5 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -165,6 +165,9 @@ Aggiornato alla versione 2.8.4 (8 novembre 2026), dopo circa 20 ore di gioco, 2.
 - **Aggiornamenti automatici sicuri:** scarica in una cartella a parte, verifica tutto, solo dopo sostituisce;
   se qualcosa non torna scarta l'aggiornamento e il sistema vecchio continua. Mai installare una versione più
   vecchia (le cache a volte la mostrano), e la versione vera è quella dentro il pacchetto, non quella annunciata.
+- **Aggiornare con il minimo disturbo:** se cambia solo la logica, ricaricarla a caldo (pochi secondi); il riavvio
+  completo solo quando cambia ciò che gira sotto. E controllare sempre che dopo il ricaricamento il sistema riparta
+  davvero, altrimenti passare da soli al riavvio completo.
 - **Non sovrascrivere un programma mentre gira:** si scrive il file nuovo accanto e lo si sostituisce con uno
   spostamento atomico.
 - **Avvio automatico all'accensione:** un sistema che deve sempre girare non deve dipendere da qualcuno che lo

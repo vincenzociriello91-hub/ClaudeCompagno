@@ -33,6 +33,8 @@ Non serve più scaricare lo zip: le versioni nuove escono su github.com/vincenzo
 e la Odin le installa da sola. Controlla a ogni mc-avvia e poi ogni 10 minuti; se ne trova una nuova (mai una più vecchia) la scarica,
 la verifica (se il download è rotto la scarta e il bot vecchio continua) e riavvia il server in circa un minuto,
 ma solo quando nessun giocatore è online: se stai giocando aspetta che esci.
+Dalla 2.8.5, se cambia solo il bot non riavvia il server: lo ricarica in pochi secondi (comando reload); se il bot
+non riparte entro 3 minuti fa da solo il riavvio completo.
 Ti arriva una notifica ntfy. Memoria, impostazioni e chiave API non vengono toccate.
 Per spegnerlo:  proot-distro login debian -- touch /root/claudemc/impostazioni/no_aggiornamenti
 

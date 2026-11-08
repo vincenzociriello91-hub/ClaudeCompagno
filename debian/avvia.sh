@@ -51,6 +51,11 @@ aggiorna_bot() {
   # la versione vera è quella dentro il pacchetto scaricato, non quella annunciata
   nuova=$(tr -cd '0-9.' < "$tmp/VERSIONE" 2>/dev/null)
   if ! piu_nuova "$nuova" "$attuale"; then rm -rf "$tmp"; return 1; fi
+  # se cambiano solo i file del bot basta un "reload" (pochi secondi); avvia.sh, pannello.py e patch_level.py girano
+  # già in memoria e servono un riavvio vero. pannello.html no: il pannello lo rilegge a ogni richiesta.
+  local riavvio=0
+  for f in avvia.sh patch_level.py pannello.py; do cmp -s "$tmp/debian/$f" "$BASE/$f" || riavvio=1; done
+  if [ "$riavvio" = 0 ]; then touch "$BASE/.solo_pacchetto"; else rm -f "$BASE/.solo_pacchetto"; fi
   rm -rf "$BASE/pack.nuovo" && cp -r "$tmp/pack" "$BASE/pack.nuovo" && rm -rf "$BASE/pack" && mv "$BASE/pack.nuovo" "$BASE/pack"
   # mv e non cp: avvia.sh è in esecuzione e bash lo legge a pezzi, sovrascriverlo sul posto lo romperebbe
   for f in avvia.sh patch_level.py pannello.py pannello.html; do cp "$tmp/debian/$f" "$BASE/$f.nuovo" && mv -f "$BASE/$f.nuovo" "$BASE/$f"; done
@@ -349,7 +354,17 @@ NOTIFICHE=$!
     nuova_disponibile || continue
     while [ "$(giocatori_online)" -gt 0 ]; do sleep 300; done
     if aggiorna_bot; then
-      notifica "⬆️ Bot aggiornato alla versione $(cat "$BASE/.versione"): riavvio di un minuto"
+      v=$(cat "$BASE/.versione")
+      if [ -f "$BASE/.solo_pacchetto" ]; then
+        # solo il bot è cambiato: lo ricarica senza spegnere il server; se entro 3 minuti non riparte, riavvio completo
+        rm -f "$BASE/.solo_pacchetto"
+        installa_pacchetto && echo "reload" > "$FIFO"
+        ok=0
+        for _ in $(seq 1 36); do sleep 5; grep -aq "Avvio Claude Compagno v$v," "$LOG" && { ok=1; break; }; done
+        if [ "$ok" = 1 ]; then log "Bot aggiornato alla versione $v con reload, server sempre acceso"; notifica "⬆️ Bot aggiornato alla versione $v in pochi secondi (server sempre acceso)"; continue; fi
+        log "Il reload non ha fatto ripartire il bot: riavvio completo"
+      fi
+      notifica "⬆️ Bot aggiornato alla versione $v: riavvio di un minuto"
       touch "$BASE/.riavvia" "$BASE/.stop_richiesto"; echo stop > "$FIFO"; break
     fi
   done ) &

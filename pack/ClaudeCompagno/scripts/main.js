@@ -79,6 +79,8 @@ function generaBot(vicino) {
     const salvata = mem.pos && dim.getBlock(mem.pos) ? mem.pos : null; // solo se il chunk è caricato
     if (!salvata && !vicino) return; // senza giocatori serve la posizione salvata, col chunk caricato
     const l = salvata ?? { x: vicino.location.x + 1.5, y: vicino.location.y, z: vicino.location.z + 1.5 };
+    // dopo un reload può restare il "vecchio" Claude senza script: si toglie prima di farne entrare uno nuovo (mai due)
+    for (const p of world.getAllPlayers()) if (p.name === CFG.nome) { try { dim.runCommand(`kick "${CFG.nome}"`); } catch {} }
     bot = spawnSimulatedPlayer({ dimension: salvata ? dim : vicino.dimension, x: l.x, y: l.y, z: l.z }, CFG.nome, GameMode.Survival);
     if (mem.inventario.length) ripristinaInventario(bot, mem.inventario);
     evento(`${CFG.nome} entra nel mondo a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}`);
@@ -168,7 +170,12 @@ function comandoRapido(p, testo) {
 }
 
 // ---------- eventi ----------
-world.afterEvents.worldLoad.subscribe(() => {
+// avvio: con il mondo che si carica (accensione) oppure subito se il mondo è già pronto (dopo un "reload" degli
+// aggiornamenti automatici l'evento worldLoad può non arrivare più). Una volta sola.
+let avviato = false;
+function avvio() {
+  if (avviato) return;
+  avviato = true;
   caricaConfig();
   carica();
   ripristinaBackup();
@@ -192,7 +199,9 @@ world.afterEvents.worldLoad.subscribe(() => {
       if (!vivo()) evento("Avvio senza giocatori: non riesco a entrare nel mondo, aspetto un giocatore");
     }, 200);
   }
-});
+}
+world.afterEvents.worldLoad.subscribe(avvio);
+system.runTimeout(() => { try { world.getDynamicProperty("claude_prova"); avvio(); } catch {} }, 100);
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
   if (!initialSpawn || !reale(player)) return;
