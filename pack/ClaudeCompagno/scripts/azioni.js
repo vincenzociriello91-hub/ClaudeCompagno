@@ -671,6 +671,9 @@ function arrivaACasa(bot, casa) {
   if (r === "bloccato") { bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 }); nav.meta = null; nav.bloccato = 0; }
   return false;
 }
+// blocchi pieni intercambiabili per muri e tetti
+const RIEMPITIVI = ["minecraft:cobblestone", "minecraft:cobbled_deepslate", "minecraft:stone", "minecraft:granite", "minecraft:diorite", "minecraft:andesite",
+  "minecraft:tuff", "minecraft:sandstone", "minecraft:netherrack", "minecraft:dirt", "minecraft:oak_planks", "minecraft:spruce_planks", "minecraft:birch_planks"];
 const luoghiBot = () => ["casetta", "bosco", "fattoria", "deposito", "fornace"].map((n) => mem.luoghi[n]);
 
 const ESECUTORI = {
@@ -856,6 +859,11 @@ const ESECUTORI = {
       if (esito === "occupato") {
         const blk = bot.dimension.getBlock(p);
         if (blk && !protetto(bot, blk) && scava(bot, p) === "ok") esito = piazza(bot, p, id);
+      }
+      // finita la pietra si usa un altro blocco pieno che ha in tasca (rifugio notturno fallito con 63 graniti e 25 dioriti: 4 morti)
+      if (esito === "manca" && RIEMPITIVI.includes(id)) {
+        const alt = RIEMPITIVI.find((a) => a !== id && contaOggetti(bot, a) > 0);
+        if (alt) esito = piazza(bot, p, alt);
       }
       if (esito === "manca") { conta(s.mancanti, id); s.rimasti.push(c.blocchi[s.i]); }
       // c'è qualcuno nella cella: riprova alla fine, intanto il bot o il giocatore si saranno spostati.
