@@ -163,7 +163,9 @@ avvia_bds() { # $1 = "genera": si ferma appena il mondo è pronto
     echo stop >&3
     wait "$pid"
   else
-    box64 ./bedrock_server <&3 2>&1 | grep --line-buffered -av 'Box64 with Dynarec' | tee -a "$LOG"
+    # nel log va tutto (il pannello lo legge da lì); nel terminale niente righe tecniche del pannello
+    box64 ./bedrock_server <&3 2>&1 | grep --line-buffered -av 'Box64 with Dynarec' | tee -a "$LOG" \
+      | grep --line-buffered -avE '\[Claude\]\[(STATO|MEMORIA|BACKUP|API)\]'
     CODICE=${PIPESTATUS[0]}
   fi
   exec 3>&-
