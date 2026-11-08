@@ -1414,6 +1414,10 @@ export function eseguiCompito(bot) {
     const f = ESECUTORI[c.tipo];
     if (!f) return finito(false, `compito sconosciuto: ${c.tipo}`);
     c.stato ??= {};
+    // non fermarsi: oltre 10 minuti (30 per costruzioni e miniere) senza finire si cambia strada
+    const max = /costruisci|miniera|scava_area|tunnel/.test(c.tipo) ? 36000 : 12000;
+    if (c.t === undefined || c.t > tick()) c.t = tick(); // compito ripreso dopo un riavvio: i tick ripartono da zero
+    if (!["segui", "fermo"].includes(c.tipo) && tick() - c.t > max) return finito(false, `troppo tempo senza finire (${Math.round(max / 1200)} min): cambio strada`);
     try { f(bot, c); } catch (e) { errore(`compito ${c.tipo}`, e); finito(false, `errore: ${e?.message ?? e}`); }
     return;
   }
