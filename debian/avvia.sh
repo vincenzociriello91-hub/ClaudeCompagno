@@ -343,9 +343,9 @@ notifica() { curl -s -m 10 -H "Title: Claude Compagno" -d "$1" "https://ntfy.sh/
   done ) &
 NOTIFICHE=$!
 
-# Ogni 30 minuti controlla se su GitHub c'è una versione nuova; la installa (riavvio di circa 1 minuto)
+# Ogni 10 minuti controlla se su GitHub c'è una versione nuova; la installa (riavvio di circa 1 minuto)
 # solo quando non c'è nessun giocatore online, così non butta fuori chi sta giocando
-( while sleep 1800; do
+( while sleep 600; do
     nuova_disponibile || continue
     while [ "$(giocatori_online)" -gt 0 ]; do sleep 300; done
     if aggiorna_bot; then
