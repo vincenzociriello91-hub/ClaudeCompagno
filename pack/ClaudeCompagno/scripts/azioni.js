@@ -1315,7 +1315,7 @@ const ESECUTORI = {
     }
     // la vecchia cassa del deposito (se non è una delle nuove) si svuota nelle casse giuste, passando dall'inventario
     const vecchia = mem.luoghi.deposito && !Object.values(mem.casse).some((q) => q.x === mem.luoghi.deposito.x && q.y === mem.luoghi.deposito.y && q.z === mem.luoghi.deposito.z)
-      ? bot.dimension.getBlock(mem.luoghi.deposito)?.getComponent("minecraft:inventory")?.container : null;
+      ? bot.dimension.getBlock(mem.luoghi.deposito)?.getComponent?.("minecraft:inventory")?.container : null;
     if (vecchia && dist(bot.location, mem.luoghi.deposito) <= 6) {
       for (let i = 0; i < vecchia.size; i++) { const it = vecchia.getItem(i); if (it && categoriaCassa(it.typeId) === cat) { const resto = cassa.addItem(it); vecchia.setItem(i, resto); if (resto) break; } }
     }
