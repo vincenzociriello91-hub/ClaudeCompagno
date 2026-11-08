@@ -1238,6 +1238,29 @@ const ESECUTORI = {
     finito(true, `fornace fissa a ${p.x},${p.y},${p.z}`);
   },
 
+  // tana: scende di 2 blocchi dove si trova e chiude sopra la testa con un blocco (anche quello appena scavato)
+  tana(bot, c) {
+    const s = c.stato;
+    const dim = bot.dimension;
+    s.base ??= pav(bot.location);
+    const b = s.base;
+    const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
+    if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return finito(false, "sotto c'è una grotta o acqua: niente tana qui");
+    for (const dy of [-1, -2]) {
+      const blk = dim.getBlock({ x: b.x, y: b.y + dy, z: b.z });
+      if (blk?.isLiquid) return finito(false, "sotto c'è acqua o lava: niente tana qui");
+      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") return finito(false, "terreno troppo duro per la tana");
+    }
+    bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
+    const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
+    if (!alt) return finito(false, "niente blocchi per chiudere la tana");
+    const esito = piazza(bot, b, alt);
+    if (esito !== "ok" && esito !== "gia") return finito(false, `non riesco a chiudere la tana (${esito})`);
+    mem.rifugio = { x: b.x, y: b.y - 2, z: b.z };
+    nav.meta = null;
+    finito(true, `tana scavata a ${b.x},${b.y - 2},${b.z}: resto qui fino all'alba`);
+  },
+
   // bosco: pianta gli alberelli accanto a casa, così la legna è sempre a due passi (i viaggi per la legna finivano nelle grotte)
   bosco(bot, c) {
     const s = c.stato;

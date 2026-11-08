@@ -22,14 +22,19 @@ function notteFuori() {
   if (ora < 12500 || ora >= 23000 || !mem.luoghi.casa || dist(bot.location, mem.luoghi.casa) <= 24) return false;
   const eq = bot.getComponent("minecraft:equippable");
   if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
-  if (!mem.rifugio || dist(mem.rifugio, bot.location) > 6) {
+  // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
+  const lavori = mem.compito?.routine === "notte_sicura" || mem.compito?.tipo === "tana";
+  if (!lavori && (!mem.rifugio || dist(mem.rifugio, bot.location) > 16)) {
     mem.rifugio = { x: Math.floor(bot.location.x), y: Math.floor(bot.location.y), z: Math.floor(bot.location.z) };
     mem.coda = [];
-    evento("Notte senza armatura e casa lontana: mi chiudo in un rifugio qui fino all'alba");
-    assegna({ tipo: "routine", nome: "notte_sicura" }, "piano");
+    // con pochi blocchi in tasca il rifugio non si chiude mai: tana scavata nel terreno, bastano 1 blocco e 1 minuto
+    const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
+    evento(`Notte senza armatura e casa lontana: ${blocchi >= 34 ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    assegna(blocchi >= 34 ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;
 }
+const BLOCCHI_PIENI = ["minecraft:cobblestone", "minecraft:cobbled_deepslate", "minecraft:stone", "minecraft:granite", "minecraft:diorite", "minecraft:andesite", "minecraft:tuff", "minecraft:dirt", "minecraft:sandstone"];
 // La dettatura vocale storpia spesso "Claude": accetto le varianti più comuni.
 let nomeRe = /\b(claude|cloud|clod|claud|cloude|clode)\b/i;
 const reale = (p) => p && p.typeId === "minecraft:player" && !(p instanceof SimulatedPlayer);

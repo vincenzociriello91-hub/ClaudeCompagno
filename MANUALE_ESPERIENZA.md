@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.12 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.13 (8 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -207,6 +207,7 @@ Aggiornato alla versione 2.8.12 (8 novembre 2026), dopo circa 20 ore di gioco, 2
 | Riassunto "0 blocchi" | contatori azzerati dai riavvii | contatori cumulativi salvati |
 | Caccia all'1% | posti ricordati ormai vuoti, un solo tipo di preda | dimenticare i posti vuoti, allargare l'obiettivo, esplorare |
 | Fusioni al 2% con 81 ciottoli | la fornace richiede il banco, il banco il legno: si fermava al primo anello | rinviare al prerequisito più a monte |
+| 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
 | Rifugio finito ma morto lo stesso | lo costruiva restando fuori, poi usciva a fare altro | finita la protezione, mettersi dentro e restarci finché dura il pericolo |
 | Deposito e bosco "nessuno spiazzo" per giorni | cercava il posto in 12 punti fissi | allargare la ricerca a cerchi crescenti prima di arrendersi |
 | Rifugio notturno mai costruito con 88 blocchi di pietra in tasca | il progetto chiedeva solo ciottoli | se manca il materiale previsto, usare quello equivalente che si ha: il fine è il riparo, non il ciottolo |
