@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 
-export const VERSIONE = "2.8.5";
+export const VERSIONE = "2.8.6";
 
 // Stato persistente (sopravvive ai riavvii del server)
 export const mem = {
@@ -183,6 +183,12 @@ export function rapporto(motivo, stato) {
   r.push("");
   r.push(`Manuale di esperienza universale: ${(mem.universali ?? []).length} lezioni dal gioco${(mem.universali ?? []).length ? " | ultime: " + mem.universali.slice(-3).map((u) => u.t).join(" | ") : ""}`);
   r.push("== APPRENDIMENTO (missione principale)");
+  {
+    const prove = Object.entries(mem.esperienza).filter(([t, e]) => !/^(routine|fermo)$/.test(t) && e.ok + e.ko >= 5).map(([t, e]) => [t, Math.round(100 * e.ok / (e.ok + e.ko)), e.ok + e.ko]);
+    const elenco = (l) => l.map(([t, p, n]) => `${t} ${p}% su ${n}`).join(", ") || "nessuno";
+    r.push(`Dove è bravo (70% o più): ${elenco(prove.filter((x) => x[1] >= 70).sort((a, b) => b[1] - a[1]))}`);
+    r.push(`Dove è debole (sotto il 30%): ${elenco(prove.filter((x) => x[1] < 30).sort((a, b) => a[1] - b[1]))}`);
+  }
   const perc = (ok, ko) => (ok + ko ? `${Math.round((100 * ok) / (ok + ko))}%` : "-");
   for (const [t, e] of Object.entries(mem.esperienza)) {
     const prima = sessione.espInizio?.[t] ?? { ok: 0, ko: 0 };

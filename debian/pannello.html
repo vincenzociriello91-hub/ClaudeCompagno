@@ -81,6 +81,7 @@
     <h2>Lezioni imparate</h2><div class="box"><ol id="lezioni"></ol></div>
     <h2>Lezioni scritte dal codice</h2><div class="box"><ul id="auto"></ul></div>
     <h2>Riflessione giornaliera e priorità</h2><div class="box" id="rifl"></div>
+    <h2>Dove è bravo e dove no</h2><div class="box" id="bravura"></div>
     <h2>Esperienza per compito</h2><div class="box"><ul class="lista" id="esp"></ul></div>
     <h2>Routine</h2><div class="box"><ul class="lista" id="rout"></ul></div>
     <h2>Luoghi</h2><div class="box"><ul class="lista" id="luoghi"></ul></div>
@@ -154,6 +155,14 @@ function mostraMemoria() {
   $("auto").innerHTML = (m.lezioniAuto ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
   const r = m.riflessione;
   $("rifl").innerHTML = (r ? `<p><b>${esc(r.giorno)}</b> — ${esc(r.stato)}${r.nota ? ": " + esc(r.nota) : ""}</p>` : '<p class="vuoto">mai fatta</p>') + `<p>Priorità del piano gratis: ${esc((m.priorita ?? []).join(" › ") || "non ancora decise")}</p>`;
+  // bravo: almeno 70% su 5 o più tentativi; debole: sotto il 30% (gli ingredienti mancanti non contano)
+  const prove = Object.entries(m.esperienza ?? {}).filter(([t, e]) => !/^(routine|fermo)$/.test(t) && e.ok + e.ko >= 5)
+    .map(([t, e]) => [t, Math.round(100 * e.ok / (e.ok + e.ko)), e.ok + e.ko]);
+  const bravo = prove.filter((x) => x[1] >= 70).sort((a, b) => b[1] - a[1]), debole = prove.filter((x) => x[1] < 30).sort((a, b) => a[1] - b[1]);
+  const riga = (x) => x ? `<div style="display:flex;justify-content:space-between;gap:6px"><span>${esc(x[0])}</span><b>${x[1]}%</b></div><small style="color:var(--tenue)">su ${x[2]} tentativi</small>` : "";
+  $("bravura").innerHTML = prove.length ? `<table style="width:100%;border-collapse:collapse;font-size:14px"><tr><th style="text-align:left;color:var(--ok)">Bravo</th><th style="text-align:left;color:var(--ko)">Debole</th></tr>`
+    + Array.from({ length: Math.max(bravo.length, debole.length) }, (_, i) => `<tr><td style="padding:3px 6px 3px 0">${riga(bravo[i])}</td><td style="padding:3px 0">${riga(debole[i])}</td></tr>`).join("") + "</table>"
+    : '<span class="vuoto">servono almeno 5 tentativi per compito</span>';
   $("esp").innerHTML = Object.entries(m.esperienza ?? {}).sort((a, b) => (b[1].ok + b[1].ko) - (a[1].ok + a[1].ko)).map(([t, e]) => `<li>${esc(t)}: ${Math.round(100 * e.ok / Math.max(1, e.ok + e.ko))}% su ${e.ok + e.ko}</li>`).join("");
   $("rout").innerHTML = Object.entries(m.statRoutine ?? {}).map(([t, e]) => `<li>${esc(t)}: ${e.ok} ok / ${e.ko} ko</li>`).join("") || '<li class="vuoto">nessuna</li>';
   $("luoghi").innerHTML = Object.entries(m.luoghi ?? {}).map(([n, p]) => `<li><b>${esc(n)}</b> ${p.x}, ${p.y}, ${p.z}${p.nota ? " — " + esc(p.nota) : ""}</li>`).join("");
