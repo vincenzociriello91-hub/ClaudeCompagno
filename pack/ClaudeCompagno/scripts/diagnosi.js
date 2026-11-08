@@ -49,7 +49,7 @@ export function autodiagnosi(bot) {
       if (avanzo > 0) togli(bot, "minecraft:dirt", avanzo);
       return messo === "ok" && tolto === "ok" && dim.getBlock(p)?.isAir ? true : `piazza ${messo}, scava ${tolto}`;
     }
-    return "nessuna cella libera intorno per provare";
+    return [true, "saltata: nessuna cella libera intorno"];
   });
 
   prova("terreno sicuro (getTopmostBlock)", () => (suolo(dim, f.x, f.z) ? true : "nessun terreno trovato"));

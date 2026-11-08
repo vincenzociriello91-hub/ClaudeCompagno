@@ -389,7 +389,7 @@ function scegliBersaglio(bot) {
     }
   }
   for (const e of bot.dimension.getEntities({ location: bot.location, maxDistance: 8, families: ["monster"] })) {
-    if (!NEUTRALI.test(e.typeId) && !EVITA.test(e.typeId)) candidati.push([5 + dist(e.location, bot.location) / 20 + (PERICOLO[e.typeId] ?? 0), e]);
+    if (!NEUTRALI.test(e.typeId) && !EVITA.test(e.typeId) && !((ignorati.get(e.id) ?? 0) > tick())) candidati.push([5 + dist(e.location, bot.location) / 20 + (PERICOLO[e.typeId] ?? 0), e]);
   }
   candidati.sort((a, b) => a[0] - b[0]);
   return candidati[0]?.[1] ?? null;
