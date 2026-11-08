@@ -646,7 +646,11 @@ function filtroBlocco(nome) {
 // Cerca vicino a casa uno spiazzo piano e asciutto di lato x lato, lontano dagli altri luoghi del bot
 // (casetta, bosco, fattoria, deposito) e dalle costruzioni dei giocatori. null se non c'è.
 export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
-  for (const [dx, dz] of [[10, 0], [-10, 0], [0, 10], [0, -10], [12, 12], [-12, 12], [12, -12], [-12, -12], [18, 0], [0, 18], [-18, 0], [0, -18]]) {
+  // anelli da 8 a 32 blocchi in 8 direzioni: con 12 posti fissi vicino alla casa (collina, acqua, base del giocatore)
+  // deposito e bosco fallivano sempre con "nessuno spiazzo libero"
+  const posti = [];
+  for (let r = 8; r <= 32; r += 4) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) posti.push([a * r, b * r]);
+  for (const [dx, dz] of posti) {
     const x0 = casa.x + dx, z0 = casa.z + dz;
     const angoli = [[0, 0], [lato - 1, 0], [0, lato - 1], [lato - 1, lato - 1], [Math.floor(lato / 2), Math.floor(lato / 2)]].map(([a, b]) => suolo(dim, x0 + a, z0 + b));
     if (angoli.some((g) => !g || g.liquido || inPericolo(g))) continue;
@@ -886,6 +890,14 @@ const ESECUTORI = {
       const unici = [...new Map(c.blocchi.map((b) => [`${b[0]},${b[1]},${b[2]}`, b])).values()];
       const nome = c.nome_schema && salvaSchema(c.nome_schema, unici);
       if (nome) evento(`Schema salvato: ${nome} (${unici.length} blocchi)`);
+      // rifugio notturno finito: dentro, al centro, e lì resta fino all'alba (lo costruiva e restava fuori: morto finendolo)
+      if (c.routine === "notte_sicura") {
+        const xs = unici.map((b) => b[0]), ys = unici.map((b) => b[1]), zs = unici.map((b) => b[2]);
+        const dentro = { x: o.x + (Math.min(...xs) + Math.max(...xs)) / 2 + 0.5, y: o.y + Math.min(...ys) + 1, z: o.z + (Math.min(...zs) + Math.max(...zs)) / 2 + 0.5 };
+        bot.teleport(dentro);
+        mem.rifugio = { x: Math.floor(dentro.x), y: Math.floor(dentro.y), z: Math.floor(dentro.z) };
+        nav.meta = null;
+      }
       return finito(true, `costruzione "${c.descrizione ?? "progetto"}" completata${nome ? `, salvata come schema "${nome}"` : ""}`);
     }
     mem.sospesi.push({ tipo: "costruisci", x: o.x, y: o.y, z: o.z, descrizione: c.descrizione, blocchi: s.rimasti, da: c.da });
