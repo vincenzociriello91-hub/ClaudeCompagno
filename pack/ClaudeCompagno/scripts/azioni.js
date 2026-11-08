@@ -662,7 +662,8 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
     let occupato = false;
     for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
       const blk = dim.getBlock({ x: x0 + a, y: Math.min(...ys), z: z0 + b });
-      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves/.test(blk.typeId)) occupato = true;
+      // il terreno naturale un blocco più alto si spiana; solo le costruzioni (tue o del bot) e i tronchi rendono il posto occupato
+      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium/.test(blk.typeId)) occupato = true;
     }
     if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
   }
@@ -1242,7 +1243,8 @@ const ESECUTORI = {
   tana(bot, c) {
     const s = c.stato;
     const dim = bot.dimension;
-    s.base ??= pav(bot.location);
+    // +0.5: sopra un blocco basso (sentiero, terra arata) i piedi sono a 63,94 e la cella "dei piedi" era il blocco stesso
+    s.base ??= pav({ x: bot.location.x, y: bot.location.y + 0.5, z: bot.location.z });
     const b = s.base;
     const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
     if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return finito(false, "sotto c'è una grotta o acqua: niente tana qui");
