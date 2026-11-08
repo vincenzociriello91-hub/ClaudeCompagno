@@ -27,20 +27,30 @@ log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 # dentro: chiave e impostazioni restano qui). Scarica, controlla e installa; ritorna 0 se ha installato una versione nuova.
 # Per disattivarlo: touch /root/claudemc/impostazioni/no_aggiornamenti
 REPO=vincenzociriello91-hub/ClaudeCompagno
-aggiorna_bot() {
+# vero se $1 è una versione più alta di $2 (mai tornare indietro: la cache di GitHub a volte mostra la precedente)
+piu_nuova() { [ -n "$1" ] && [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -1)" = "$1" ]; }
+nuova_disponibile() {
   [ -f "$IMP/no_aggiornamenti" ] && return 1
+  piu_nuova "$(curl -fsS -m 20 "https://raw.githubusercontent.com/$REPO/main/VERSIONE" 2>/dev/null | tr -cd '0-9.')" "$(cat "$BASE/.versione" 2>/dev/null)"
+}
+# giocatori veri collegati ora (il bot non conta: entra come "Player Spawned", non "Player connected")
+# (contati dall'ultimo "Server started": dopo un crash mancano le righe di uscita)
+giocatori_online() { awk '/Server started/{n=0} /Player connected:/{n++} /Player disconnected:/{n--} END{print (n>0?n:0)}' "$LOG"; }
+aggiorna_bot() {
+  nuova_disponibile || return 1
   local nuova attuale tmp f
-  nuova=$(curl -fsS -m 20 "https://raw.githubusercontent.com/$REPO/main/VERSIONE" 2>/dev/null | tr -cd '0-9.')
   attuale=$(cat "$BASE/.versione" 2>/dev/null)
-  { [ -n "$nuova" ] && [ "$nuova" != "$attuale" ]; } || return 1
   tmp=$(mktemp -d)
   # prima si controlla tutto in una cartella a parte: un download rotto non tocca il bot che funziona
   if ! curl -fsSL -m 180 "https://codeload.github.com/$REPO/tar.gz/refs/heads/main" | tar -xz -C "$tmp" --strip-components=1 2>/dev/null \
      || [ ! -f "$tmp/pack/ClaudeCompagno/manifest.json" ] || ! bash -n "$tmp/debian/avvia.sh" 2>/dev/null \
      || ! python3 -I "$tmp/debian/pannello.py" --test >/dev/null 2>&1; then
-    log "Aggiornamento $nuova scartato: download incompleto o file non validi"
+    log "Aggiornamento scartato: download incompleto o file non validi"
     rm -rf "$tmp"; return 1
   fi
+  # la versione vera è quella dentro il pacchetto scaricato, non quella annunciata
+  nuova=$(tr -cd '0-9.' < "$tmp/VERSIONE" 2>/dev/null)
+  if ! piu_nuova "$nuova" "$attuale"; then rm -rf "$tmp"; return 1; fi
   rm -rf "$BASE/pack.nuovo" && cp -r "$tmp/pack" "$BASE/pack.nuovo" && rm -rf "$BASE/pack" && mv "$BASE/pack.nuovo" "$BASE/pack"
   # mv e non cp: avvia.sh è in esecuzione e bash lo legge a pezzi, sovrascriverlo sul posto lo romperebbe
   for f in avvia.sh patch_level.py pannello.py pannello.html; do cp "$tmp/debian/$f" "$BASE/$f.nuovo" && mv -f "$BASE/$f.nuovo" "$BASE/$f"; done
@@ -297,8 +307,11 @@ notifica() { curl -s -m 10 -H "Title: Claude Compagno" -d "$1" "https://ntfy.sh/
   done ) &
 NOTIFICHE=$!
 
-# Ogni 10 minuti controlla se su GitHub c'è una versione nuova: la installa e riavvia da solo (circa 1 minuto)
-( while sleep 600; do
+# Ogni 30 minuti controlla se su GitHub c'è una versione nuova; la installa (riavvio di circa 1 minuto)
+# solo quando non c'è nessun giocatore online, così non butta fuori chi sta giocando
+( while sleep 1800; do
+    nuova_disponibile || continue
+    while [ "$(giocatori_online)" -gt 0 ]; do sleep 300; done
     if aggiorna_bot; then
       notifica "⬆️ Bot aggiornato alla versione $(cat "$BASE/.versione"): riavvio di un minuto"
       touch "$BASE/.riavvia" "$BASE/.stop_richiesto"; echo stop > "$FIFO"; break
