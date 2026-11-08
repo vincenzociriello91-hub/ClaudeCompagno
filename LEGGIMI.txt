@@ -30,7 +30,7 @@ Ti dà un indirizzo pubblico da passare agli amici.
 
 AGGIORNAMENTI AUTOMATICI (dalla 2.7.1, gratis)
 Non serve più scaricare lo zip: le versioni nuove escono su github.com/vincenzociriello91-hub/ClaudeCompagno
-e la Odin le installa da sola. Controlla a ogni mc-avvia e poi ogni 10 minuti; se ne trova una nuova (mai una più vecchia) la scarica,
+e la Odin le installa da sola. Controlla a ogni mc-avvia; le versioni normali le installa al massimo ogni 30 minuti, le urgenti entro 10; se ne trova una nuova (mai una più vecchia) la scarica,
 la verifica (se il download è rotto la scarta e il bot vecchio continua) e riavvia il server in circa un minuto,
 ma solo quando nessun giocatore è online: se stai giocando aspetta che esci.
 Dalla 2.8.5, se cambia solo il bot non riavvia il server: lo ricarica in pochi secondi (comando reload); se il bot

@@ -33,6 +33,8 @@ nuova_disponibile() {
   [ -f "$IMP/no_aggiornamenti" ] && return 1
   piu_nuova "$(curl -fsS -m 20 "https://raw.githubusercontent.com/$REPO/main/VERSIONE" 2>/dev/null | tr -cd '0-9.')" "$(cat "$BASE/.versione" 2>/dev/null)"
 }
+# aggiornamento urgente: nel repository il file URGENTE contiene il numero della versione da installare subito
+urgente() { [ "$(curl -fsS -m 20 "https://raw.githubusercontent.com/$REPO/main/URGENTE" 2>/dev/null | tr -cd '0-9.')" = "$(curl -fsS -m 20 "https://raw.githubusercontent.com/$REPO/main/VERSIONE" 2>/dev/null | tr -cd '0-9.')" ]; }
 # giocatori veri collegati ora (il bot non conta: entra come "Player Spawned", non "Player connected")
 # (contati dall'ultimo "Server started": dopo un crash mancano le righe di uscita)
 giocatori_online() { awk '/Server started/{n=0} /Player connected:/{n++} /Player disconnected:/{n--} END{print (n>0?n:0)}' "$LOG"; }
@@ -348,10 +350,13 @@ notifica() { curl -s -m 10 -H "Title: Claude Compagno" -d "$1" "https://ntfy.sh/
   done ) &
 NOTIFICHE=$!
 
-# Ogni 10 minuti controlla se su GitHub c'è una versione nuova; la installa (riavvio di circa 1 minuto)
-# solo quando non c'è nessun giocatore online, così non butta fuori chi sta giocando
-( while sleep 600; do
+# Ogni 10 minuti guarda se su GitHub c'è una versione nuova: le urgenti le installa subito, le normali al massimo
+# una volta ogni 30 minuti (deciso da Vincenzo). Sempre solo quando nessun giocatore è online.
+( giro=0
+  while sleep 600; do
+    giro=$((giro + 1))
     nuova_disponibile || continue
+    if [ $((giro % 3)) -ne 0 ] && ! urgente; then continue; fi
     while [ "$(giocatori_online)" -gt 0 ]; do sleep 300; done
     if aggiorna_bot; then
       v=$(cat "$BASE/.versione")
