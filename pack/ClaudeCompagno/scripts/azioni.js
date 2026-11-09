@@ -1285,6 +1285,7 @@ const ESECUTORI = {
   // ci smista l'inventario e svuota la vecchia cassa del deposito nelle casse giuste
   // fornace fissa vicino a casa: fondi falliva l'80% delle volte per "serve una fornace"
   fornace(bot, c) {
+    const s0 = c.stato;
     const casa = mem.luoghi.casa;
     if (!casa) return finito(false, "serve prima una casa");
     const r = vaiVerso(bot, { x: casa.x + 0.5, y: casa.y, z: casa.z + 2.5 }, 3);
@@ -1294,9 +1295,10 @@ const ESECUTORI = {
       if (contaOggetti(bot, "#pietra") < 8 && rinvia(c, "#pietra", 8 - contaOggetti(bot, "#pietra"))) return;
       const [ok, msg] = fabbrica(bot, "minecraft:furnace");
       if (!ok && msg === "serve un banco da lavoro" && rinvia(c, "#tronco", 1)) return;
+      if (!ok) s0.motivo = msg; // la causa vera (di solito manca la legna per il banco), non "né 8 pietre"
     }
     const p = assicuraBlocco(bot, "minecraft:furnace");
-    if (!p) return finito(false, "non ho una fornace né 8 pietre per farla");
+    if (!p) return finito(false, `non riesco a fare la fornace: ${s0.motivo ?? "nessun posto asciutto dove piazzarla"}`);
     mem.luoghi.fornace = { x: p.x, y: p.y, z: p.z, nota: "fornace fissa del bot" };
     finito(true, `fornace fissa a ${p.x},${p.y},${p.z}`);
   },
@@ -1387,7 +1389,9 @@ const ESECUTORI = {
     if (r === "bloccato") { s.i++; return; }
     if (r !== true) return;
     const sotto = bot.dimension.getBlock({ x: g.x, y: g.y - 1, z: g.z });
-    if (bot.dimension.getBlock(g)?.isAir && /dirt|grass_block|podzol|moss_block/.test(sotto?.typeId ?? "") && piazza(bot, g, alberello) === "ok") {
+    // anche sull'erba alta o sui fiori (piazza li sostituisce): prima piantava 0 alberelli su 8 nei prati
+    const cella = bot.dimension.getBlock(g);
+    if (cella && (cella.isAir || SOSTITUIBILI.test(cella.typeId)) && /dirt|grass_block|podzol|moss_block/.test(sotto?.typeId ?? "") && piazza(bot, g, alberello) === "ok") {
       protetti.delete(chiaveBlocco(bot.dimension, g)); // il tronco che crescerà deve restare tagliabile
       s.piantati++;
     }
