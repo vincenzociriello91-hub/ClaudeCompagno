@@ -293,7 +293,10 @@ world.afterEvents.entityDie.subscribe(({ deadEntity, damageSource }) => {
     if (!giocatoriVeri().length) lezioneAuto(`morte|${causa}|${zonaDi(dove)}`, `Morto per ${causa} a ${dove.x},${dove.y},${dove.z} mentre facevo: ${descriviCompito(mem.compito)}. Lì serve più prudenza.`, 1);
     // recupero oggetti: non in lava o nel vuoto, e non se è già morto lì da poco (sarebbe una trappola)
     const giaMortoQui = mem.morteRecente && dist(mem.morteRecente, dove) < 8 && Date.now() - mem.morteRecente.t < 600000;
-    const recuperabile = !/lava|void|fire/.test(causa) && !giaMortoQui;
+    // raffica di morti (09/11: 4 morti per zombie in 2 minuti intorno a casa): niente recupero, si rinasce protetti
+    mem.mortiRecenti = (mem.mortiRecenti ?? []).filter((t) => Date.now() - t < 180000).concat(Date.now());
+    const raffica = mem.mortiRecenti.length >= 2;
+    const recuperabile = !/lava|void|fire/.test(causa) && !giaMortoQui && !raffica;
     mem.morteRecente = { ...dove, t: Date.now() };
     segnaPericolo(dove, 12, causa);
     mem.luoghi.ultima_morte = { ...dove, nota: "oggetti persi" };
@@ -307,6 +310,12 @@ world.afterEvents.entityDie.subscribe(({ deadEntity, damageSource }) => {
         const casa = mem.luoghi.casa;
         if (p) bot.teleport(p.location, { dimension: p.dimension });
         else if (casa) bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 });
+        if (raffica) {
+          // come la protezione alla rinascita dei giocatori: 15 secondi per allontanarsi o chiudersi in una tana
+          try { bot.addEffect("resistance", 300, { amplifier: 4, showParticles: false }); } catch {}
+          evento("Rinasco protetto per 15 secondi: troppe morti di fila, niente recupero degli oggetti");
+          assegna({ tipo: "tana", routine: "notte_sicura" }, "autonomia");
+        }
         // gli oggetti a terra spariscono dopo 5 minuti: va subito a riprenderli
         if (recuperabile && vivo()) assegna({ tipo: "recupera", ...dove, scadenza: system.currentTick + 5600 }, "autonomia");
       }, 20);
