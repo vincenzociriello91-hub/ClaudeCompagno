@@ -105,6 +105,10 @@
     <h2>Temperatura CPU e fluidità del server (ultime 12 ore)</h2><div class="box" id="grafici"><p class="vuoto">Il grafico si riempie un punto al minuto.</p></div>
     <h2>Temperature per zona</h2><div class="box"><ul class="lista" id="zone"></ul></div>
     <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
+    <h2>Comandi a distanza</h2>
+    <div class="box"><div class="filtri" id="comandi">
+      <button data-c="sync_drive">Fai ripartire Drive</button><button data-c="avvia_server">Avvia il server</button><button data-c="riavvia_odin">Riavvia la Odin</button></div>
+      <div class="leggenda" id="esito">Servono il modulo Magisk v4.13. L'esito compare qui entro pochi secondi.</div></div>
   </section>
   <section id="novita"><div class="box" id="novitatesto"><p class="vuoto">Carico…</p></div></section>
   <section id="rapporti">
@@ -313,10 +317,17 @@ async function aggiornaOdin() {
         + `<polyline fill="none" stroke="var(--ok)" stroke-width="1.5" vector-effect="non-scaling-stroke" points="${linea(2, 0, 20)}"/></svg>`
         + `<div class="leggenda"><span style="color:var(--ko)">■</span> CPU (30-95 °C, massimo ${tmax} °C) · <span style="color:var(--ok)">■</span> TPS (0-20) · dalle ${new Date(t0 * 1000).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</div>`;
     }
+    if (o.esito_comando) $("esito").textContent = "Ultimo comando: " + o.esito_comando;
     $("consumo").className = o.consumo_server ? "" : "vuoto";
     $("consumo").textContent = o.consumo_server || "Ancora nessuna misura del modulo Odin2PortalTweaks.";
   } catch { $("odinbox").innerHTML = '<p class="vuoto">Odin non raggiungibile</p>'; }
 }
+$("comandi").onclick = async (e) => {
+  const c = e.target.dataset.c; if (!c) return;
+  if (c === "riavvia_odin" && !confirm("Riavviare la Odin? Il server resta fermo un paio di minuti.")) return;
+  try { const r = await fetch("/api/comando?a=" + c, { method: "POST" }); $("esito").textContent = r.ok ? "Comando inviato…" : "Comando non permesso"; }
+  catch { $("esito").textContent = "Pannello non raggiungibile"; }
+};
 aggiorna(); setInterval(aggiorna, 2000);
 aggiornaOdin(); setInterval(aggiornaOdin, 10000);
 </script>

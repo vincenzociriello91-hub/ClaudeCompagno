@@ -312,8 +312,21 @@ def campiona(rep, percorso_log):
     del STORICO[:-1440]
 
 
+COMANDI = ("sync_drive", "avvia_server", "riavvia_odin")
+
+
+def manda_comando(rep, azione):
+    """Assistente remoto del modulo Magisk: una parola della lista in Download/.odin_comando (il modulo la esegue)."""
+    if azione not in COMANDI:
+        return False
+    with open(os.path.join(os.path.dirname(rep.rstrip("/")), ".odin_comando"), "w") as f:
+        f.write(azione)
+    return True
+
+
 def odin_completo(rep, percorso_log):
     o = stato_odin(rep)
+    o["esito_comando"] = _leggi(os.path.join(os.path.dirname(rep.rstrip("/")), ".odin_esito")) or ""
     b = ultimo_battito(percorso_log)
     if b:
         o["tps"], o["tps_media"], o["tps_min"] = b[1], b[2], b[3]
@@ -369,6 +382,15 @@ class Gestore(BaseHTTPRequestHandler):
                 return self._invia(404, "rapporto non trovato", "text/plain; charset=utf-8")
         self._invia(404, "non trovato", "text/plain; charset=utf-8")
 
+    def do_POST(self):
+        u = urlparse(self.path)
+        if u.path == "/api/comando":
+            azione = parse_qs(u.query).get("a", [""])[0]
+            if manda_comando(self.rep, azione):
+                return self._invia(200, "ok", "text/plain; charset=utf-8")
+            return self._invia(400, "comando non permesso", "text/plain; charset=utf-8")
+        self._invia(404, "non trovato", "text/plain; charset=utf-8")
+
     def log_message(self, *args):  # niente righe nel terminale a ogni richiesta
         pass
 
@@ -412,8 +434,12 @@ def prova():
         assert od["batteria"] == 54 and od["carica"] == "Discharging" and od["temp_batteria"] == 25.1, od
         assert od["watt"] == 1.6 and od["temp_cpu"] == 54.3 and od["ram_libera_mb"] == 2148 and od["acceso_da_ore"] == 10.5, od
         assert od["consumo_server"] == "=== CONSUMO ===" and od["carico"] is None
+        # comandi remoti: solo quelli della lista arrivano al modulo
+        rc = os.path.join(d, "Download/Odin2_report"); os.makedirs(rc, exist_ok=True)
+        assert manda_comando(rc, "sync_drive") and _leggi(os.path.join(d, "Download/.odin_comando")) == "sync_drive"
+        assert not manda_comando(rc, "rm -rf /")
         # sysfs nascosto (come su Termux): valori dal file del modulo
-        r2 = os.path.join(d, "Download/Odin2_report"); os.makedirs(r2)
+        r2 = os.path.join(d, "Download/Odin2_report"); os.makedirs(r2, exist_ok=True)
         open(os.path.join(d, "Download/.odin_stato"), "w").write(f"batteria=77\nstato=Charging\ntemp_batteria=312\ncorrente_ua=-500000\ntensione_uv=4000000\ntemp_cpu=61\nuptime=36000\nora={int(time.time())}\n")
         m = stato_odin(r2, os.path.join(d, "manca"), os.path.join(d, "manca"))
         assert m["batteria"] == 77 and m["carica"] == "Charging" and m["temp_batteria"] == 31.2 and m["watt"] == 2.0, m
