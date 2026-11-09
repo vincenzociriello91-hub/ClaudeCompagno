@@ -455,15 +455,17 @@ if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
   PLAYIT=$!
   ( for _ in $(seq 1 2880); do  # 24 ore: finché il link non viene usato lo tiene su Drive
       sleep 30
-      kill -0 "$PLAYIT" 2>/dev/null || break
-      u=$(grep -o 'https://playit\.gg/claim/[A-Za-z0-9_-]*' "$LOGDIR/playit.log" 2>/dev/null | tail -1)
+      # copia leggibile su Drive per capire cosa fa playit (senza righe con chiavi)
+      tail -n 40 "$LOGDIR/playit.log" 2>/dev/null | grep -viE 'secret|token|key' > "$REP/playit_log.txt"
+      kill -0 "$PLAYIT" 2>/dev/null || { echo "(playit si è fermato)" >> "$REP/playit_log.txt"; break; }
+      u=$(grep -oE 'https?://[A-Za-z0-9./-]*playit\.gg/[A-Za-z0-9/_?=-]*claim[A-Za-z0-9/_?=-]*' "$LOGDIR/playit.log" 2>/dev/null | tail -1)
       if [ -n "$u" ] && [ ! -f "$IMP/playit_collegato" ] && ! grep -qiE 'tunnel.*(running|ready|online)|agent (registered|connected)' "$LOGDIR/playit.log" 2>/dev/null; then
         [ -f "$REP/playit_accesso.txt" ] || notifica "🔗 Tunnel per giocare da fuori casa: apri il file playit_accesso.txt in Odin2_report"
         printf 'Apri questo link dal telefono, accedi o crea l account gratuito di playit e conferma:\n%s\n\nPoi nel sito: Add Tunnel, tipo "Minecraft Bedrock", porta locale 19132.\nL indirizzo da usare in Minecraft (Server > Aggiungi server) compare nel sito accanto al tunnel.\n' "$u" > "$REP/playit_accesso.txt"
       elif [ -f "$REP/playit_accesso.txt" ]; then
         rm -f "$REP/playit_accesso.txt"; touch "$IMP/playit_collegato"
         log "Tunnel playit collegato all'account"; notifica "✅ Tunnel playit collegato all'account"; break
-      elif [ -z "$u" ]; then break  # già collegato da prima: niente link
+      elif [ -z "$u" ] && [ -f "$IMP/playit_collegato" ]; then break  # già collegato da prima: niente link
       fi
     done ) &
   log "Tunnel playit avviato (log: $LOGDIR/playit.log)"
