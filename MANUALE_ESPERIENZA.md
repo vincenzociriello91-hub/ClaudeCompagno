@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.40 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.41 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -231,6 +231,7 @@ Aggiornato alla versione 2.8.40 (9 novembre 2026), dopo circa 30 ore di gioco, 2
 | Bosco "piantati 0 alberelli" con 8 alberelli in tasca, e niente legna vicino a casa per giorni | si piantava solo su celle d'aria, ma nei prati sopra la terra c'è l'erba alta | prima di dire che un posto non va bene, togli ciò che si può togliere (erba, fiori) |
 | Fornace "né 8 pietre" con 28 ciottoli in tasca | il messaggio nascondeva la causa vera: mancava la legna per il banco da lavoro | un errore deve dire la causa vera, non la prima ipotesi |
 | Il proprietario voleva vedere il bot giocare, non solo leggere i rapporti | si poteva solo leggere il log | far vedere il lavoro dal vivo costa poco se lo spettatore usa il proprio dispositivo, non chi lavora |
+| Da fuori casa il gioco non si collegava, la pagina web sì | la rete privata portava solo il collegamento della pagina | quando un canale non passa, usa quello che passa già: una vista semplice che arriva sempre vale più di una completa che non arriva |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |

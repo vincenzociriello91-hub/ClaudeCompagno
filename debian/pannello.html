@@ -77,9 +77,11 @@
     <canvas id="tela" width="900" height="900"></canvas>
     <div class="leg"><span><i style="background:#c45a2c"></i>Claude</span><span><i style="background:#1f6fb2"></i>giocatori</span>
       <span><i style="background:#2f7d4f"></i>luoghi</span><span><i style="background:#8a6d00"></i>risorse</span>
-      <span><i style="background:#b3261e"></i>zone pericolose</span><span><i style="background:#888"></i>percorso</span></div>
+      <span><i style="background:#b3261e"></i>zone pericolose</span><span><i style="background:#888"></i>percorso</span>
+      <span><i style="background:#e03131"></i>mostri</span><span><i style="background:#2f9e44"></i>animali</span></div>
     <div class="sotto">Vista dall'alto: nord in alto, est a destra. Pizzica o usa i pulsanti per lo zoom.</div>
-    <div class="filtri"><button id="zp">+</button><button id="zm">−</button><button id="zc">centra su Claude</button></div>
+    <div class="filtri"><button id="dv">▶ dal vivo</button><button id="zp">+</button><button id="zm">−</button><button id="zc">centra su Claude</button></div>
+    <div class="sotto" id="vivotesto"></div>
   </section>
   <section id="memoria">
     <h2>Missione principale</h2><div class="box">1. Sopravvivere · 2. Trovare una soluzione · 3. Adattarsi · 4. Evolversi · 5. Costruire · 6. Esplorare · e sempre: non fermarsi</div>
@@ -200,10 +202,19 @@ const tela = $("tela"), ctx = tela.getContext("2d");
 function disegna() {
   const s = dati?.stato, m = dati?.memoria; if (!s) return;
   const css = getComputedStyle(document.documentElement);
-  if (!centro && s.presente) centro = { x: s.x, z: s.z };
+  if ((!centro || dalVivo) && s.presente) centro = { x: s.x, z: s.z };
   const c = centro ?? { x: 0, z: 0 }, W = tela.width, H = tela.height;
   const px = (x) => W / 2 + (x - c.x) * zoom, pz = (z) => H / 2 + (z - c.z) * zoom;
   ctx.clearRect(0, 0, W, H);
+  // terreno dal vivo intorno a Claude: una lettera per blocco visto dall'alto
+  const v = s.presente ? s.vista : null;
+  if (v?.g) {
+    const lato = 2 * v.r + 1;
+    for (let i = 0; i < v.g.length; i++) {
+      const col = COLORI[v.g[i]]; if (!col) continue;
+      ctx.fillStyle = col; ctx.fillRect(px(v.cx - v.r + (i % lato)), pz(v.cz - v.r + Math.floor(i / lato)), zoom + 0.5, zoom + 0.5);
+    }
+  }
   ctx.strokeStyle = css.getPropertyValue("--linea"); ctx.lineWidth = 1;
   const passo = zoom >= 4 ? 16 : zoom >= 1.5 ? 64 : 128;
   for (let x = Math.floor((c.x - W / 2 / zoom) / passo) * passo; x < c.x + W / 2 / zoom; x += passo) { ctx.beginPath(); ctx.moveTo(px(x), 0); ctx.lineTo(px(x), H); ctx.stroke(); }
@@ -214,8 +225,16 @@ function disegna() {
   for (const [n, q] of Object.entries(m?.luoghi ?? {})) if (!/^ultima_morte/.test(n)) punto(q.x, q.z, 6, "#2f7d4f", n);
   ctx.strokeStyle = "#888"; ctx.lineWidth = 2; ctx.beginPath(); percorso.forEach((q, i) => (i ? ctx.lineTo(px(q.x), pz(q.z)) : ctx.moveTo(px(q.x), pz(q.z)))); ctx.stroke();
   for (const g of s.giocatori ?? []) punto(g.x, g.z, 8, "#1f6fb2", g.n);
-  if (s.presente) punto(s.x, s.z, 10, "#c45a2c", "Claude");
+  for (const e of v?.mob ?? []) punto(e.x + 0.5, e.z + 0.5, Math.max(4, zoom * 0.35), e.o ? "#e03131" : "#2f9e44", zoom >= 12 ? e.t : "");
+  if (s.presente) {
+    punto(s.x, s.z, 10, "#c45a2c", "Claude");
+    if (v) { const a = v.dir / 57.3; ctx.strokeStyle = "#c45a2c"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(px(s.x), pz(s.z)); ctx.lineTo(px(s.x) + Math.sin(a) * 30, pz(s.z) + Math.cos(a) * 30); ctx.stroke(); }
+  }
+  $("vivotesto").textContent = dalVivo && s.presente ? `Claude: vita ${s.vita}/20 · ${s.compito} · ${(v?.mob ?? []).filter((e) => e.o).length} mostri vicini` : "";
 }
+const COLORI = { w: "#3b7dd8", v: "#e2591b", f: "#2e6b2e", t: "#6b4a2b", c: "#a39382", g: "#6aa84f", y: "#d9c98a", n: "#eeeeee", d: "#8b6b4a", s: "#8a8a8a", o: "#a8a8a8" };
+let dalVivo = false;
+$("dv").onclick = () => { dalVivo = !dalVivo; $("dv").classList.toggle("on", dalVivo); if (dalVivo) zoom = 24; disegna(); };
 $("zp").onclick = () => { zoom = Math.min(16, zoom * 1.6); disegna(); };
 $("zm").onclick = () => { zoom = Math.max(0.2, zoom / 1.6); disegna(); };
 $("zc").onclick = () => { if (dati?.stato?.presente) centro = { x: dati.stato.x, z: dati.stato.z }; disegna(); };

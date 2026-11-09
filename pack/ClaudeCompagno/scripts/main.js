@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -710,6 +710,7 @@ ogniTick(100, () => {
     compito: breve(mem.compito), coda: mem.coda.slice(0, 8).map(breve),
     modalita: mem.modalita, bersaglio: mem.bersaglio, giocatori: g, ora: world.getTimeOfDay(), tps: +prestazioni.tps.toFixed(1),
     spesa: +mem.spesa.usd.toFixed(4), chiamate: mem.spesa.chiamate, budget: CFG.budget, maturita: maturita(),
+    vista: (() => { try { return vista(bot); } catch (e) { errore("vista", e); return null; } })(),
   });
 });
 ogniTick(2400, () => {

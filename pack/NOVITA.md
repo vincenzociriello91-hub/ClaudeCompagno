@@ -1,15 +1,16 @@
 # Novità di Claude Compagno
 
-## 2.8.40 — attuale (09/11/2026)
+## 2.8.41 — attuale (09/11/2026)
+- **Mappa dal vivo** nel pannello, anche da fuori casa: scheda Mappa → tasto "▶ dal vivo". Vedi Claude dall'alto con il terreno intorno (erba, acqua, alberi, costruzioni), i mostri in rosso e gli animali in verde, la direzione in cui guarda, vita e compito. Si aggiorna ogni 5 secondi e la mappa lo segue.
+- Pesa pochissimo sulla Odin: il terreno si rilegge solo quando il bot si sposta.
+
+## 2.8.40 — precedente (09/11/2026)
 - **Guardalo in diretta**: entra nel mondo dal telefono e scrivi in chat `guarda`. Diventi spettatore invisibile e la telecamera segue il bot da dietro, come un video di gioco. Scrivi `smetti` per tornare com'eri, dove eri. Solo per sparda991.
 - Pesa pochissimo sulla Odin: le immagini le disegna il telefono, la Odin sposta solo la telecamera ogni mezzo secondo.
 
-## 2.8.39 — precedente (09/11/2026)
-- Bosco vicino a casa: ora pianta gli alberelli anche nei prati con l'erba alta (prima ne piantava 0 su 8). Così tra poco avrà legna vicina per il banco da lavoro e l'armatura di ferro.
-- Fornace: se non riesce a farla dice la causa vera (di solito manca la legna per il banco), non più "né 8 pietre".
-
 ## In programma
-- Armatura di ferro: appena gli alberi del bosco crescono, banco da lavoro e armatura.
+- Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.
+- Giocare e usare `guarda` anche da fuori casa: tunnel gratuito (playit) da attivare una volta a casa.
 - Inventario spesso pieno: svuotarlo nel deposito prima che blocchi il lavoro.
 - Meno morti di notte senza armatura, fino a passare più notti di fila senza morire (primo criterio per fare da maestro).
 - Modulo Magisk v4.12 (da installare a casa): batteria, ventola e protezione dal calore nella scheda Odin.

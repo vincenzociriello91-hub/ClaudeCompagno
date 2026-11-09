@@ -383,6 +383,44 @@ export function riordinaInventario(bot) {
   if (via) evento(`Inventario riordinato: buttati ${via} oggetti inutili o doppi`);
 }
 
+// ---------- vista dal vivo per il pannello ----------
+// Blocchi visti dall'alto (una lettera per blocco) e creature intorno al bot, dentro lo STATO ogni 5 secondi.
+// Il terreno si rilegge solo se il bot si è spostato di 3 blocchi o dopo 30 s: costa pochissimo alla Odin.
+const R_VISTA = 12;
+const cache = { x: null, z: null, t: 0, griglia: "" };
+export function letteraBlocco(id) {
+  const n = id.replace("minecraft:", "");
+  if (/water|ice$/.test(n)) return "w";
+  if (/lava|magma/.test(n)) return "v";
+  if (/leaves/.test(n)) return "f";
+  if (/_log$|_wood$|_stem$/.test(n)) return "t";
+  if (COSTRUITI.test(n) || n === "cobblestone") return "c";
+  if (/grass_block|moss|podzol|mycelium|short_grass|fern|flower|bush/.test(n)) return "g";
+  if (/sand|gravel/.test(n)) return "y";
+  if (/snow/.test(n)) return "n";
+  if (/dirt|mud|farmland|clay/.test(n)) return "d";
+  if (/stone|deepslate|andesite|diorite|granite|tuff|calcite|ore$/.test(n)) return "s";
+  return "o";
+}
+const mostro = (e) => { try { return e.matches({ families: ["monster"] }) ? 1 : 0; } catch { return 0; } };
+export function vista(bot) {
+  const l = bot.location, dim = bot.dimension, x0 = Math.floor(l.x), z0 = Math.floor(l.z);
+  if (cache.x === null || Math.abs(x0 - cache.x) >= 3 || Math.abs(z0 - cache.z) >= 3 || (Date.now() - cache.t > 30000 && !prestazioni.lento)) {
+    let g = "";
+    for (let dz = -R_VISTA; dz <= R_VISTA; dz++) for (let dx = -R_VISTA; dx <= R_VISTA; dx++) {
+      let b; try { b = dim.getTopmostBlock({ x: x0 + dx, z: z0 + dz }); } catch {}
+      g += b ? letteraBlocco(b.typeId) : "?";
+    }
+    Object.assign(cache, { x: x0, z: z0, t: Date.now(), griglia: g });
+  }
+  let ent = [];
+  try { ent = dim.getEntities({ location: l, maxDistance: 20 }); } catch {}
+  const mob = ent.filter((e) => e.id !== bot.id && e.typeId !== "minecraft:player" && !/item|xp_orb|arrow|projectile|painting|boat|minecart|fireball|potion|egg|snowball|trident|leash/.test(e.typeId))
+    .slice(0, 40).map((e) => ({ t: e.typeId.replace("minecraft:", ""), x: Math.round(e.location.x), z: Math.round(e.location.z), o: mostro(e) }));
+  const d = bot.getViewDirection?.() ?? { x: 0, z: 1 };
+  return { cx: cache.x, cz: cache.z, r: R_VISTA, g: cache.griglia, mob, dir: Math.round(Math.atan2(d.x, d.z) * 57.3) };
+}
+
 // ---------- difesa ----------
 const NEUTRALI = /enderman|zombie_pigman|zombified_piglin|piglin$|piglin_brute|wolf|bee$|llama|iron_golem|polar_bear|dolphin|goat|panda/;
 const EVITA = /warden|ender_dragon|wither$|elder_guardian/;
