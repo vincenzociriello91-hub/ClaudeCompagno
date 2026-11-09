@@ -1162,8 +1162,11 @@ const ESECUTORI = {
   routine(bot, c) {
     const passi = ROUTINE[c.nome]?.passi;
     if (!passi) return finito(false, `routine sconosciuta: ${c.nome}`);
-    mem.coda.unshift(...passi.map((p) => ({ ...p, routine: c.nome })));
-    finito(true, `routine ${c.nome} avviata: ${passi.length} passi`);
+    // lingotti già in tasca per il piccone (09/11: 4 lingotti, piccone rotto, e andava a scavare 10 minerali di ferro
+    // senza piccone): si crafta subito; i lingotti che mancano per spada e ascia li procura il crafta stesso
+    const lista = c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi;
+    mem.coda.unshift(...lista.map((p) => ({ ...p, routine: c.nome })));
+    finito(true, `routine ${c.nome} avviata: ${lista.length} passi`);
   },
 
   caccia(bot, c) {
