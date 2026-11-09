@@ -647,10 +647,10 @@ function filtroBlocco(nome) {
 // (casetta, bosco, fattoria, deposito) e dalle costruzioni dei giocatori. null se non c'è.
 export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
   for (const k of Object.keys(motiviSpiazzo)) motiviSpiazzo[k] = 0;
-  // anelli da 8 a 32 blocchi in 8 direzioni: con 12 posti fissi vicino alla casa (collina, acqua, base del giocatore)
+  // anelli da 8 a 48 blocchi in 8 direzioni (casa sul lago: a est e a sud è tutta acqua); gli alberi si tagliano costruendo. con 12 posti fissi vicino alla casa (collina, acqua, base del giocatore)
   // deposito e bosco fallivano sempre con "nessuno spiazzo libero"
   const posti = [];
-  for (let r = 8; r <= 32; r += 4) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) posti.push([a * r, b * r]);
+  for (let r = 8; r <= 48; r += 4) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]) posti.push([a * r, b * r]);
   for (const [dx, dz] of posti) {
     const x0 = casa.x + dx, z0 = casa.z + dz;
     const angoli = [[0, 0], [lato - 1, 0], [0, lato - 1], [lato - 1, lato - 1], [Math.floor(lato / 2), Math.floor(lato / 2)]].map(([a, b]) => suolo(dim, x0 + a, z0 + b));
@@ -668,7 +668,7 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
     for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
       const blk = dim.getBlock({ x: x0 + a, y: Math.min(...ys), z: z0 + b });
       // il terreno naturale un blocco più alto si spiana; solo le costruzioni (tue o del bot) e i tronchi rendono il posto occupato
-      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium/.test(blk.typeId)) occupato = true;
+      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium|_log$|vine/.test(blk.typeId)) occupato = true;
     }
     if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
     motiviSpiazzo.occupato++;
