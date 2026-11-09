@@ -594,6 +594,14 @@ function finito(ok, msg) {
   mem.compito = null;
 }
 
+// prima posizione sopra l, con piedi e testa liberi (aria o erba), entro 24 blocchi
+export function ariaSopra(dim, l) {
+  const x = Math.floor(l.x), z = Math.floor(l.z), passa = (b) => !!b && (b.isAir || /short_grass|tall_grass|fern|flower|snow_layer/.test(b.typeId));
+  for (let y = Math.floor(l.y + 0.5); y < Math.min(dim.heightRange.max - 2, l.y + 24); y++)
+    if (passa(dim.getBlock({ x, y, z })) && passa(dim.getBlock({ x, y: y + 1, z }))) return { x, y, z };
+  return null;
+}
+
 // Terreno su cui stare in piedi a x,z: scende sotto chiome e tronchi; dice se in superficie c'è acqua o lava.
 export function suolo(dim, x, z) {
   let b;

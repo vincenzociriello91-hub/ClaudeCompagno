@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -249,13 +249,14 @@ world.afterEvents.entityHurt.subscribe(({ hurtEntity, damage, damageSource }) =>
     sessione.danniSubiti += damage;
     // soffoca dentro un blocco (è morto così a 110,64,350): esce subito sul terreno libero sopra
     if (damageSource.cause === "suffocation") {
-      const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
+      // si esce verso l'alto: suolo() scende dentro i tronchi e rimetteva il bot nel legno (morto a 87,73,361)
+      const g = ariaSopra(bot.dimension, bot.location);
       soffocamenti = soffocamenti.filter((t) => Date.now() - t < 30000).concat(Date.now());
       const casa = mem.luoghi.casa;
       if (soffocamenti.length >= 3 && (ultimoSicuro || casa)) {
         // il salvataggio sul posto non basta (ieri 9 di fila e poi morto): via di lì e compito cambiato
-        bot.teleport(ultimoSicuro ?? { x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 });
-        segnaPericolo(bot.location, 8, "soffocamento");
+        segnaPericolo(bot.location, 8, "soffocamento"); // il punto pericoloso, prima di spostarsi
+        bot.teleport(terraSicura(bot.dimension, bot.location) ?? (casa ? { x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 } : ultimoSicuro));
         if (mem.compito) interrompi("soffocavo di continuo in quel punto: cambio strada");
         soffocamenti = [];
         evento("Salvataggio: soffocavo di continuo, mi sposto in un punto sicuro");
