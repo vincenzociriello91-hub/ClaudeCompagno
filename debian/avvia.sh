@@ -445,27 +445,40 @@ fuori_casa &  # in sottofondo: il primo download non ritarda l'avvio del server
 # Odin2_report/playit_accesso.txt (cartella privata su Drive). Per spegnerlo: touch /root/claudemc/impostazioni/no_playit
 PLAYIT=""
 pkill -x playit 2>/dev/null  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
-if ! command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
-  curl -fsSL -m 300 -o /usr/local/bin/playit.nuovo https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-linux-aarch64 \
-    && chmod +x /usr/local/bin/playit.nuovo && mv -f /usr/local/bin/playit.nuovo /usr/local/bin/playit && log "playit scaricato"
+pkill -f "playit-cli setup" 2>/dev/null
+# playit nuovo = due programmi: "playit" è il servizio (playitd) che tiene il tunnel, "playit-cli" fa il collegamento all'account
+scarica_playit() {
+  [ -x "/usr/local/bin/$1" ] && return 0
+  curl -fsSL -m 300 -o "/usr/local/bin/$1.nuovo" "https://github.com/playit-cloud/playit-agent/releases/latest/download/$2" \
+    && chmod +x "/usr/local/bin/$1.nuovo" && mv -f "/usr/local/bin/$1.nuovo" "/usr/local/bin/$1" && log "$1 scaricato"
+}
+if [ ! -f "$IMP/no_playit" ]; then
+  scarica_playit playit playit-linux-aarch64
+  scarica_playit playit-cli playit-cli-linux-aarch64
 fi
 if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
-  # -s: log normali invece della schermata interattiva (senza terminale non funziona); le versioni vecchie non lo conoscono
-  { playit -s > "$LOGDIR/playit.log" 2>&1 || playit > "$LOGDIR/playit.log" 2>&1; } &
+  playit > "$LOGDIR/playit.log" 2>&1 &
   PLAYIT=$!
+  # prima volta: "playit-cli setup" stampa il link https://playit.gg/claim/... e aspetta che venga confermato
+  if [ ! -f "$IMP/playit_collegato" ] && command -v playit-cli >/dev/null; then
+    ( sleep 10; playit-cli setup > "$LOGDIR/playit_setup.log" 2>&1 && touch "$IMP/playit_collegato" ) &
+  fi
   ( for _ in $(seq 1 2880); do  # 24 ore: finché il link non viene usato lo tiene su Drive
       sleep 30
-      # copia leggibile su Drive per capire cosa fa playit (senza righe con chiavi)
-      tail -n 40 "$LOGDIR/playit.log" 2>/dev/null | grep -viE 'secret|token|key' > "$REP/playit_log.txt"
+      # copia leggibile su Drive per controllare playit da lontano (senza righe con chiavi)
+      { tail -n 25 "$LOGDIR/playit.log"; echo "--- collegamento:"; tail -n 15 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
+        | grep -viE 'secret|token|key|guest-account' > "$REP/playit_log.txt"
       kill -0 "$PLAYIT" 2>/dev/null || { echo "(playit si è fermato)" >> "$REP/playit_log.txt"; break; }
-      u=$(grep -oE 'https?://[A-Za-z0-9./-]*playit\.gg/[A-Za-z0-9/_?=-]*claim[A-Za-z0-9/_?=-]*' "$LOGDIR/playit.log" 2>/dev/null | tail -1)
-      if [ -n "$u" ] && [ ! -f "$IMP/playit_collegato" ] && ! grep -qiE 'tunnel.*(running|ready|online)|agent (registered|connected)' "$LOGDIR/playit.log" 2>/dev/null; then
+      if [ -f "$IMP/playit_collegato" ]; then
+        if [ -f "$REP/playit_accesso.txt" ]; then
+          rm -f "$REP/playit_accesso.txt"; log "Tunnel playit collegato all'account"; notifica "✅ Tunnel playit collegato all'account"
+        fi
+        break
+      fi
+      u=$(grep -oE 'https://playit\.gg/claim/[A-Za-z0-9_-]+' "$LOGDIR/playit_setup.log" 2>/dev/null | tail -1)
+      if [ -n "$u" ]; then
         [ -f "$REP/playit_accesso.txt" ] || notifica "🔗 Tunnel per giocare da fuori casa: apri il file playit_accesso.txt in Odin2_report"
         printf 'Apri questo link dal telefono, accedi o crea l account gratuito di playit e conferma:\n%s\n\nPoi nel sito: Add Tunnel, tipo "Minecraft Bedrock", porta locale 19132.\nL indirizzo da usare in Minecraft (Server > Aggiungi server) compare nel sito accanto al tunnel.\n' "$u" > "$REP/playit_accesso.txt"
-      elif [ -f "$REP/playit_accesso.txt" ]; then
-        rm -f "$REP/playit_accesso.txt"; touch "$IMP/playit_collegato"
-        log "Tunnel playit collegato all'account"; notifica "✅ Tunnel playit collegato all'account"; break
-      elif [ -z "$u" ] && [ -f "$IMP/playit_collegato" ]; then break  # già collegato da prima: niente link
       fi
     done ) &
   log "Tunnel playit avviato (log: $LOGDIR/playit.log)"
@@ -490,6 +503,7 @@ done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
 pkill -f "$TS/tailscaled" 2>/dev/null
 pkill -x playit 2>/dev/null
+pkill -f "playit-cli setup" 2>/dev/null
 notifica "⏹️ Server fermato: $ESITO"
 avvio_breve
 pkill -f "tail -n0 -F $LOG" 2>/dev/null

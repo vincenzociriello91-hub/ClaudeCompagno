@@ -1,7 +1,7 @@
 # Novità di Claude Compagno
 
-## 2.8.45 — attuale (09/11/2026)
-- Tunnel playit: riconosce più formati del link di collegamento e mette su Drive (`playit_log.txt`) le ultime righe di playit, così posso controllarlo da qui.
+## 2.8.46 — attuale (09/11/2026)
+- Tunnel playit: la versione nuova di playit è fatta di due programmi (il servizio e quello per collegarsi all'account). Ora la Odin scarica anche il secondo e lo usa per creare il link, che arriva su Drive in `playit_accesso.txt`. Comprende la 2.8.45 (registro di playit su Drive).
 
 ## 2.8.44 — precedente (09/11/2026)
 - **Giocare da fuori casa**: la Odin accende da sola il tunnel gratuito playit. La prima volta il link per collegarlo al tuo account arriva su Drive, nel file `playit_accesso.txt` della cartella Odin2_report (e una notifica). Dopo averlo collegato, sul sito di playit: Add Tunnel → "Minecraft Bedrock" → porta 19132; l'indirizzo che compare si usa in Minecraft (Server → Aggiungi server). Così funziona anche `guarda` da fuori casa.
