@@ -440,14 +440,35 @@ fuori_casa() {
 }
 fuori_casa &  # in sottofondo: il primo download non ritarda l'avvio del server
 
-# Tunnel per gli amici fuori casa: parte da solo se è già stato collegato una volta con mc-tunnel.
+# Tunnel playit per giocare da fuori casa (Tailscale porta solo il pannello, non il gioco), attivato da remoto con
+# l'autorizzazione di sparda991 (09/11). La prima volta il link per collegarlo all'account va in
+# Odin2_report/playit_accesso.txt (cartella privata su Drive). Per spegnerlo: touch /root/claudemc/impostazioni/no_playit
 PLAYIT=""
-if command -v playit >/dev/null && { [ -f /root/.config/playit_gg/playit.toml ] || [ -f /etc/playit/playit.toml ]; }; then
-  playit > "$LOGDIR/playit.log" 2>&1 &
+pkill -x playit 2>/dev/null  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
+if ! command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
+  curl -fsSL -m 300 -o /usr/local/bin/playit.nuovo https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-linux-aarch64 \
+    && chmod +x /usr/local/bin/playit.nuovo && mv -f /usr/local/bin/playit.nuovo /usr/local/bin/playit && log "playit scaricato"
+fi
+if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
+  # -s: log normali invece della schermata interattiva (senza terminale non funziona); le versioni vecchie non lo conoscono
+  { playit -s > "$LOGDIR/playit.log" 2>&1 || playit > "$LOGDIR/playit.log" 2>&1; } &
   PLAYIT=$!
-  log "Tunnel playit avviato"
+  ( for _ in $(seq 1 2880); do  # 24 ore: finché il link non viene usato lo tiene su Drive
+      sleep 30
+      kill -0 "$PLAYIT" 2>/dev/null || break
+      u=$(grep -o 'https://playit\.gg/claim/[A-Za-z0-9_-]*' "$LOGDIR/playit.log" 2>/dev/null | tail -1)
+      if [ -n "$u" ] && [ ! -f "$IMP/playit_collegato" ] && ! grep -qiE 'tunnel.*(running|ready|online)|agent (registered|connected)' "$LOGDIR/playit.log" 2>/dev/null; then
+        [ -f "$REP/playit_accesso.txt" ] || notifica "🔗 Tunnel per giocare da fuori casa: apri il file playit_accesso.txt in Odin2_report"
+        printf 'Apri questo link dal telefono, accedi o crea l account gratuito di playit e conferma:\n%s\n\nPoi nel sito: Add Tunnel, tipo "Minecraft Bedrock", porta locale 19132.\nL indirizzo da usare in Minecraft (Server > Aggiungi server) compare nel sito accanto al tunnel.\n' "$u" > "$REP/playit_accesso.txt"
+      elif [ -f "$REP/playit_accesso.txt" ]; then
+        rm -f "$REP/playit_accesso.txt"; touch "$IMP/playit_collegato"
+        log "Tunnel playit collegato all'account"; notifica "✅ Tunnel playit collegato all'account"; break
+      elif [ -z "$u" ]; then break  # già collegato da prima: niente link
+      fi
+    done ) &
+  log "Tunnel playit avviato (log: $LOGDIR/playit.log)"
 else
-  log "Tunnel playit non configurato: per gli amici fuori casa lancia una volta mc-tunnel"
+  log "Tunnel playit non installato o spento"
 fi
 notifica "▶️ Server avviato. Pannello: http://$(ip_casa):8080$([ -n "$(ip_tailscale)" ] && echo " (fuori casa: http://$(ip_tailscale):8080)")"
 
@@ -466,6 +487,7 @@ while true; do
 done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
 pkill -f "$TS/tailscaled" 2>/dev/null
+pkill -x playit 2>/dev/null
 notifica "⏹️ Server fermato: $ESITO"
 avvio_breve
 pkill -f "tail -n0 -F $LOG" 2>/dev/null

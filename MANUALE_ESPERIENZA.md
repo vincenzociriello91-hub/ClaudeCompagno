@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.43 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.44 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -234,6 +234,7 @@ Aggiornato alla versione 2.8.43 (9 novembre 2026), dopo circa 30 ore di gioco, 2
 | Da fuori casa il gioco non si collegava, la pagina web sì | la rete privata portava solo il collegamento della pagina | quando un canale non passa, usa quello che passa già: una vista semplice che arriva sempre vale più di una completa che non arriva |
 | Con 4 lingotti in tasca e il piccone rotto andava a scavare 10 minerali di ferro | il piano partiva sempre dal primo passo, senza guardare cosa aveva già | prima di un piano lungo controlla cosa hai già: salta i passi già fatti |
 | 4 morti in 15 minuti di notte subito dopo essersi chiuso nella tana | i lavori rimasti in lista lo facevano uscire al buio | quando ti metti al riparo, sospendi davvero il resto: un rifugio vale solo se ci resti |
+| Per collegare il tunnel serviva essere davanti alla Odin | il link di collegamento compariva solo sul suo schermo | i passaggi che richiedono una persona vanno portati dove la persona è (il suo telefono), non lasciati sulla macchina |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
