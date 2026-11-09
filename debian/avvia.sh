@@ -17,6 +17,19 @@ PACK_UUID=474e90cf-a18d-47a6-8238-eb23d909064a
 MOD_UUID=a0cc125d-961a-4e16-ad35-3716ead16d1f
 
 mkdir -p "$LOGDIR" "$REP" "$BASE/backup"
+# L'avvio automatico (Termux:Boot) mandava tutta la console in Odin2_report/ClaudeMinecraft_avvio_automatico.log:
+# il file cresceva mentre Drive lo caricava e nascevano copie "conflict" (8 in una notte). Il log completo resta qui;
+# su Drive va solo una copia breve (ultime 200 righe), rifatta ogni 10 minuti e sostituita in un colpo solo.
+AVVIO_LOG=$LOGDIR/avvio_automatico.log
+case "$(readlink /proc/$$/fd/1 2>/dev/null)" in
+  *avvio_automatico*)
+    [ "$(stat -c %s "$AVVIO_LOG" 2>/dev/null || echo 0)" -gt 5000000 ] && mv -f "$AVVIO_LOG" "$AVVIO_LOG.1"
+    exec >>"$AVVIO_LOG" 2>&1 ;;
+esac
+avvio_breve() {
+  [ -s "$AVVIO_LOG" ] || return 0
+  tail -n 200 "$AVVIO_LOG" > "$REP/.avvio_breve.tmp" && mv -f "$REP/.avvio_breve.tmp" "$REP/ClaudeMinecraft_avvio_ultime_righe.txt"
+}
 INIZIO=$(date '+%Y-%m-%d %H:%M:%S')
 LOG="$LOGDIR/server_$(date +%Y%m%d_%H%M%S).log"
 LEVEL=""
@@ -310,7 +323,7 @@ if [ "${1:-}" = "--prepara" ]; then log "Preparazione completata"; exit 0; fi
 
 rm -f "$BASE/.stop_richiesto"
 trap 'touch "$BASE/.stop_richiesto"; echo stop > "$FIFO"' INT TERM
-( while sleep 60; do esporta "$REP/ClaudeMinecraft_in_corso.txt" "server in esecuzione"; done ) &
+( n=0; while sleep 60; do esporta "$REP/ClaudeMinecraft_in_corso.txt" "server in esecuzione"; n=$((n + 1)); [ $((n % 10)) -eq 1 ] && avvio_breve; done ) &
 ESPORTATORE=$!
 # Richieste di amministratore fatte dal proprietario in chat: il bot le scrive nel log, la console le esegue.
 ( tail -n0 -F "$LOG" 2>/dev/null | grep --line-buffered -a '\[Claude\]\[OP\] ' | while read -r riga; do
@@ -401,6 +414,7 @@ while true; do
 done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
 notifica "⏹️ Server fermato: $ESITO"
+avvio_breve
 pkill -f "tail -n0 -F $LOG" 2>/dev/null
 rm -f "$BASE/.stop_richiesto" "$REP/ClaudeMinecraft_in_corso.txt"
 log "=== Fine sessione: $ESITO ==="
