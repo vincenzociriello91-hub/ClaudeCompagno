@@ -316,6 +316,8 @@ export function gestisciFame(bot, inLotta) {
   if (!bisogno) return false;
   let migliore = null;
   for (const id of Object.keys(CIBO)) if (contaOggetti(bot, id) > 0 && (!migliore || CIBO[id] > CIBO[migliore])) migliore = id;
+  // emergenza: pollo crudo (30% di nausea) meglio che morire di fame (fame 3 con 2 polli in tasca, 0 pasti)
+  if (!migliore && fame <= 6 && contaOggetti(bot, "minecraft:chicken") > 0) migliore = "minecraft:chicken";
   if (!migliore) return false;
   const slot = trovaSlot(bot, migliore);
   if (slot !== 8) inv(bot).swapItems(slot, 8, inv(bot));
