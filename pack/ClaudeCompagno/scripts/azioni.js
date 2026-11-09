@@ -408,8 +408,9 @@ export function vista(bot) {
   if (cache.x === null || Math.abs(x0 - cache.x) >= 3 || Math.abs(z0 - cache.z) >= 3 || (Date.now() - cache.t > 30000 && !prestazioni.lento)) {
     let g = "";
     for (let dz = -R_VISTA; dz <= R_VISTA; dz++) for (let dx = -R_VISTA; dx <= R_VISTA; dx++) {
-      let b; try { b = dim.getTopmostBlock({ x: x0 + dx, z: z0 + dz }); } catch {}
-      g += b ? letteraBlocco(b.typeId) : "?";
+      // ai bordi dei chunk non caricati anche leggere il tipo del blocco dà errore: lì "?"
+      let c = "?"; try { const b = dim.getTopmostBlock({ x: x0 + dx, z: z0 + dz }); if (b) c = letteraBlocco(b.typeId); } catch {}
+      g += c;
     }
     Object.assign(cache, { x: x0, z: z0, t: Date.now(), griglia: g });
   }
@@ -1424,6 +1425,10 @@ const ESECUTORI = {
     }
     mem.rifugio = { x: b.x, y: b.y - 2, z: b.z, ok: true };
     nav.meta = null;
+    // di notte i lavori rimasti in coda (legna, deposito) lo facevano uscire subito dalla tana: 4 morti in 15 minuti il 09/11.
+    // Si cancellano: all'alba il piano li riassegna.
+    const ora = world.getTimeOfDay?.() ?? 0;
+    if (ora >= 12500 && ora < 23000) mem.coda = [];
     finito(true, `tana scavata a ${b.x},${b.y - 2},${b.z}: resto qui fino all'alba`);
   },
 

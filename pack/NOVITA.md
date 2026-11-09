@@ -1,12 +1,12 @@
 # Novità di Claude Compagno
 
-## 2.8.42 — attuale (09/11/2026)
+## 2.8.43 — attuale (09/11/2026, urgente)
+- Di notte, una volta nella tana, ci resta davvero fino all'alba: prima i lavori rimasti in sospeso (legna, deposito) lo facevano uscire subito al buio. 4 morti in 15 minuti per zombie e scheletri.
+- Mappa dal vivo: niente più errore quando il bot è vicino al bordo della zona caricata.
+
+## 2.8.42 — precedente (09/11/2026)
 - Piccone di ferro subito: con 3 o più lingotti in tasca lo fabbrica al banco invece di andare a scavare 10 minerali di ferro (oggi aveva 4 lingotti e il piccone rotto). Spada e ascia dopo, quando ha altro ferro.
 - Contiene anche la 2.8.41: mappa dal vivo nel pannello.
-
-## 2.8.41 — precedente (09/11/2026)
-- **Mappa dal vivo** nel pannello, anche da fuori casa: scheda Mappa → tasto "▶ dal vivo". Vedi Claude dall'alto con il terreno intorno (erba, acqua, alberi, costruzioni), i mostri in rosso e gli animali in verde, la direzione in cui guarda, vita e compito. Si aggiorna ogni 5 secondi e la mappa lo segue.
-- Pesa pochissimo sulla Odin: il terreno si rilegge solo quando il bot si sposta.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.
