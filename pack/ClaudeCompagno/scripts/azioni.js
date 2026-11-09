@@ -466,6 +466,9 @@ function scegliBersaglio(bot) {
 export function difendi(bot) {
   // rinato protetto dopo una raffica di morti: niente lotte, solo la tana (combattendo usciva e moriva di nuovo)
   if (Date.now() < (mem.protettoFino ?? 0)) { lotta.bersaglio = null; return false; }
+  // chiuso nella tana: niente lotte né ritirate (inseguendo mostri irraggiungibili usciva e moriva: 19:57 e 23:07 del 09/11)
+  const r = mem.rifugio;
+  if (r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5) { lotta.bersaglio = null; return false; }
   if (tick() - lotta.scelta >= 10) {
     lotta.scelta = tick();
     const b = lotta.bersaglio;
