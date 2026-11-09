@@ -98,6 +98,65 @@ def elenco_rapporti(cartella):
     return [{"nome": n, "kb": round(os.path.getsize(os.path.join(cartella, n)) / 1024)} for n in nomi]
 
 
+def _leggi(percorso):
+    try:
+        with open(percorso) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _num(percorso):
+    try:
+        return float(_leggi(percorso))
+    except (TypeError, ValueError):
+        return None
+
+
+def stato_odin(rep, sys_dir="/sys", proc_dir="/proc"):
+    """Stato della Odin letto da sysfs e /proc (solo lettura). Ogni valore può mancare: Android a volte li nasconde."""
+    o = {}
+    bat = os.path.join(sys_dir, "class/power_supply/battery")
+    o["batteria"] = _num(os.path.join(bat, "capacity"))
+    o["carica"] = _leggi(os.path.join(bat, "status"))
+    t = _num(os.path.join(bat, "temp"))
+    o["temp_batteria"] = round(t / 10, 1) if t is not None else None
+    i, v = _num(os.path.join(bat, "current_now")), _num(os.path.join(bat, "voltage_now"))
+    # µA × µV → W; il segno dipende dal kernel, conta solo il valore (istantaneo, sovrastima: la lettura sveglia la CPU)
+    o["watt"] = round(abs(i * v) / 1e12, 2) if i is not None and v is not None else None
+    cpu = []
+    tz = os.path.join(sys_dir, "class/thermal")
+    try:
+        zone = [z for z in os.listdir(tz) if z.startswith("thermal_zone")]
+    except OSError:
+        zone = []
+    for z in zone:
+        tipo = _leggi(os.path.join(tz, z, "type")) or ""
+        if re.search(r"cpu", tipo, re.I):
+            g = _num(os.path.join(tz, z, "temp"))
+            if g is not None and 0 < g < 150000:
+                cpu.append(g / 1000 if g > 1000 else g)
+    o["temp_cpu"] = round(max(cpu), 1) if cpu else None
+    mem = {}
+    for riga in (_leggi(os.path.join(proc_dir, "meminfo")) or "").splitlines():
+        k, _, val = riga.partition(":")
+        if val.strip().split()[:1]:
+            mem[k] = int(val.split()[0])
+    o["ram_libera_mb"] = round(mem["MemAvailable"] / 1024) if "MemAvailable" in mem else None
+    o["ram_totale_mb"] = round(mem["MemTotal"] / 1024) if "MemTotal" in mem else None
+    try:
+        st = os.statvfs(rep)
+        o["disco_libero_gb"] = round(st.f_bavail * st.f_frsize / 1e9, 1)
+    except OSError:
+        o["disco_libero_gb"] = None
+    up = _leggi(os.path.join(proc_dir, "uptime"))
+    o["acceso_da_ore"] = round(float(up.split()[0]) / 3600, 1) if up else None
+    la = _leggi(os.path.join(proc_dir, "loadavg"))
+    o["carico"] = la.split()[0] if la else None
+    o["consumo_server"] = _leggi(os.path.join(rep, "consumo_server.txt"))
+    return o
+
+
 class Gestore(BaseHTTPRequestHandler):
     log_path = ""
     rep = ""
@@ -118,6 +177,8 @@ class Gestore(BaseHTTPRequestHandler):
                 return self._invia(200, f.read(), "text/html; charset=utf-8")
         if u.path == "/api/stato":
             return self._invia(200, json.dumps(stato(self.log_path), ensure_ascii=False), "application/json")
+        if u.path == "/api/odin":
+            return self._invia(200, json.dumps(stato_odin(self.rep), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporti":
             return self._invia(200, json.dumps(elenco_rapporti(self.rep), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporto":
@@ -159,6 +220,24 @@ def prova():
     assert "tps 20.0" in st["battito"]
     assert NOME_RAPPORTO.match("ClaudeMinecraft_20261108_100639.txt")
     assert not NOME_RAPPORTO.match("../../etc/passwd") and not NOME_RAPPORTO.match("ClaudeMinecraft_x/../a.txt")
+    # stato della Odin da un sysfs finto
+    with tempfile.TemporaryDirectory() as d:
+        b = os.path.join(d, "sys/class/power_supply/battery"); os.makedirs(b)
+        for k, v in {"capacity": "54", "status": "Discharging", "temp": "251", "current_now": "-400000", "voltage_now": "4000000"}.items():
+            open(os.path.join(b, k), "w").write(v)
+        for n, (tipo, g) in enumerate([("cpu-0-0-0", "48000"), ("cpu-1-2-0", "54300"), ("battery", "25000")]):
+            z = os.path.join(d, f"sys/class/thermal/thermal_zone{n}"); os.makedirs(z)
+            open(os.path.join(z, "type"), "w").write(tipo); open(os.path.join(z, "temp"), "w").write(g)
+        os.makedirs(os.path.join(d, "proc"))
+        open(os.path.join(d, "proc/meminfo"), "w").write("MemTotal:  7800000 kB\nMemAvailable:  2200000 kB\n")
+        open(os.path.join(d, "proc/uptime"), "w").write("37800.5 1000.0")
+        open(os.path.join(d, "consumo_server.txt"), "w").write("=== CONSUMO ===")
+        od = stato_odin(d, os.path.join(d, "sys"), os.path.join(d, "proc"))
+        assert od["batteria"] == 54 and od["carica"] == "Discharging" and od["temp_batteria"] == 25.1, od
+        assert od["watt"] == 1.6 and od["temp_cpu"] == 54.3 and od["ram_libera_mb"] == 2148 and od["acceso_da_ore"] == 10.5, od
+        assert od["consumo_server"] == "=== CONSUMO ===" and od["carico"] is None
+        vuoto = stato_odin(os.path.join(d, "manca"), os.path.join(d, "manca"), os.path.join(d, "manca"))
+        assert all(v is None for v in vuoto.values()), vuoto
     print("prova pannello ok")
 
 

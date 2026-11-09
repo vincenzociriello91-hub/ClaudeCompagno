@@ -50,7 +50,7 @@
   <div class="sotto" id="riga">In attesa del server…</div>
   <nav id="nav">
     <button data-s="diretta" class="on">Diretta</button><button data-s="stato">Stato</button><button data-s="mappa">Mappa</button>
-    <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="rapporti">Rapporti</button>
+    <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="odin">Odin</button><button data-s="rapporti">Rapporti</button>
   </nav>
 </header>
 <main>
@@ -91,6 +91,10 @@
     <div class="griglia" id="costibox"></div>
     <h2>Ogni chiamata all'IA</h2><div id="chiamate"></div>
   </section>
+  <section id="odin">
+    <div class="griglia" id="odinbox"></div>
+    <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
+  </section>
   <section id="rapporti">
     <div class="box"><ul id="elenco"></ul></div>
     <pre id="testo" class="vuoto">Tocca un rapporto per leggerlo.</pre>
@@ -114,6 +118,7 @@ $("nav").onclick = (e) => {
   document.querySelectorAll("section").forEach((x) => x.classList.toggle("on", x.id === s));
   if (s === "rapporti") caricaRapporti();
   if (s === "mappa") disegna();
+  if (s === "odin") aggiornaOdin();
 };
 const FILTRI = { tutto: "Tutto", azione: "Azioni", pensiero: "Pensieri", lezione: "Lezioni", pericolo: "Pericoli", chat: "Chat", api: "IA e costi", errore: "Errori" };
 $("filtri").innerHTML = Object.entries(FILTRI).map(([k, v]) => `<button data-f="${k}">${v}</button>`).join("");
@@ -230,7 +235,24 @@ async function aggiorna() {
     if ($("mappa").classList.contains("on")) disegna();
   } catch { $("riga").textContent = "Pannello non raggiungibile: la Odin è accesa e sulla stessa Wi-Fi?"; $("punto").className = "punto morto"; }
 }
+// stato della Odin ogni 10 secondi (batteria, temperature, memoria): leggerlo più spesso consumerebbe di più
+async function aggiornaOdin() {
+  try {
+    const o = await (await fetch("/api/odin")).json();
+    const v = (x, u) => (x === null || x === undefined ? "—" : x + u);
+    const carica = { Charging: "in carica", Discharging: "a batteria", Full: "carica completa", "Not charging": "collegata, non carica" }[o.carica] ?? v(o.carica, "");
+    $("odinbox").innerHTML = [
+      casella("Batteria", v(o.batteria, "%")), casella("Alimentazione", carica),
+      casella("Temperatura CPU", v(o.temp_cpu, " °C")), casella("Temperatura batteria", v(o.temp_batteria, " °C")),
+      casella("Consumo adesso", v(o.watt, " W")), casella("RAM libera", o.ram_libera_mb == null ? "—" : `${(o.ram_libera_mb / 1024).toFixed(1)} di ${(o.ram_totale_mb / 1024).toFixed(1)} GB`),
+      casella("Spazio libero", v(o.disco_libero_gb, " GB")), casella("Accesa da", v(o.acceso_da_ore, " ore")),
+    ].join("");
+    $("consumo").className = o.consumo_server ? "" : "vuoto";
+    $("consumo").textContent = o.consumo_server || "Ancora nessuna misura del modulo Odin2PortalTweaks.";
+  } catch { $("odinbox").innerHTML = '<p class="vuoto">Odin non raggiungibile</p>'; }
+}
 aggiorna(); setInterval(aggiorna, 2000);
+aggiornaOdin(); setInterval(aggiornaOdin, 10000);
 </script>
 </body>
 </html>
