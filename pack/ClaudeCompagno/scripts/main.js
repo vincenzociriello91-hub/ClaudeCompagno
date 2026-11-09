@@ -186,6 +186,15 @@ function avvio() {
   caricaConfig();
   carica();
   ripristinaBackup();
+  // riparazione una tantum: la 2.8.23 spostando la casa (09/11 05:18) ha cancellato anche la fattoria funzionante
+  // a 135,62,360; la 2.8.25 non la cancella più, qui la si rimette se manca
+  const cp = mem.luoghi?.casa_palude;
+  if (cp) mem.casaSpostataT ??= Date.now(); // casa già spostata dalla 2.8.23: le zone d'acqua vecchie non la fanno risaltare
+  if (cp && cp.x === 142 && cp.z === 359 && !mem.luoghi.fattoria && !mem.fattoriaRipristinata) {
+    mem.luoghi.fattoria = { x: 135, y: 62, z: 360 };
+    mem.fattoriaRipristinata = true;
+    evento("Fattoria a 135,62,360 ritrovata dopo lo spostamento della casa");
+  }
   mem.baseContatori = mem.ultimiContatori ?? mem.baseContatori ?? {};
   mem.proprietario = CFG.proprietario;
   sessione.espInizio = JSON.parse(JSON.stringify(mem.esperienza)); // per misurare i progressi di questa sessione
