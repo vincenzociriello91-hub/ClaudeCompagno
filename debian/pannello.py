@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import re
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -154,6 +155,36 @@ def stato_odin(rep, sys_dir="/sys", proc_dir="/proc"):
     la = _leggi(os.path.join(proc_dir, "loadavg"))
     o["carico"] = la.split()[0] if la else None
     o["consumo_server"] = _leggi(os.path.join(rep, "consumo_server.txt"))
+    # Termux non può leggere batteria e uptime veri (SELinux): li scrive ogni 30 s il modulo Magisk (v4.11+)
+    mod = {}
+    for riga in (_leggi(os.path.join(os.path.dirname(rep.rstrip("/")), ".odin_stato")) or "").splitlines():
+        k, _, v = riga.partition("=")
+        mod[k.strip()] = v.strip()
+    try:
+        fresco = time.time() - float(mod.get("ora", 0)) < 180
+    except ValueError:
+        fresco = False
+    if fresco:
+        def f(k):
+            try:
+                return float(mod[k])
+            except (KeyError, ValueError):
+                return None
+        if o["batteria"] is None:
+            o["batteria"] = f("batteria")
+        if o["carica"] is None:
+            o["carica"] = mod.get("stato") or None
+        if o["temp_batteria"] is None and f("temp_batteria") is not None:
+            o["temp_batteria"] = round(f("temp_batteria") / 10, 1)
+        if o["watt"] is None and f("corrente_ua") is not None and f("tensione_uv") is not None:
+            i, v = abs(f("corrente_ua")), f("tensione_uv")
+            i = i * 1000 if i < 20000 else i  # alcuni kernel danno mA / mV
+            v = v * 1000 if v < 20000 else v
+            o["watt"] = round(i * v / 1e12, 2)
+        if f("temp_cpu") is not None:
+            o["temp_cpu"] = f("temp_cpu")
+        if f("uptime") is not None:
+            o["acceso_da_ore"] = round(f("uptime") / 3600, 1)
     return o
 
 
@@ -236,6 +267,14 @@ def prova():
         assert od["batteria"] == 54 and od["carica"] == "Discharging" and od["temp_batteria"] == 25.1, od
         assert od["watt"] == 1.6 and od["temp_cpu"] == 54.3 and od["ram_libera_mb"] == 2148 and od["acceso_da_ore"] == 10.5, od
         assert od["consumo_server"] == "=== CONSUMO ===" and od["carico"] is None
+        # sysfs nascosto (come su Termux): valori dal file del modulo
+        r2 = os.path.join(d, "Download/Odin2_report"); os.makedirs(r2)
+        open(os.path.join(d, "Download/.odin_stato"), "w").write(f"batteria=77\nstato=Charging\ntemp_batteria=312\ncorrente_ua=-500000\ntensione_uv=4000000\ntemp_cpu=61\nuptime=36000\nora={int(time.time())}\n")
+        m = stato_odin(r2, os.path.join(d, "manca"), os.path.join(d, "manca"))
+        assert m["batteria"] == 77 and m["carica"] == "Charging" and m["temp_batteria"] == 31.2 and m["watt"] == 2.0, m
+        assert m["temp_cpu"] == 61 and m["acceso_da_ore"] == 10.0, m
+        open(os.path.join(d, "Download/.odin_stato"), "w").write("batteria=10\nora=1\n")  # vecchio: ignorato
+        assert stato_odin(r2, os.path.join(d, "manca"), os.path.join(d, "manca"))["batteria"] is None
         vuoto = stato_odin(os.path.join(d, "manca"), os.path.join(d, "manca"), os.path.join(d, "manca"))
         assert all(v is None for v in vuoto.values()), vuoto
     print("prova pannello ok")
