@@ -317,7 +317,7 @@ export function gestisciFame(bot, inLotta) {
   let migliore = null;
   for (const id of Object.keys(CIBO)) if (contaOggetti(bot, id) > 0 && (!migliore || CIBO[id] > CIBO[migliore])) migliore = id;
   // emergenza: pollo crudo (30% di nausea) meglio che morire di fame (fame 3 con 2 polli in tasca, 0 pasti)
-  if (!migliore && fame <= 6 && contaOggetti(bot, "minecraft:chicken") > 0) migliore = "minecraft:chicken";
+  if (!migliore && (fame <= 6 || vita <= 8) && contaOggetti(bot, "minecraft:chicken") > 0) migliore = "minecraft:chicken";
   if (!migliore) return false;
   const slot = trovaSlot(bot, migliore);
   if (slot !== 8) inv(bot).swapItems(slot, 8, inv(bot));
@@ -402,7 +402,9 @@ export function difendi(bot) {
     lotta.scelta = tick();
     const b = lotta.bersaglio;
     if (!b?.isValid || dist(b.location, bot.location) > 36) {
-      const nuovo = scegliBersaglio(bot);
+      let nuovo = scegliBersaglio(bot);
+      // con vita ≤ 6 non va a cercare lotte: solo chi è già addosso (a vita 1 attaccava un drowned dopo l'altro e moriva)
+      if (nuovo && (bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 6 && dist(nuovo.location, bot.location) > 3) nuovo = null;
       if (nuovo && nuovo !== b) evento(`Attacco ${nuovo.typeId.replace("minecraft:", "")}`);
       lotta.bersaglio = nuovo;
       if (nuovo && nuovo !== b) lotta.progresso = tick();

@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.21 (9 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.22 (9 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -212,6 +212,7 @@ Aggiornato alla versione 2.8.21 (9 novembre 2026), dopo circa 20 ore di gioco, 2
 | Annegato 3 volte dopo essere stato "salvato" sul fondo di un lago | la ricerca della superficie salta l'acqua e restituisce il fondale | quando cerchi un posto sicuro, controlla anche cosa c'è sopra il punto, non solo il punto |
 | Soffocato dentro un tronco nonostante 10 salvataggi | il salvataggio cercava il terreno scendendo nei tronchi e rimetteva il bot nel legno; il punto pericoloso veniva segnato dopo lo spostamento | per uscire da un blocco si va verso l'alto, dove c'è aria; si segna il pericolo dove è successo, non dove si arriva |
 | Fame 3 con 2 polli crudi in tasca e 0 pasti | il pollo crudo non era nella lista del cibo (può dare nausea) | in emergenza il cibo "cattivo" è meglio di niente: le regole prudenti devono avere una via d'uscita |
+| A vita 1 attaccava un drowned dopo l'altro e poi moriva | la scelta del bersaglio non guardava la vita; la ritirata durava 2 secondi e poi ripartiva | da ferito non si cercano lotte: ci si difende solo da chi è già addosso, e si mangia anche il cibo di ripiego |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
