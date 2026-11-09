@@ -12,4 +12,4 @@
 - Inventario spesso pieno: svuotarlo nel deposito prima che blocchi il lavoro.
 - Meno morti di notte senza armatura, fino a passare più notti di fila senza morire (primo criterio per fare da maestro).
 - Modulo Magisk v4.12 (da installare a casa): batteria, ventola e protezione dal calore nella scheda Odin.
-- Valutare il server online (Oracle Cloud gratuito) per ospitare anche il bot del collega.
+- Più avanti, non urgente: valutare il server online (Oracle Cloud gratuito) per ospitare anche il bot del collega.
