@@ -417,14 +417,18 @@ fuori_casa() {
     > "$LOGDIR/tailscaled.log" 2>&1 &
   sleep 5
   # già collegata: basta "up"; altrimenti "up" stampa il link di accesso, che va in Drive (cartella privata)
-  ( timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
-      | while read -r r; do
-          case "$r" in *https://login.tailscale.com/*)
-            u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
-            printf 'Per vedere il pannello da fuori casa apri questo link (una volta sola) ed entra con il tuo account Tailscale:\n%s\n' "$u" \
-              > "$REP/tailscale_accesso.txt" ;;
-          esac
-        done
+  # il link resta valido finché "up" aspetta: si rinnova ogni 10 minuti per 24 ore, così si può aprire quando si vuole
+  ( for _ in $(seq 1 144); do
+      timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
+        | while read -r r; do
+            case "$r" in *https://login.tailscale.com/*)
+              u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
+              printf 'Per vedere il pannello da fuori casa apri questo link (una volta sola) ed entra con il tuo account Tailscale:\n%s\n(il link si rinnova ogni 10 minuti: usa sempre quello scritto qui)\n' "$u" \
+                > "$REP/tailscale_accesso.txt" ;;
+            esac
+          done
+      [ -n "$(ip_tailscale)" ] && break
+    done
     i=$(ip_tailscale)
     if [ -n "$i" ]; then
       # inoltro esplicito della porta del pannello (in userspace non sempre arriva da solo ai servizi locali)
