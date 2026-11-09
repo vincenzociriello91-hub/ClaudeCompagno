@@ -667,8 +667,10 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
     let occupato = false;
     for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
       const blk = dim.getBlock({ x: x0 + a, y: Math.min(...ys), z: z0 + b });
-      // il terreno naturale un blocco più alto si spiana; solo le costruzioni (tue o del bot) e i tronchi rendono il posto occupato
-      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium|_log$|vine/.test(blk.typeId)) { occupato = true; esempioOccupato = blk.typeId.replace("minecraft:", ""); }
+      // occupato solo da costruzioni: blocchi registrati come piazzati (tuoi o del bot) o chiaramente fatti a mano.
+      // Elencare i blocchi naturali non bastava: ne escono di nuovi (leaf_litter) e ogni posto risultava occupato
+      const pos = { x: x0 + a, y: Math.min(...ys), z: z0 + b };
+      if (blk && !blk.isAir && (protetti.has(chiaveBlocco(dim, pos)) || COSTRUITO.test(blk.typeId))) { occupato = true; esempioOccupato = blk.typeId.replace("minecraft:", ""); }
     }
     if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
     motiviSpiazzo.occupato++;
@@ -678,6 +680,7 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
 // perché non ha trovato posto (per il rapporto: "nessuno spiazzo" da solo non diceva niente)
 export const motiviSpiazzo = { scarico: 0, acqua: 0, pericolo: 0, pendenza: 0, usato: 0, occupato: 0 };
 let esempioOccupato = "";
+const COSTRUITO = /planks|cobblestone|brick|glass|chest|door|fence|slab|stairs|wool|_bed$|torch|furnace|crafting_table|farmland|_wall$|carpet|concrete|lantern|barrel|ladder|sign|smooth|polished|rail|hay_block|composter|campfire/;
 const perche = () => (Object.entries(motiviSpiazzo).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ") || "nessun posto provato") + (esempioOccupato ? `; occupato per esempio da ${esempioOccupato}` : "");
 // Lontano da casa i chunk non sono caricati e trovaSpiazzo dava sempre null ("nessuno spiazzo libero"): prima ci va.
 function arrivaACasa(bot, casa) {
