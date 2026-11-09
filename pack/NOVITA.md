@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.48 — attuale (09/11/2026)
-- Controllo da lontano del tunnel: su Drive (`playit_log.txt`) restano aggiornati lo stato di playit, il tipo di collegamento del server e chi entra o esce, per capire subito perché un giocatore non riesce a entrare.
+## 2.8.49 — attuale (09/11/2026)
+- Tunnel: registro più dettagliato del traffico del gioco, per trovare dove si fermano i collegamenti da fuori casa.
 
-## 2.8.47 — precedente (09/11/2026)
-- Server sul collegamento classico **RakNet** (richiesto dal tunnel playit): così da fuori casa si entra nel mondo con l'indirizzo del tunnel.
+## 2.8.48 — precedente (09/11/2026)
+- Controllo da lontano del tunnel: su Drive (`playit_log.txt`) restano aggiornati lo stato di playit, il tipo di collegamento del server e chi entra o esce, per capire subito perché un giocatore non riesce a entrare.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.

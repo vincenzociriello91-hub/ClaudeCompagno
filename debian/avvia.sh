@@ -459,7 +459,8 @@ if [ ! -f "$IMP/no_playit" ]; then
   scarica_playit playit-cli playit-cli-linux-aarch64
 fi
 if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
-  playit > "$LOGDIR/playit.log" 2>&1 &
+  # dettagli sul traffico UDP del gioco: servono a capire perché da fuori casa non si entra (09/11, banda 0 su playit)
+  PLAYIT_LOG="info,playit_agent_core::network=debug,playit_agent_core::agent_control=debug" playit > "$LOGDIR/playit.log" 2>&1 &
   PLAYIT=$!
   # prima volta: "playit-cli setup" stampa il link https://playit.gg/claim/... e aspetta che venga confermato
   if [ ! -f "$IMP/playit_collegato" ] && command -v playit-cli >/dev/null; then
@@ -471,7 +472,7 @@ if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
       # (continua anche dopo il collegamento: serve a capire da lontano perché un giocatore non entra)
       { echo "server: $(grep -E '^(transport|server-port)=' "$SRV/server.properties" | tr '\n' ' ')"
         grep -E 'Accepting clients|Player (connected|disconnected|Spawned)' "$LOG" 2>/dev/null | tail -n 6
-        echo "--- playit:"; tail -n 25 "$LOGDIR/playit.log"; echo "--- collegamento:"; tail -n 8 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
+        echo "--- playit:"; grep -vE "DEBUG" "$LOGDIR/playit.log" | tail -n 12; echo "--- playit UDP:"; grep -iE "udp|channel|origin|client" "$LOGDIR/playit.log" | tail -n 20; echo "--- collegamento:"; tail -n 8 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
         | grep -viE 'secret|token|key|guest-account' | sed -E 's/(xuid|pfid): *[A-Za-z0-9]*/\1: -/g' > "$REP/playit_log.txt"
       kill -0 "$PLAYIT" 2>/dev/null || { echo "(playit si è fermato)" >> "$REP/playit_log.txt"; break; }
       if [ -f "$IMP/playit_collegato" ]; then
