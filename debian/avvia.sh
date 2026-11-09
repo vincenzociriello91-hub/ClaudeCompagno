@@ -442,6 +442,20 @@ fuori_casa() {
 }
 fuori_casa &  # in sottofondo: il primo download non ritarda l'avvio del server
 
+# Tentativo da remoto di risvegliare Autosync (la sincronizzazione di Drive si era fermata il 09/11 dopo un riavvio
+# della Odin). Debian non comanda Android: si prova con "am" di Android; l'esito arriva come notifica sul telefono.
+# shortcut: tentativo alla cieca, la soluzione vera è l'assistente remoto del modulo Magisk (v4.13).
+sveglia_drive() {
+  local esito="" p r
+  for p in com.ttxapps.autosync com.ttxapps.drivesync; do
+    r=$(timeout 20 /system/bin/am start --user 0 -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p "$p" 2>&1 | tr '\n' ' ' | cut -c1-150)
+    esito="$esito $p: ${r:-nessuna risposta};"
+  done
+  log "Risveglio Autosync:$esito"
+  notifica "🔄 Provo a far ripartire Autosync (Drive):$esito"
+}
+( sleep 60; sveglia_drive ) &
+
 # Tunnel playit per giocare da fuori casa (Tailscale porta solo il pannello, non il gioco), attivato da remoto con
 # l'autorizzazione di sparda991 (09/11). La prima volta il link per collegarlo all'account va in
 # Odin2_report/playit_accesso.txt (cartella privata su Drive). Per spegnerlo: touch /root/claudemc/impostazioni/no_playit
