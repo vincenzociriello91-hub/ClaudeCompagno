@@ -146,8 +146,9 @@ configura() {
   # Box64 emula x86 sulla Odin: con distanza 10 il server generava e spediva troppi chunk e laggava
   imposta_prop view-distance 6
   imposta_prop allow-list false # gli amici devono poter entrare senza essere aggiunti a mano
-  # RakNet, il collegamento classico: il tunnel playit (e la rete Tailscale) non portano NetherNet, il predefinito delle versioni nuove
-  imposta_prop transport raknet
+  # NetherNet, il predefinito delle versioni nuove: il Minecraft del telefono entra solo così (con RakNet, provato il 09/11 per il
+  # tunnel playit, non si entrava più nemmeno da casa: "Terracotta")
+  imposta_prop transport nethernet
   imposta_prop content-log-file-enabled true
   imposta_prop content-log-console-output-enabled true
   local perm='{"allowed_modules":["@minecraft/server","@minecraft/server-ui","@minecraft/server-gametest","@minecraft/server-admin","@minecraft/server-net","@minecraft/server-editor"]}'

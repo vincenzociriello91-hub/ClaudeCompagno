@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.54 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.55 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -245,6 +245,7 @@ Aggiornato alla versione 2.8.54 (9 novembre 2026), dopo circa 30 ore di gioco, 2
 | Per far ripartire un servizio bisognava essere davanti alla Odin | non c'era un canale di comando da lontano | dai a chi è lontano poche azioni sicure e fisse, mai comandi liberi |
 | Chi aiuta da lontano non poteva agire sulla macchina | i comandi passavano solo da chi era presente | un canale di comando da lontano deve essere autenticato (firma) e limitato a poche azioni |
 | 18 morti in una sera, rinascendo tra gli stessi mostri | 15 secondi di protezione e poi tornava a combattere invece di ripararsi | dopo una serie di sconfitte, prima mettiti al sicuro e smetti di combattere; riprendi quando il pericolo è passato |
+| Per far funzionare il tunnel il server fu cambiato a RakNet, e nessuno riuscì più a entrare | il telefono parla solo NetherNet: si è adattato il server allo strumento invece che a chi lo usa | non cambiare ciò che funziona per chi lo usa per far contento uno strumento accessorio; prima verifica cosa usa il cliente |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
