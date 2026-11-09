@@ -56,7 +56,7 @@
   <div class="sotto" id="riga">In attesa del server…</div>
   <nav id="nav">
     <button data-s="diretta" class="on">Diretta</button><button data-s="stato">Stato</button><button data-s="mappa">Mappa</button>
-    <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="odin">Odin</button><button data-s="rapporti">Rapporti</button>
+    <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="odin">Odin</button><button data-s="novita">Novità</button><button data-s="rapporti">Rapporti</button>
   </nav>
 </header>
 <main>
@@ -104,6 +104,7 @@
     <h2>Temperature per zona</h2><div class="box"><ul class="lista" id="zone"></ul></div>
     <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
   </section>
+  <section id="novita"><div class="box" id="novitatesto"><p class="vuoto">Carico…</p></div></section>
   <section id="rapporti">
     <div class="box"><ul id="elenco"></ul></div>
     <pre id="testo" class="vuoto">Tocca un rapporto per leggerlo.</pre>
@@ -128,6 +129,7 @@ $("nav").onclick = (e) => {
   if (s === "rapporti") caricaRapporti();
   if (s === "mappa") disegna();
   if (s === "odin") aggiornaOdin();
+  if (s === "novita") caricaNovita();
 };
 const FILTRI = { tutto: "Tutto", azione: "Azioni", pensiero: "Pensieri", lezione: "Lezioni", pericolo: "Pericoli", chat: "Chat", api: "IA e costi", errore: "Errori" };
 $("filtri").innerHTML = Object.entries(FILTRI).map(([k, v]) => `<button data-f="${k}">${v}</button>`).join("");
@@ -222,6 +224,17 @@ tela.addEventListener("pointerdown", (e) => { tocco = { x: e.clientX, y: e.clien
 tela.addEventListener("pointermove", (e) => { if (!tocco || !centro) return; const k = tela.width / tela.clientWidth / zoom; centro.x -= (e.clientX - tocco.x) * k; centro.z -= (e.clientY - tocco.y) * k; tocco = { x: e.clientX, y: e.clientY }; disegna(); });
 addEventListener("pointerup", () => { tocco = null; });
 tela.addEventListener("wheel", (e) => { e.preventDefault(); zoom = Math.max(0.2, Math.min(16, zoom * (e.deltaY < 0 ? 1.2 : 1 / 1.2))); disegna(); }, { passive: false });
+
+// novità: changelog della versione attuale, della precedente e di quello che è in programma (pack/NOVITA.md)
+async function caricaNovita() {
+  try {
+    const r = await fetch("/api/novita");
+    const t = r.ok ? await r.text() : "";
+    $("novitatesto").innerHTML = t ? t.split("\n").map((l) => l.startsWith("## ") ? `<h2>${esc(l.slice(3))}</h2>`
+      : l.startsWith("# ") ? "" : l.startsWith("- ") ? `<li>${esc(l.slice(2))}</li>` : l.trim() ? `<p>${esc(l)}</p>` : "").join("").replace(/(<li>.*?<\/li>)+/g, (m) => `<ul>${m}</ul>`)
+      : '<p class="vuoto">Novità non disponibili</p>';
+  } catch { $("novitatesto").innerHTML = '<p class="vuoto">Non raggiungibile</p>'; }
+}
 
 // rapporti (storico)
 async function caricaRapporti() {

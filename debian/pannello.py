@@ -347,6 +347,14 @@ class Gestore(BaseHTTPRequestHandler):
             return self._invia(200, json.dumps(stato(self.log_path), ensure_ascii=False), "application/json")
         if u.path == "/api/odin":
             return self._invia(200, json.dumps(odin_completo(self.rep, self.log_path), ensure_ascii=False), "application/json")
+        if u.path == "/api/novita":
+            # pack/NOVITA.md arriva con ogni aggiornamento del bot (anche col reload, senza riavviare il pannello)
+            base = os.path.dirname(os.path.dirname(self.log_path)) if self.log_path else QUI
+            for f in (os.path.join(base, "pack", "NOVITA.md"), os.path.join(QUI, "..", "pack", "NOVITA.md")):
+                testo = _leggi(f)
+                if testo:
+                    return self._invia(200, testo, "text/plain; charset=utf-8")
+            return self._invia(404, "novità non disponibili", "text/plain; charset=utf-8")
         if u.path == "/api/rapporti":
             return self._invia(200, json.dumps(elenco_rapporti(self.rep), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporto":
