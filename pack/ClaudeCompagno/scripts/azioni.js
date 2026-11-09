@@ -660,7 +660,7 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
     if (angoli.some((g) => g.liquido)) { motiviSpiazzo.acqua++; continue; }
     if (angoli.some(pericoloso)) { motiviSpiazzo.pericolo++; continue; }
     const ys = angoli.map((g) => g.y);
-    if (Math.max(...ys) - Math.min(...ys) > 2) { motiviSpiazzo.pendenza++; continue; } // fino a 2 blocchi si spiana costruendo
+    if (Math.max(...ys) - Math.min(...ys) > 3) { motiviSpiazzo.pendenza++; continue; } // fino a 3 blocchi si spiana costruendo
     const centroSp = { x: x0 + lato / 2, z: z0 + lato / 2 };
     if (giaUsati.some((p) => p && Math.hypot(p.x - centroSp.x, p.z - centroSp.z) < lato + 4)) { motiviSpiazzo.usato++; continue; }
     // niente blocchi dei giocatori o del bot sopra il terreno nello spiazzo (non costruisce in casa tua)
@@ -668,7 +668,7 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
     for (let a = 0; a < lato && !occupato; a++) for (let b = 0; b < lato && !occupato; b++) {
       const blk = dim.getBlock({ x: x0 + a, y: Math.min(...ys), z: z0 + b });
       // il terreno naturale un blocco più alto si spiana; solo le costruzioni (tue o del bot) e i tronchi rendono il posto occupato
-      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium|_log$|vine/.test(blk.typeId)) occupato = true;
+      if (blk && !blk.isAir && !/grass|flower|fern|snow|bush|leaves|dirt|stone|sand|gravel|clay|podzol|mud|moss|granite|diorite|andesite|tuff|deepslate|mycelium|_log$|vine/.test(blk.typeId)) { occupato = true; esempioOccupato = blk.typeId.replace("minecraft:", ""); }
     }
     if (!occupato) return { x: x0, y: Math.min(...ys), z: z0 };
     motiviSpiazzo.occupato++;
@@ -677,7 +677,8 @@ export function trovaSpiazzo(dim, casa, lato, giaUsati = []) {
 }
 // perché non ha trovato posto (per il rapporto: "nessuno spiazzo" da solo non diceva niente)
 export const motiviSpiazzo = { scarico: 0, acqua: 0, pericolo: 0, pendenza: 0, usato: 0, occupato: 0 };
-const perche = () => Object.entries(motiviSpiazzo).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ") || "nessun posto provato";
+let esempioOccupato = "";
+const perche = () => (Object.entries(motiviSpiazzo).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ") || "nessun posto provato") + (esempioOccupato ? `; occupato per esempio da ${esempioOccupato}` : "");
 // Lontano da casa i chunk non sono caricati e trovaSpiazzo dava sempre null ("nessuno spiazzo libero"): prima ci va.
 function arrivaACasa(bot, casa) {
   if (dist(bot.location, casa) <= 40) return true;
