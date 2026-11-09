@@ -25,13 +25,18 @@ function notteFuori() {
   if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
   const lavori = mem.compito?.routine === "notte_sicura" || mem.compito?.tipo === "tana";
-  if (!lavori && (!mem.rifugio || dist(mem.rifugio, bot.location) > 16)) {
+  // riparo non riuscito (rifugio senza blocchi, tana fallita): si riprova ogni 30 secondi invece di restare scoperti
+  const daRifare = !mem.rifugio?.ok && Date.now() - (mem.rifugioT ?? 0) > 30000;
+  if (!lavori && (!mem.rifugio || dist(mem.rifugio, bot.location) > 16 || daRifare)) {
     mem.rifugio = { x: Math.floor(bot.location.x), y: Math.floor(bot.location.y), z: Math.floor(bot.location.z) };
+    mem.rifugioT = Date.now();
     mem.coda = [];
-    // con pochi blocchi in tasca il rifugio non si chiude mai: tana scavata nel terreno, bastano 1 blocco e 1 minuto
+    // prima la tana (1 blocco, 1 minuto, 9 posti provati); il rifugio costruito solo se la tana è già fallita qui
+    // (il rifugio riusciva 7 volte su 55: il 09/11 4 morti per scheletri mentre lo costruiva senza ciottoli)
     const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
-    evento(`Notte senza armatura e senza casetta: ${blocchi >= 34 ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
-    assegna(blocchi >= 34 ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
+    const rifugio = mem.tanaKo && Date.now() - mem.tanaKo < 120000 && blocchi >= 34;
+    evento(`Notte senza armatura e senza casetta: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    assegna(rifugio ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;
 }

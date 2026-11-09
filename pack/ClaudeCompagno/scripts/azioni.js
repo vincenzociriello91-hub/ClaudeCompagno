@@ -958,7 +958,7 @@ const ESECUTORI = {
         const xs = unici.map((b) => b[0]), ys = unici.map((b) => b[1]), zs = unici.map((b) => b[2]);
         const dentro = { x: o.x + (Math.min(...xs) + Math.max(...xs)) / 2 + 0.5, y: o.y + Math.min(...ys) + 1, z: o.z + (Math.min(...zs) + Math.max(...zs)) / 2 + 0.5 };
         bot.teleport(dentro);
-        mem.rifugio = { x: Math.floor(dentro.x), y: Math.floor(dentro.y), z: Math.floor(dentro.z) };
+        mem.rifugio = { x: Math.floor(dentro.x), y: Math.floor(dentro.y), z: Math.floor(dentro.z), ok: true };
         nav.meta = null;
       }
       return finito(true, `costruzione "${c.descrizione ?? "progetto"}" completata${nome ? `, salvata come schema "${nome}"` : ""}`);
@@ -1327,12 +1327,12 @@ const ESECUTORI = {
         const c0 = g ? { x: g.x, y: g.y, z: g.z } : qui;
         if (adatto(c0)) { s.base = c0; break; }
       }
-      if (!s.base) return finito(false, "acqua o grotte tutto intorno: niente tana qui");
+      if (!s.base) return (mem.tanaKo = Date.now()), finito(false, "acqua o grotte tutto intorno: niente tana qui");
     }
     const b = s.base;
     for (const dy of [-1, -2]) {
       const blk = dim.getBlock({ x: b.x, y: b.y + dy, z: b.z });
-      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") return finito(false, "terreno troppo duro per la tana");
+      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "terreno troppo duro per la tana");
     }
     bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
     const testa = dim.getBlock(b);
@@ -1340,12 +1340,12 @@ const ESECUTORI = {
     const chiusa = testa && !testa.isAir && !testa.isLiquid && testa.isSolid;
     if (!chiusa) {
       const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
-      if (!alt) return finito(false, "niente blocchi per chiudere la tana");
+      if (!alt) return (mem.tanaKo = Date.now()), finito(false, "niente blocchi per chiudere la tana");
       let esito = piazza(bot, b, alt);
       if (esito === "occupato" && scava(bot, b) === "ok") esito = piazza(bot, b, alt);
-      if (esito !== "ok" && esito !== "gia") return finito(false, `non riesco a chiudere la tana (${esito})`);
+      if (esito !== "ok" && esito !== "gia") return (mem.tanaKo = Date.now()), finito(false, `non riesco a chiudere la tana (${esito})`);
     }
-    mem.rifugio = { x: b.x, y: b.y - 2, z: b.z };
+    mem.rifugio = { x: b.x, y: b.y - 2, z: b.z, ok: true };
     nav.meta = null;
     finito(true, `tana scavata a ${b.x},${b.y - 2},${b.z}: resto qui fino all'alba`);
   },
