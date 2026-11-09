@@ -449,6 +449,20 @@ PLAYIT=""
 pkill -x playit 2>/dev/null  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
 pkill -f "playit-cli setup" 2>/dev/null
 # playit nuovo = due programmi: "playit" è il servizio (playitd) che tiene il tunnel, "playit-cli" fa il collegamento all'account
+# ping RakNet come quello dell'elenco Server di Minecraft: dice se il server risponde a un indirizzo
+ping_bedrock() {
+  python3 -I -c '
+import os, socket, struct, sys, time
+M = bytes.fromhex("00ffff00fefefefefdfdfdfd12345678")
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(2); t = time.time()
+try:
+    s.sendto(b"\x01" + struct.pack(">q", int(t * 1000)) + M + os.urandom(8), (sys.argv[1], int(sys.argv[2]))); d = s.recv(2048)
+except OSError:
+    d = b""
+n = d[35:].decode("utf-8", "replace").split(";") if d[:1] == b"\x1c" else []
+print("OK %d ms, versione %s" % ((time.time() - t) * 1000, n[3]) if len(n) > 3 else "NESSUNA RISPOSTA")
+' "$1" "$2" 2>&1
+}
 scarica_playit() {
   [ -x "/usr/local/bin/$1" ] && return 0
   curl -fsSL -m 300 -o "/usr/local/bin/$1.nuovo" "https://github.com/playit-cloud/playit-agent/releases/latest/download/$2" \
@@ -471,7 +485,8 @@ if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
       # copia leggibile su Drive per controllare playit da lontano (senza righe con chiavi)
       # (continua anche dopo il collegamento: serve a capire da lontano perché un giocatore non entra)
       { echo "server: $(grep -E '^(transport|server-port)=' "$SRV/server.properties" | tr '\n' ' ')"
-        grep -E 'Accepting clients|Player (connected|disconnected|Spawned)' "$LOG" 2>/dev/null | tail -n 6
+        grep -E 'Accepting clients|IPv4|IPv6|Player (connected|disconnected|Spawned)' "$LOG" 2>/dev/null | tail -n 6
+        echo "ping RakNet 127.0.0.1:19132 (come fa playit): $(ping_bedrock 127.0.0.1 19132)"
         echo "--- playit:"; grep -vE "DEBUG" "$LOGDIR/playit.log" | tail -n 12; echo "--- playit UDP:"; grep -iE "udp|channel|origin|client" "$LOGDIR/playit.log" | tail -n 20; echo "--- collegamento:"; tail -n 8 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
         | grep -viE 'secret|token|key|guest-account' | sed -E 's/(xuid|pfid): *[A-Za-z0-9]*/\1: -/g' > "$REP/playit_log.txt"
       kill -0 "$PLAYIT" 2>/dev/null || { echo "(playit si è fermato)" >> "$REP/playit_log.txt"; break; }
