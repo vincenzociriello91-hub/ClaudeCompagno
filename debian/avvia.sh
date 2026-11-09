@@ -35,6 +35,9 @@ LOG="$LOGDIR/server_$(date +%Y%m%d_%H%M%S).log"
 LEVEL=""
 CODICE=0
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
+# indirizzi: 100.64-127.x.x è Tailscale (pannello da fuori casa), il resto è la Wi-Fi di casa
+ip_tailscale() { hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' | head -1; }
+ip_casa() { hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^[0-9]+\.' | grep -vE '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' | head -1; }
 
 # Aggiornamento automatico gratuito: le versioni nuove del bot escono su GitHub (repository pubblico, nessun segreto
 # dentro: chiave e impostazioni restano qui). Scarica, controlla e installa; ritorna 0 se ha installato una versione nuova.
@@ -227,7 +230,8 @@ esporta() { # $1 file di destinazione, $2 esito
     echo "Versione server: $(cat "$SRV/.versione" 2>/dev/null || echo sconosciuta)"
     echo "Mondo: ${LEVEL:-?} | RAM disponibile: $(free -m 2>/dev/null | awk '/Mem:/{print $7" MB"}') | spazio libero: $(df -h "$BASE" | awk 'NR==2{print $4}')"
     echo "Indirizzi del server in casa: $(hostname -I 2>/dev/null) porta 19132"
-    echo "Pannello dal telefono (stessa Wi-Fi): http://$(hostname -I 2>/dev/null | awk '{print $1}'):8080"
+    echo "Pannello dal telefono (stessa Wi-Fi): http://$(ip_casa):8080"
+    [ -n "$(ip_tailscale)" ] && echo "Pannello da fuori casa (Tailscale): http://$(ip_tailscale):8080"
     echo "Notifiche: app ntfy, iscriviti all'argomento $(cat "$IMP/ntfy_topic" 2>/dev/null || echo '(non ancora creato)')"
     echo "Tunnel playit: $(pgrep -x playit >/dev/null && echo attivo || echo 'non attivo (configuralo una volta con mc-tunnel)')"
     echo
@@ -397,9 +401,9 @@ if command -v playit >/dev/null && { [ -f /root/.config/playit_gg/playit.toml ] 
 else
   log "Tunnel playit non configurato: per gli amici fuori casa lancia una volta mc-tunnel"
 fi
-notifica "▶️ Server avviato. Pannello: http://$(hostname -I 2>/dev/null | awk '{print $1}'):8080"
+notifica "▶️ Server avviato. Pannello: http://$(ip_casa):8080$([ -n "$(ip_tailscale)" ] && echo " (fuori casa: http://$(ip_tailscale):8080)")"
 
-log "Avvio del server. Dal telefono: Server > Aggiungi server, indirizzo $(hostname -I 2>/dev/null | awk '{print $1}') porta 19132"
+log "Avvio del server. Dal telefono: Server > Aggiungi server, indirizzo $(ip_casa) porta 19132"
 crash=0
 while true; do
   avvia_bds
