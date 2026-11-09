@@ -107,8 +107,9 @@
     <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
     <h2>Comandi a distanza</h2>
     <div class="box"><div class="filtri" id="comandi">
-      <button data-c="sync_drive">Fai ripartire Drive</button><button data-c="avvia_server">Avvia il server</button><button data-c="riavvia_odin">Riavvia la Odin</button></div>
-      <div class="leggenda" id="esito">Servono il modulo Magisk v4.13. L'esito compare qui entro pochi secondi.</div></div>
+      <button data-c="sync_drive">Fai ripartire Drive</button><button data-c="rapporto">Rapporto completo</button><button data-c="libera_ram">Libera RAM</button>
+      <button data-c="avvia_server">Avvia il server</button><button data-c="riavvia_server">Riavvia il server</button><button data-c="ferma_server">Ferma il server</button><button data-c="riavvia_odin">Riavvia la Odin</button></div>
+      <div class="leggenda" id="esito">Serve il modulo Magisk v4.14. L'esito compare qui entro pochi secondi (il rapporto va su Drive).</div></div>
   </section>
   <section id="novita"><div class="box" id="novitatesto"><p class="vuoto">Carico…</p></div></section>
   <section id="rapporti">
@@ -324,7 +325,8 @@ async function aggiornaOdin() {
 }
 $("comandi").onclick = async (e) => {
   const c = e.target.dataset.c; if (!c) return;
-  if (c === "riavvia_odin" && !confirm("Riavviare la Odin? Il server resta fermo un paio di minuti.")) return;
+  const avviso = { riavvia_odin: "Riavviare la Odin? Il server resta fermo un paio di minuti.", ferma_server: "Fermare il server? Il bot smette di giocare finché non lo riavvii." }[c];
+  if (avviso && !confirm(avviso)) return;
   try { const r = await fetch("/api/comando?a=" + c, { method: "POST" }); $("esito").textContent = r.ok ? "Comando inviato…" : "Comando non permesso"; }
   catch { $("esito").textContent = "Pannello non raggiungibile"; }
 };

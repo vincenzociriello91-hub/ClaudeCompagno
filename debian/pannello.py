@@ -312,7 +312,7 @@ def campiona(rep, percorso_log):
     del STORICO[:-1440]
 
 
-COMANDI = ("sync_drive", "avvia_server", "riavvia_odin")
+COMANDI = ("sync_drive", "avvia_server", "ferma_server", "riavvia_server", "rapporto", "libera_ram", "riavvia_odin")
 
 
 def manda_comando(rep, azione):
