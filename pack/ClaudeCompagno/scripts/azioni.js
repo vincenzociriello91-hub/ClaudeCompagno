@@ -1315,7 +1315,10 @@ const ESECUTORI = {
       if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return false;
       const testa = dim.getBlock(b);
       if (!testa || testa.isLiquid) return false;
-      return [-1, -2].every((dy) => !dim.getBlock({ x: b.x, y: b.y + dy, z: b.z })?.isLiquid);
+      // anche ai lati della buca: l'acqua accanto entra appena si scava (annegato nella tana a 107,61,422 il 09/11)
+      const bagnato = (q) => { const k = dim.getBlock(q); return !!k && (k.isLiquid || /water|lava/.test(k.typeId)); };
+      return [0, -1, -2].every((dy) => !bagnato({ x: b.x, y: b.y + dy, z: b.z })
+        && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([ax, az]) => !bagnato({ x: b.x + ax, y: b.y + dy, z: b.z + az })));
     };
     if (!s.base) {
       for (const [dx, dz] of posti) {
