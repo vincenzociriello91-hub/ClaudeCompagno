@@ -316,9 +316,11 @@ world.afterEvents.entityDie.subscribe(({ deadEntity, damageSource }) => {
         if (p) bot.teleport(p.location, { dimension: p.dimension });
         else if (casa) bot.teleport({ x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 });
         if (raffica) {
-          // come la protezione alla rinascita dei giocatori: 15 secondi per allontanarsi o chiudersi in una tana
-          try { bot.addEffect("resistance", 300, { amplifier: 4, showParticles: false }); } catch {}
-          evento("Rinasco protetto per 15 secondi: troppe morti di fila, niente recupero degli oggetti");
+          // 15 secondi non bastavano (09/11 sera: 18 morti, rinasceva tra gli stessi mostri e si rimetteva a combattere):
+          // 2 minuti protetto e senza combattere, il tempo di chiudersi nella tana e restarci
+          try { bot.addEffect("resistance", 2400, { amplifier: 4, showParticles: false }); } catch {}
+          mem.protettoFino = Date.now() + 120000;
+          evento("Rinasco protetto per 2 minuti: troppe morti di fila, niente recupero né combattimenti, mi chiudo in una tana");
           assegna({ tipo: "tana", routine: "notte_sicura" }, "autonomia");
         }
         // gli oggetti a terra spariscono dopo 5 minuti: va subito a riprenderli

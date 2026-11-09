@@ -464,6 +464,8 @@ function scegliBersaglio(bot) {
 }
 
 export function difendi(bot) {
+  // rinato protetto dopo una raffica di morti: niente lotte, solo la tana (combattendo usciva e moriva di nuovo)
+  if (Date.now() < (mem.protettoFino ?? 0)) { lotta.bersaglio = null; return false; }
   if (tick() - lotta.scelta >= 10) {
     lotta.scelta = tick();
     const b = lotta.bersaglio;
