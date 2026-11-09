@@ -1,8 +1,35 @@
-import { world, system, ItemStack, EquipmentSlot } from "@minecraft/server";
+import { world, system, ItemStack, EquipmentSlot, GameMode } from "@minecraft/server";
 import { SimulatedPlayer } from "@minecraft/server-gametest";
 import { mem, sessione, protetti, chiaveBlocco, proteggi, evento, errore, conta, notifica } from "./memoria.js";
 import { RICETTE, FUSIONI, COMBUSTIBILI, CIBO, GRUPPI, assiDaTronco } from "./ricette.js";
 import { salvaSchema, ROUTINE } from "./schemi.js";
+
+// "guarda" / "smetti": il proprietario vede il bot in diretta da spettatore, come un video di gioco.
+// La telecamera la disegna il suo telefono; la Odin fa solo un teletrasporto ogni mezzo secondo (costo minimo).
+export function guarda(p, on) {
+  if (on) {
+    if (!mem.spettatore) mem.spettatore = { nome: p.name, modo: String(p.getGameMode?.() ?? "Survival"), x: p.location.x, y: p.location.y, z: p.location.z, dim: p.dimension.id };
+    p.setGameMode(GameMode.Spectator);
+    if (mem.bersaglio === p.name) { mem.modalita = "autonomo"; mem.bersaglio = ""; } // seguire chi lo sta filmando lo farebbe girare su se stesso
+    return true;
+  }
+  const s = mem.spettatore;
+  if (!s || s.nome !== p.name) return false;
+  mem.spettatore = null;
+  p.setGameMode(GameMode[s.modo] ?? GameMode.Survival);
+  p.teleport({ x: s.x, y: s.y, z: s.z }, { dimension: world.getDimension?.(s.dim) ?? p.dimension });
+  return true;
+}
+// 4 blocchi dietro al bot e 2,5 più in alto, guardando lui
+export function inquadra(bot) {
+  const s = mem.spettatore;
+  if (!s || !bot?.isValid) return;
+  const p = world.getAllPlayers().find((g) => g.name === s.nome);
+  if (!p) return;
+  const v = bot.getViewDirection?.() ?? { x: 0, z: 1 };
+  const n = Math.hypot(v.x, v.z) || 1, l = bot.location;
+  p.teleport({ x: l.x - (v.x / n) * 4, y: l.y + 2.5, z: l.z - (v.z / n) * 4 }, { dimension: bot.dimension, facingLocation: { x: l.x, y: l.y + 1, z: l.z } });
+}
 
 // Notifiche per il cervello (compito finito, fallito, morte...): main.js le svuota.
 export const notifiche = [];

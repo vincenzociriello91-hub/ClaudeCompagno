@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -114,6 +114,9 @@ function comandoRapido(p, testo) {
   const cambiaStato = /^(fermo|fermati|stop|basta|seguimi|segui|vieni|difendimi|difendi|proteggimi|autonomo|libero)\b/.test(t);
   if (cambiaStato && !proprietario && ordineRecente) { parla(`Sto facendo una cosa per ${CFG.proprietario}, chiedi a lui.`); return true; }
   const ordina = () => { mem.ordine = { da: p.name, t: Date.now() }; };
+  // spettatore: solo il proprietario (cambia la sua modalità di gioco); "smetti" e non "basta", che ferma il bot
+  if (/^guarda(mi|ti)?$/.test(t) && proprietario) { guarda(p, true); parla("Ora mi vedi in diretta. Scrivi \"smetti\" per tornare dove eri."); return true; }
+  if (/^smetti\b/.test(t) && proprietario) { if (guarda(p, false)) parla("Sei tornato dove eri."); return true; }
   if (/^(fermo|fermati|stop|basta|seguimi|segui|difendimi|difendi|proteggimi)\b/.test(t)) mem.coda = [];
   if (/^(fermo|fermati|stop|basta)\b/.test(t)) { ordina(); mem.compito = null; mem.modalita = "fermo"; bot.stopMoving(); parla("Ok, mi fermo."); return true; }
   if (/^(seguimi|segui)\b/.test(t)) { ordina(); mem.compito = null; mem.modalita = "segui"; mem.bersaglio = p.name; parla("Ti seguo."); return true; }
@@ -226,6 +229,8 @@ system.runTimeout(() => { try { world.getDynamicProperty("claude_prova"); avvio(
 
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
   if (!initialSpawn || !reale(player)) return;
+  // era uscito mentre guardava (o il server si è riavviato): gli si ridà la sua modalità e il suo posto
+  if (mem.spettatore?.nome === player.name) system.runTimeout(() => { try { guarda(player, false); } catch (e) { errore("fine spettatore", e); } }, 40);
   sessione.giocatori[player.name] = `${sessione.giocatori[player.name] ? sessione.giocatori[player.name] + "; " : ""}entrato ${adesso()}`;
   evento(`${player.name} è entrato`);
   if (player.name.toLowerCase() === CFG.proprietario.toLowerCase()) system.runTimeout(() => riassuntoAssenza(player.name), 200);
@@ -455,6 +460,8 @@ function aiutoAttivo() {
 
 // ---------- cicli ----------
 // Riflessi: difesa, cibo, compito. 5 volte al secondo.
+ogniTick(10, () => { if (mem.spettatore && vivo()) try { inquadra(bot); } catch (e) { errore("spettatore", e); } });
+
 ogniTick(4, () => {
   if (!vivo()) return;
   // il giocatore simulato non nuota da solo: con la testa sott'acqua salta per risalire
