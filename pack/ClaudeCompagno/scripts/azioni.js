@@ -423,6 +423,16 @@ export function difendi(bot) {
   }
   // vita bassa: si ritira per 2 secondi e intanto mangia (gestisciFame in lotta mangia sotto 4 cuori), poi torna
   const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
+  // creeper con metà vita o meno: niente corpo a corpo, scappa lontano (2 morti per esplosione a vita 5 il 09/11:
+  // la ritirata di 6-8 blocchi per 2 secondi non basta, il creeper insegue e scoppia)
+  if (b.typeId === "minecraft:creeper" && vita <= 10) {
+    const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
+    if (d > 16) { ignorati.set(b.id, tick() + 600); lotta.bersaglio = null; return false; }
+    try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 14, y: l.y, z: l.z + ((l.z - e.z) / d) * 14 }); } catch {}
+    lotta.ritirata = tick() + 60;
+    if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Scappo dal creeper: vita ${Math.round(vita)}/20`); }
+    return true;
+  }
   if (vita <= 6 && dist(b.location, bot.location) < 6) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 8, y: l.y, z: l.z + ((l.z - e.z) / d) * 8 }); } catch {}

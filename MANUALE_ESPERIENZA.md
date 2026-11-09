@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.27 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.28 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -222,6 +222,8 @@ Aggiornato alla versione 2.8.27 (9 novembre 2026), dopo circa 30 ore di gioco, 2
 | A vita 1 attaccava un drowned dopo l'altro e poi moriva | la scelta del bersaglio non guardava la vita; la ritirata durava 2 secondi e poi ripartiva | da ferito non si cercano lotte: ci si difende solo da chi è già addosso, e si mangia anche il cibo di ripiego |
 | 8 copie "in conflitto" del log di avvio su Drive in una notte | un file che cresce di continuo dentro una cartella sincronizzata viene caricato a metà | nelle cartelle sincronizzate scrivi file piccoli e sostituiscili in un colpo solo; il log lungo tienilo in locale |
 | Lo spostamento della casa fuori dalla palude l'avrebbe rifatto ogni 30 minuti, cancellando ogni volta fattoria e luoghi | contava anche i pericoli vecchi, già "pagati" con il primo spostamento | dopo una decisione drastica, conta solo i fatti nuovi; e non buttare ciò che funziona (la fattoria al 92%) |
+| 2 morti per esplosione di creeper a vita 5 | colpiva il creeper e si allontanava solo 6-8 blocchi per 2 secondi | contro un pericolo che esplode non si combatte da feriti: ci si allontana abbastanza e si aspetta |
+| Un aggiornamento urgente rimasto fermo 30 minuti | dopo di lui ne era uscito uno normale e l'urgenza vale solo per l'ultima versione | quando una correzione urgente viene superata, anche la successiva va segnata come urgente |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
