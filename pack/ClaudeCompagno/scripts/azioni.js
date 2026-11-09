@@ -1321,18 +1321,25 @@ const ESECUTORI = {
         && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([ax, az]) => !bagnato({ x: b.x + ax, y: b.y + dy, z: b.z + az })));
     };
     if (!s.base) {
+      s.scartati ??= [];
       for (const [dx, dz] of posti) {
+        if (s.scartati.includes(`${dx},${dz}`)) continue;
         const g = dx || dz ? suolo(dim, qui.x + dx, qui.z + dz) : null;
         if (g?.liquido) continue;
         const c0 = g ? { x: g.x, y: g.y, z: g.z } : qui;
-        if (adatto(c0)) { s.base = c0; break; }
+        if (adatto(c0)) { s.base = c0; s.posto = `${dx},${dz}`; break; }
       }
       if (!s.base) return (mem.tanaKo = Date.now()), finito(false, "acqua o grotte tutto intorno: niente tana qui");
     }
     const b = s.base;
     for (const dy of [-1, -2]) {
       const blk = dim.getBlock({ x: b.x, y: b.y + dy, z: b.z });
-      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "terreno troppo duro per la tana");
+      // blocco che non si scava (protetto, troppo duro): si prova il posto successivo invece di arrendersi
+      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") {
+        s.scartati.push(s.posto); s.base = null;
+        if (s.scartati.length >= posti.length) return (mem.tanaKo = Date.now()), finito(false, "terreno troppo duro per la tana");
+        return;
+      }
     }
     bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
     const testa = dim.getBlock(b);
