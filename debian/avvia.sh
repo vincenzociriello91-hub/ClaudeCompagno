@@ -36,7 +36,11 @@ LEVEL=""
 CODICE=0
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 # indirizzi: 100.64-127.x.x è Tailscale (pannello da fuori casa), il resto è la Wi-Fi di casa
-ip_tailscale() { hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' | head -1; }
+TS=$BASE/tailscale
+ip_tailscale() {
+  { [ -S "$TS/tailscaled.sock" ] && timeout 5 "$TS/tailscale" --socket="$TS/tailscaled.sock" ip -4 2>/dev/null; hostname -I 2>/dev/null | tr ' ' '\n'; } \
+    | grep -E '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' | head -1
+}
 ip_casa() { hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^[0-9]+\.' | grep -vE '^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.' | head -1; }
 
 # Aggiornamento automatico gratuito: le versioni nuove del bot escono su GitHub (repository pubblico, nessun segreto
@@ -392,6 +396,46 @@ NOTIFICHE=$!
   done ) &
 AGGIORNATORE=$!
 
+# Pannello da fuori casa con Tailscale DENTRO Debian (modalità userspace): niente VPN Android, che bloccava la
+# sincronizzazione di Drive (09/11). Il primo avvio scarica Tailscale e scrive in Odin2_report il link per collegare la
+# Odin all'account (una volta sola); poi riparte da solo. Per spegnerlo: touch /root/claudemc/impostazioni/no_tailscale
+fuori_casa() {
+  [ -f "$IMP/no_tailscale" ] && return 0
+  mkdir -p "$TS"
+  if [ ! -x "$TS/tailscaled" ]; then
+    local ver tmp=$TS/scarico
+    ver=$(curl -fsS -m 20 "https://pkgs.tailscale.com/stable/?mode=json" | jq -r '.Tarballs.arm64 // empty' 2>/dev/null)
+    [ -n "$ver" ] || { log "Tailscale: versione non trovata, pannello solo in casa"; return 1; }
+    rm -rf "$tmp"; mkdir -p "$tmp"
+    if curl -fsSL -m 300 "https://pkgs.tailscale.com/stable/$ver" | tar -xz -C "$tmp" --strip-components=1 \
+       && [ -x "$tmp/tailscaled" ] && [ -x "$tmp/tailscale" ]; then
+      mv -f "$tmp/tailscaled" "$tmp/tailscale" "$TS/"; rm -rf "$tmp"; log "Tailscale $ver scaricato"
+    else rm -rf "$tmp"; log "Tailscale: download fallito, pannello solo in casa"; return 1; fi
+  fi
+  pkill -f "$TS/tailscaled" 2>/dev/null; sleep 1  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
+  "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
+    > "$LOGDIR/tailscaled.log" 2>&1 &
+  sleep 5
+  # già collegata: basta "up"; altrimenti "up" stampa il link di accesso, che va in Drive (cartella privata)
+  ( timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
+      | while read -r r; do
+          case "$r" in *https://login.tailscale.com/*)
+            u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
+            printf 'Per vedere il pannello da fuori casa apri questo link (una volta sola) ed entra con il tuo account Tailscale:\n%s\n' "$u" \
+              > "$REP/tailscale_accesso.txt" ;;
+          esac
+        done
+    i=$(ip_tailscale)
+    if [ -n "$i" ]; then
+      # inoltro esplicito della porta del pannello (in userspace non sempre arriva da solo ai servizi locali)
+      timeout 30 "$TS/tailscale" --socket="$TS/tailscaled.sock" serve --bg --tcp 8080 tcp://127.0.0.1:8080 >> "$LOGDIR/tailscaled.log" 2>&1 || true
+      rm -f "$REP/tailscale_accesso.txt"
+      log "Pannello da fuori casa (Tailscale): http://$i:8080"
+      notifica "🌍 Pannello anche da fuori casa: http://$i:8080 (con Tailscale acceso sul telefono)"
+    fi ) &
+}
+fuori_casa &  # in sottofondo: il primo download non ritarda l'avvio del server
+
 # Tunnel per gli amici fuori casa: parte da solo se è già stato collegato una volta con mc-tunnel.
 PLAYIT=""
 if command -v playit >/dev/null && { [ -f /root/.config/playit_gg/playit.toml ] || [ -f /etc/playit/playit.toml ]; }; then
@@ -417,6 +461,7 @@ while true; do
   sleep 10
 done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
+pkill -f "$TS/tailscaled" 2>/dev/null
 notifica "⏹️ Server fermato: $ESITO"
 avvio_breve
 pkill -f "tail -n0 -F $LOG" 2>/dev/null
