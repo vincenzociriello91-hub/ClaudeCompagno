@@ -42,6 +42,12 @@
   a { color:var(--acc); }
   h2 { font-size:15px; margin:16px 0 6px; }
   .vuoto { color:var(--tenue); font-style:italic; }
+  .salute { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
+  .salute .voto { font-size:34px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .salute .frase { font-size:16px; font-weight:600; }
+  .salute ul { color:var(--tenue); font-size:13px; }
+  .grafico { width:100%; height:90px; display:block; }
+  .leggenda { font-size:12px; color:var(--tenue); }
 </style>
 </head>
 <body>
@@ -92,7 +98,10 @@
     <h2>Ogni chiamata all'IA</h2><div id="chiamate"></div>
   </section>
   <section id="odin">
-    <div class="griglia" id="odinbox"></div>
+    <div class="box salute" id="salute"><b>Salute della Odin</b><span>…</span></div>
+    <h2>Adesso</h2><div class="griglia" id="odinbox"></div>
+    <h2>Temperatura CPU e fluidità del server (ultime 12 ore)</h2><div class="box" id="grafici"><p class="vuoto">Il grafico si riempie un punto al minuto.</p></div>
+    <h2>Temperature per zona</h2><div class="box"><ul class="lista" id="zone"></ul></div>
     <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
   </section>
   <section id="rapporti">
@@ -241,12 +250,37 @@ async function aggiornaOdin() {
     const o = await (await fetch("/api/odin")).json();
     const v = (x, u) => (x === null || x === undefined ? "—" : x + u);
     const carica = { Charging: "in carica", Discharging: "a batteria", Full: "carica completa", "Not charging": "collegata, non carica" }[o.carica] ?? v(o.carica, "");
+    const s = o.salute ?? { voto: null, frase: "", motivi: [] };
+    const colore = s.voto >= 85 ? "var(--ok)" : s.voto >= 65 ? "var(--api)" : "var(--ko)";
+    $("salute").innerHTML = `<b>Salute della Odin (0-100)</b><span class="voto" style="color:${colore}">${esc(v(s.voto, ""))}</span>`
+      + `<span class="frase" style="color:${colore}">${esc(s.frase)}</span>`
+      + (s.motivi.length ? `<ul>${s.motivi.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : `<span class="leggenda">Niente da segnalare.</span>`)
+      + (o.batteria == null ? `<span class="leggenda">Batteria e ventola arrivano con il modulo Magisk v4.12.</span>` : "");
+    const ram = o.ram_libera_mb == null ? "—" : `${(o.ram_libera_mb / 1024).toFixed(1)} di ${(o.ram_totale_mb / 1024).toFixed(1)} GB`;
+    const swap = o.swap_totale_mb ? `${(o.swap_usato_mb / 1024).toFixed(1)} di ${(o.swap_totale_mb / 1024).toFixed(1)} GB` : "—";
+    const vent = o.ventola == null ? "—" : o.ventola === 0 ? "ferma" : `livello ${o.ventola} di ${o.ventola_max}`;
     $("odinbox").innerHTML = [
-      casella("Batteria", v(o.batteria, "%")), casella("Alimentazione", carica),
-      casella("Temperatura CPU", v(o.temp_cpu, " °C")), casella("Temperatura batteria", v(o.temp_batteria, " °C")),
-      casella("Consumo adesso", v(o.watt, " W")), casella("RAM libera", o.ram_libera_mb == null ? "—" : `${(o.ram_libera_mb / 1024).toFixed(1)} di ${(o.ram_totale_mb / 1024).toFixed(1)} GB`),
-      casella("Spazio libero", v(o.disco_libero_gb, " GB")), casella("Accesa da", v(o.acceso_da_ore, " ore")),
+      casella("Batteria", v(o.batteria, "%")), casella("Alimentazione", o.limite_carica ? "limite carica (60-80%)" : carica),
+      casella("Temperatura CPU", v(o.temp_cpu, " °C")), casella("Temperatura GPU", v(o.temp_gpu, " °C")),
+      casella("Temperatura batteria", v(o.temp_batteria, " °C")), casella("Ventola", vent),
+      casella("Consumo adesso", v(o.watt, " W")), casella("Carico CPU", o.carico == null ? "—" : `${o.carico} su ${o.core} core`),
+      casella("RAM libera", ram), casella("Swap usato", swap),
+      casella("Spazio libero", v(o.disco_libero_gb, " GB")), casella("Peso del mondo", v(o.mondo_mb, " MB")),
+      casella("Server: fluidità", o.tps == null ? "—" : `${o.tps} TPS (media ${o.tps_media}, min ${o.tps_min})`),
+      casella("Server acceso da", v(o.server_acceso_ore, " ore")), casella("Odin accesa da", v(o.acceso_da_ore, " ore")),
+      casella("Protezione calore", o.pausa_calore ? "SERVER IN PAUSA" : "pronta"),
     ].join("");
+    $("zone").innerHTML = Object.entries(o.zone ?? {}).map(([k, t]) => `<li>${esc(k)}: <b>${t} °C</b></li>`).join("") || '<li class="vuoto">non disponibili</li>';
+    const st = (o.storico ?? []).filter((p) => p[1] != null || p[2] != null);
+    if (st.length > 1) {
+      const t0 = st[0][0], t1 = st[st.length - 1][0] || t0 + 1;
+      const linea = (idx, min, max) => st.filter((p) => p[idx] != null).map((p) => `${((p[0] - t0) / (t1 - t0 || 1) * 300).toFixed(1)},${(90 - (Math.min(max, Math.max(min, p[idx])) - min) / (max - min) * 86 - 2).toFixed(1)}`).join(" ");
+      const tmax = Math.round(Math.max(...st.map((p) => p[1] ?? 0)));
+      $("grafici").innerHTML = `<svg class="grafico" viewBox="0 0 300 90" preserveAspectRatio="none">`
+        + `<polyline fill="none" stroke="var(--ko)" stroke-width="1.5" vector-effect="non-scaling-stroke" points="${linea(1, 30, 95)}"/>`
+        + `<polyline fill="none" stroke="var(--ok)" stroke-width="1.5" vector-effect="non-scaling-stroke" points="${linea(2, 0, 20)}"/></svg>`
+        + `<div class="leggenda"><span style="color:var(--ko)">■</span> CPU (30-95 °C, massimo ${tmax} °C) · <span style="color:var(--ok)">■</span> TPS (0-20) · dalle ${new Date(t0 * 1000).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</div>`;
+    }
     $("consumo").className = o.consumo_server ? "" : "vuoto";
     $("consumo").textContent = o.consumo_server || "Ancora nessuna misura del modulo Odin2PortalTweaks.";
   } catch { $("odinbox").innerHTML = '<p class="vuoto">Odin non raggiungibile</p>'; }

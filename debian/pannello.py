@@ -154,6 +154,22 @@ def stato_odin(rep, sys_dir="/sys", proc_dir="/proc"):
     o["acceso_da_ore"] = round(float(up.split()[0]) / 3600, 1) if up else None
     la = _leggi(os.path.join(proc_dir, "loadavg"))
     o["carico"] = la.split()[0] if la else None
+    zone_g = {}
+    for z in zone:
+        tipo = (_leggi(os.path.join(tz, z, "type")) or "").lower()
+        g = _num(os.path.join(tz, z, "temp"))
+        if not tipo or g is None or not 0 < g < 150000:
+            continue
+        g = g / 1000 if g > 1000 else g
+        gruppo = re.split(r"[-_]", tipo)[0] or tipo
+        zone_g[gruppo] = max(zone_g.get(gruppo, 0), round(g, 1))
+    o["zone"] = dict(sorted(zone_g.items(), key=lambda kv: -kv[1])[:12])
+    o["temp_gpu"] = max((v for k, v in zone_g.items() if k.startswith("gpu")), default=None)
+    o["swap_totale_mb"] = round(mem["SwapTotal"] / 1024) if "SwapTotal" in mem else None
+    o["swap_usato_mb"] = round((mem["SwapTotal"] - mem.get("SwapFree", 0)) / 1024) if "SwapTotal" in mem else None
+    o["core"] = os.cpu_count()
+    o["ventola"] = o["ventola_max"] = None
+    o["pausa_calore"] = o["limite_carica"] = False
     o["consumo_server"] = _leggi(os.path.join(rep, "consumo_server.txt"))
     # Termux non può leggere batteria e uptime veri (SELinux): li scrive ogni 30 s il modulo Magisk (v4.11+)
     mod = {}
@@ -183,8 +199,129 @@ def stato_odin(rep, sys_dir="/sys", proc_dir="/proc"):
             o["watt"] = round(i * v / 1e12, 2)
         if f("temp_cpu") is not None:
             o["temp_cpu"] = f("temp_cpu")
+        for k in ("temp_gpu", "ventola", "ventola_max"):
+            if f(k) is not None:
+                o[k] = f(k)
+        o["pausa_calore"] = mod.get("pausa_calore") == "1"
+        o["limite_carica"] = mod.get("carica_limite") == "1"
         if f("uptime") is not None:
             o["acceso_da_ore"] = round(f("uptime") / 3600, 1)
+    return o
+
+
+def salute(o, tps=None):
+    """Voto 0-100 della salute della Odin, con frase e motivi (dati che mancano non tolgono punti)."""
+    voto, motivi = 100, []
+    def togli(p, m):
+        nonlocal voto
+        voto -= p
+        motivi.append(m)
+    t = o.get("temp_cpu")
+    if t is not None:
+        if t >= 90: togli(40, f"CPU molto calda ({t:.0f} °C)")
+        elif t >= 80: togli(25, f"CPU calda ({t:.0f} °C)")
+        elif t >= 70: togli(10, f"CPU tiepida ({t:.0f} °C)")
+        elif t >= 60: togli(3, f"CPU sopra i 60 °C ({t:.0f} °C)")
+    b = o.get("temp_batteria")
+    if b is not None:
+        if b >= 45: togli(30, f"batteria molto calda ({b:.0f} °C)")
+        elif b >= 40: togli(15, f"batteria calda ({b:.0f} °C)")
+        elif b >= 37: togli(5, f"batteria tiepida ({b:.0f} °C)")
+    if o.get("pausa_calore"):
+        togli(30, "server in pausa per il calore")
+    v, vm = o.get("ventola"), o.get("ventola_max")
+    if v is not None and t is not None and v == 0 and t >= 65:
+        togli(25, f"ventola ferma con CPU a {t:.0f} °C")
+    r = o.get("ram_libera_mb")
+    if r is not None:
+        if r < 300: togli(30, f"RAM quasi finita ({r} MB liberi)")
+        elif r < 600: togli(15, f"poca RAM libera ({r} MB)")
+        elif r < 1000: togli(5, f"RAM libera sotto 1 GB ({r} MB)")
+    d = o.get("disco_libero_gb")
+    if d is not None:
+        if d < 2: togli(20, f"spazio quasi finito ({d} GB)")
+        elif d < 5: togli(5, f"poco spazio libero ({d} GB)")
+    c = o.get("batteria")
+    if c is not None and o.get("carica") in ("Discharging", "Not charging") and not o.get("limite_carica"):
+        if c < 15: togli(20, f"batteria quasi scarica ({c:.0f}%)")
+        elif c < 30: togli(5, f"batteria sotto il 30% ({c:.0f}%)")
+    if tps is not None:
+        if tps < 10: togli(20, f"server molto lento ({tps:.1f} TPS su 20)")
+        elif tps < 15: togli(10, f"server lento ({tps:.1f} TPS su 20)")
+        elif tps < 18: togli(3, f"server un po' lento ({tps:.1f} TPS su 20)")
+    voto = max(0, voto)
+    frase = ("La Odin sta bene" if voto >= 85 else "La Odin sta bene, con qualche attenzione" if voto >= 65
+             else "La Odin è sotto sforzo" if voto >= 40 else "La Odin sta male: controllala")
+    return {"voto": voto, "frase": frase, "motivi": motivi}
+
+
+TPS_RIGA = re.compile(r"\[BATTITO\] (\S+ \S+) tps ([\d.]+) media ([\d.]+) min ([\d.]+)")
+
+
+def ultimo_battito(percorso_log):
+    """Ultimo battito del bot dal fondo del log: (ora, tps, media, minimo) o None."""
+    try:
+        with open(percorso_log, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - 65536))
+            coda = f.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+    m = None
+    for m in TPS_RIGA.finditer(coda):
+        pass
+    return (m.group(1), float(m.group(2)), float(m.group(3)), float(m.group(4))) if m else None
+
+
+_cache_mondo = {"t": 0, "mb": None}
+
+
+def peso_mondo(base):
+    """MB occupati dai mondi (ricalcolato al massimo ogni 10 minuti: contare i file costa)."""
+    if time.time() - _cache_mondo["t"] < 600:
+        return _cache_mondo["mb"]
+    tot = 0
+    for radice, _, files in os.walk(os.path.join(base, "server", "worlds")):
+        for n in files:
+            try:
+                tot += os.path.getsize(os.path.join(radice, n))
+            except OSError:
+                pass
+    _cache_mondo.update(t=time.time(), mb=round(tot / 1048576) if tot else None)
+    return _cache_mondo["mb"]
+
+
+def acceso_da(percorso_log):
+    """Ore da quando è partito il server, dal nome del log (server_AAAAMMGG_HHMMSS.log)."""
+    m = re.search(r"server_(\d{8}_\d{6})\.log$", percorso_log or "")
+    if not m:
+        return None
+    try:
+        return round((time.time() - time.mktime(time.strptime(m.group(1), "%Y%m%d_%H%M%S"))) / 3600, 1)
+    except (ValueError, OverflowError):
+        return None
+
+
+STORICO = []  # (ora, temp CPU, tps) ogni minuto, ultime 24 ore; si azzera al riavvio del pannello
+
+
+def campiona(rep, percorso_log):
+    o = stato_odin(rep)
+    b = ultimo_battito(percorso_log)
+    STORICO.append([int(time.time()), o.get("temp_cpu"), b[1] if b else None])
+    del STORICO[:-1440]
+
+
+def odin_completo(rep, percorso_log):
+    o = stato_odin(rep)
+    b = ultimo_battito(percorso_log)
+    if b:
+        o["tps"], o["tps_media"], o["tps_min"] = b[1], b[2], b[3]
+    o["server_acceso_ore"] = acceso_da(percorso_log)
+    base = os.path.dirname(os.path.dirname(percorso_log)) if percorso_log else ""
+    o["mondo_mb"] = peso_mondo(base) if base else None
+    o["salute"] = salute(o, b[2] if b else None)
+    o["storico"] = STORICO[-720:]  # ultime 12 ore
     return o
 
 
@@ -209,7 +346,7 @@ class Gestore(BaseHTTPRequestHandler):
         if u.path == "/api/stato":
             return self._invia(200, json.dumps(stato(self.log_path), ensure_ascii=False), "application/json")
         if u.path == "/api/odin":
-            return self._invia(200, json.dumps(stato_odin(self.rep), ensure_ascii=False), "application/json")
+            return self._invia(200, json.dumps(odin_completo(self.rep, self.log_path), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporti":
             return self._invia(200, json.dumps(elenco_rapporti(self.rep), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporto":
@@ -275,8 +412,19 @@ def prova():
         assert m["temp_cpu"] == 61 and m["acceso_da_ore"] == 10.0, m
         open(os.path.join(d, "Download/.odin_stato"), "w").write("batteria=10\nora=1\n")  # vecchio: ignorato
         assert stato_odin(r2, os.path.join(d, "manca"), os.path.join(d, "manca"))["batteria"] is None
+        sano = salute({"temp_cpu": 45, "ram_libera_mb": 2300, "disco_libero_gb": 40}, 19.9)
+        assert sano["voto"] == 100 and sano["frase"] == "La Odin sta bene", sano
+        caldo = salute({"temp_cpu": 85, "ventola": 0, "ram_libera_mb": 500, "pausa_calore": True}, 9)
+        assert caldo["voto"] < 40 and len(caldo["motivi"]) == 5 and "sta male" in caldo["frase"], caldo
+        lg = os.path.join(d, "server_20261109_065227.log")
+        open(lg, "w").write("x [Scripting] [Claude][BATTITO] 2026-11-09 07:10:00 tps 19.9 media 16.6 min 8.8 | ok\n")
+        assert ultimo_battito(lg) == ("2026-11-09 07:10:00", 19.9, 16.6, 8.8)
+        assert acceso_da(lg) is not None and acceso_da("x.log") is None
+        oc = odin_completo(r2, lg)
+        assert oc["tps_media"] == 16.6 and "salute" in oc and isinstance(oc["storico"], list)
+        campiona(r2, lg); assert STORICO and STORICO[-1][2] == 19.9
         vuoto = stato_odin(os.path.join(d, "manca"), os.path.join(d, "manca"), os.path.join(d, "manca"))
-        assert all(v is None for v in vuoto.values()), vuoto
+        assert all(v in (None, {}, False) for k, v in vuoto.items() if k != "core"), vuoto
     print("prova pannello ok")
 
 
@@ -291,4 +439,14 @@ if __name__ == "__main__":
         prova()
     else:
         Gestore.log_path, Gestore.rep = arg.log, arg.rep
+        import threading
+
+        def campionatore():
+            while True:
+                try:
+                    campiona(arg.rep, arg.log)
+                except Exception:  # un campione perso non deve fermare il pannello
+                    pass
+                time.sleep(60)
+        threading.Thread(target=campionatore, daemon=True).start()
         ThreadingHTTPServer(("0.0.0.0", arg.porta), Gestore).serve_forever()
