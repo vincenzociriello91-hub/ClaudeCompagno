@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.18 (9 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.19 (9 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
 
 ---
 
@@ -209,6 +209,7 @@ Aggiornato alla versione 2.8.18 (9 novembre 2026), dopo circa 20 ore di gioco, 2
 | Fusioni al 2% con 81 ciottoli | la fornace richiede il banco, il banco il legno: si fermava al primo anello | rinviare al prerequisito più a monte |
 | 4 morti per scheletri accanto a casa, di notte | il riparo notturno scattava solo lontano da casa | il pericolo dipende dalla protezione che hai, non da quanto sei vicino a casa |
 | Ogni posto "occupato" da un blocco mai visto (leaf_litter) | si elencavano i casi buoni invece di quelli cattivi | quando il mondo cambia, definisci l'eccezione rara (opere fatte a mano) e lascia passare il resto |
+| Annegato 3 volte dopo essere stato "salvato" sul fondo di un lago | la ricerca della superficie salta l'acqua e restituisce il fondale | quando cerchi un posto sicuro, controlla anche cosa c'è sopra il punto, non solo il punto |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |

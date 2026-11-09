@@ -607,7 +607,10 @@ export function suolo(dim, x, z) {
   }
   if (y + 2 >= dim.heightRange.max || y < dim.heightRange.min) return null; // mai un punto al tetto o sotto il fondo del mondo
   const t = dim.getBlock({ x, y, z });
-  return { x, y: y + 1, z, liquido: !!t && (t.isLiquid || /water|lava/.test(t.typeId)) };
+  // getTopmostBlock può saltare l'acqua e dare il fondale: si controllano anche le due celle sopra il terreno
+  // (il bot veniva "salvato" sul fondo del lago e annegava: 3 morti in un'ora)
+  const bagnato = (b) => !!b && (b.isLiquid || /water|lava/.test(b.typeId));
+  return { x, y: y + 1, z, liquido: bagnato(t) || bagnato(dim.getBlock({ x, y: y + 1, z })) || bagnato(dim.getBlock({ x, y: y + 2, z })) };
 }
 
 // Categorie delle casse del deposito organizzato.
