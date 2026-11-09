@@ -1,1 +1,2 @@
 # Comandi firmati per la Odin (assistente remoto del modulo Magisk). Senza la chiave non sono validi.
+1794252739 rapporto bda48c655c5020650cc6fc1e21dd3a5e1baaea74c71a74c42445bb006915b487
