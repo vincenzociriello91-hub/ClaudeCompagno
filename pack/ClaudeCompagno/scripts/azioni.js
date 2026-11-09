@@ -539,7 +539,7 @@ export const prestazioni = { tps: 20, lento: false };
 // le lezioni scritte, e a volte le ignorava: è morto 3 volte nella stessa grotta).
 export function segnaPericolo(p, raggio, motivo) {
   mem.pericoli = (mem.pericoli ?? []).filter((z) => dist(z, p) > 6);
-  mem.pericoli.push({ x: Math.round(p.x), y: Math.round(p.y), z: Math.round(p.z), r: raggio, motivo: String(motivo).slice(0, 60) });
+  mem.pericoli.push({ x: Math.round(p.x), y: Math.round(p.y), z: Math.round(p.z), r: raggio, motivo: String(motivo).slice(0, 60), t: Date.now() });
   if (mem.pericoli.length > 20) mem.pericoli.shift();
 }
 export const inPericolo = (p) => (mem.pericoli ?? []).some((z) => Math.hypot(z.x - p.x, z.z - p.z) <= z.r && Math.abs(z.y - p.y) <= z.r);
@@ -717,14 +717,18 @@ export function spostaBaseSeAllagata(bot) {
   if (!casa || dist(bot.location, casa) > 40) return false; // lontano i chunk non sono caricati
   if (Date.now() - (mem.ultimoControlloBase ?? 0) < 30 * 60000) return false;
   mem.ultimoControlloBase = Date.now();
-  const bagnati = (mem.pericoli ?? []).filter((z) => ACQUA_MORTALE.test(z.motivo ?? "") && Math.hypot(z.x - casa.x, z.z - casa.z) <= 40);
+  // 2.8.24: contano solo le zone nate dopo l'ultimo spostamento, altrimenti le vecchie della palude (entro 48 blocchi)
+  // facevano saltare la casa di nuovo ogni 30 minuti, cancellando ogni volta i luoghi ricostruiti
+  const bagnati = (mem.pericoli ?? []).filter((z) => ACQUA_MORTALE.test(z.motivo ?? "") && Math.hypot(z.x - casa.x, z.z - casa.z) <= 40 && (z.t ?? 1) > (mem.casaSpostataT ?? 0));
   if (bagnati.length < 4) return false;
   const sp = trovaSpiazzo(bot.dimension, casa, 9, [...luoghiBot(), ...bagnati]);
   if (!sp) { evento(`Casa in palude (${bagnati.length} zone d'acqua mortali) ma nessuno spiazzo asciutto entro 48 blocchi (${perche()})`); return false; }
   mem.luoghi.casa_palude = { ...casa, nota: "vecchia casa in palude" };
   mem.luoghi.casa = { x: sp.x + 4, y: sp.y, z: sp.z + 4, nota: "casa spostata all'asciutto dal bot" };
-  // casetta, deposito, fattoria e bosco della palude non valgono più: si rifanno accanto alla casa nuova
-  for (const n of ["casetta", "deposito", "fattoria", "bosco", "fornace", "muro_base"]) delete mem.luoghi[n];
+  mem.casaSpostataT = Date.now();
+  // casetta, deposito, bosco, fornace si rifanno accanto alla casa nuova; la fattoria no: funziona (92%) e di giorno
+  // ci si lavora lo stesso, rifarla da zero buttava raccolti e semi
+  for (const n of ["casetta", "deposito", "bosco", "fornace", "muro_base"]) delete mem.luoghi[n];
   evento(`Casa spostata fuori dalla palude: da ${casa.x},${casa.y},${casa.z} a ${mem.luoghi.casa.x},${mem.luoghi.casa.y},${mem.luoghi.casa.z}`);
   return true;
 }
