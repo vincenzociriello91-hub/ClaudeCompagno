@@ -709,6 +709,26 @@ const RIEMPITIVI = ["minecraft:cobblestone", "minecraft:cobbled_deepslate", "min
   "minecraft:tuff", "minecraft:sandstone", "minecraft:netherrack", "minecraft:dirt", "minecraft:oak_planks", "minecraft:spruce_planks", "minecraft:birch_planks"];
 const luoghiBot = () => ["casetta", "bosco", "fattoria", "deposito", "fornace"].map((n) => mem.luoghi[n]);
 
+// 2.8.23: base in palude (annegamenti e drowned ripetuti intorno a casa): di giorno sposta la casa in uno spiazzo
+// asciutto ad almeno 13 blocchi da ogni punto dove è annegato. La vecchia resta come casa_palude.
+const ACQUA_MORTALE = /annega|drowning|drowned|acqua/;
+export function spostaBaseSeAllagata(bot) {
+  const casa = mem.luoghi.casa;
+  if (!casa || dist(bot.location, casa) > 40) return false; // lontano i chunk non sono caricati
+  if (Date.now() - (mem.ultimoControlloBase ?? 0) < 30 * 60000) return false;
+  mem.ultimoControlloBase = Date.now();
+  const bagnati = (mem.pericoli ?? []).filter((z) => ACQUA_MORTALE.test(z.motivo ?? "") && Math.hypot(z.x - casa.x, z.z - casa.z) <= 40);
+  if (bagnati.length < 4) return false;
+  const sp = trovaSpiazzo(bot.dimension, casa, 9, [...luoghiBot(), ...bagnati]);
+  if (!sp) { evento(`Casa in palude (${bagnati.length} zone d'acqua mortali) ma nessuno spiazzo asciutto entro 48 blocchi (${perche()})`); return false; }
+  mem.luoghi.casa_palude = { ...casa, nota: "vecchia casa in palude" };
+  mem.luoghi.casa = { x: sp.x + 4, y: sp.y, z: sp.z + 4, nota: "casa spostata all'asciutto dal bot" };
+  // casetta, deposito, fattoria e bosco della palude non valgono più: si rifanno accanto alla casa nuova
+  for (const n of ["casetta", "deposito", "fattoria", "bosco", "fornace", "muro_base"]) delete mem.luoghi[n];
+  evento(`Casa spostata fuori dalla palude: da ${casa.x},${casa.y},${casa.z} a ${mem.luoghi.casa.x},${mem.luoghi.casa.y},${mem.luoghi.casa.z}`);
+  return true;
+}
+
 const ESECUTORI = {
   vai(bot, c) {
     const meta = posDa(c, bot);
@@ -1272,20 +1292,42 @@ const ESECUTORI = {
     const s = c.stato;
     const dim = bot.dimension;
     // +0.5: sopra un blocco basso (sentiero, terra arata) i piedi sono a 63,94 e la cella "dei piedi" era il blocco stesso
-    s.base ??= pav({ x: bot.location.x, y: bot.location.y + 0.5, z: bot.location.z });
+    const qui = pav({ x: bot.location.x, y: bot.location.y + 0.5, z: bot.location.z });
+    // 2.8.23: prima falliva al primo posto storto ("occupato", acqua sotto) e il bot restava fuori tutta la notte:
+    // ora prova la cella dove sta e 8 vicine, sempre all'asciutto, e si chiude nella prima buona
+    const posti = [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [3, 3], [-3, 3], [3, -3], [-3, -3]];
+    const adatto = (b) => {
+      const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
+      if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return false;
+      const testa = dim.getBlock(b);
+      if (!testa || testa.isLiquid) return false;
+      return [-1, -2].every((dy) => !dim.getBlock({ x: b.x, y: b.y + dy, z: b.z })?.isLiquid);
+    };
+    if (!s.base) {
+      for (const [dx, dz] of posti) {
+        const g = dx || dz ? suolo(dim, qui.x + dx, qui.z + dz) : null;
+        if (g?.liquido) continue;
+        const c0 = g ? { x: g.x, y: g.y, z: g.z } : qui;
+        if (adatto(c0)) { s.base = c0; break; }
+      }
+      if (!s.base) return finito(false, "acqua o grotte tutto intorno: niente tana qui");
+    }
     const b = s.base;
-    const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
-    if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return finito(false, "sotto c'è una grotta o acqua: niente tana qui");
     for (const dy of [-1, -2]) {
       const blk = dim.getBlock({ x: b.x, y: b.y + dy, z: b.z });
-      if (blk?.isLiquid) return finito(false, "sotto c'è acqua o lava: niente tana qui");
       if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") return finito(false, "terreno troppo duro per la tana");
     }
     bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
-    const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
-    if (!alt) return finito(false, "niente blocchi per chiudere la tana");
-    const esito = piazza(bot, b, alt);
-    if (esito !== "ok" && esito !== "gia") return finito(false, `non riesco a chiudere la tana (${esito})`);
+    const testa = dim.getBlock(b);
+    // già chiusa da un blocco pieno (succedeva con "occupato"): va bene così; se è altro (fiori, neve, foglie) lo tolgo
+    const chiusa = testa && !testa.isAir && !testa.isLiquid && testa.isSolid;
+    if (!chiusa) {
+      const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
+      if (!alt) return finito(false, "niente blocchi per chiudere la tana");
+      let esito = piazza(bot, b, alt);
+      if (esito === "occupato" && scava(bot, b) === "ok") esito = piazza(bot, b, alt);
+      if (esito !== "ok" && esito !== "gia") return finito(false, `non riesco a chiudere la tana (${esito})`);
+    }
     mem.rifugio = { x: b.x, y: b.y - 2, z: b.z };
     nav.meta = null;
     finito(true, `tana scavata a ${b.x},${b.y - 2},${b.z}: resto qui fino all'alba`);

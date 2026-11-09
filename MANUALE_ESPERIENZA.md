@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.22 (9 novembre 2026), dopo circa 20 ore di gioco, 2.200 compiti misurati e 26 rapporti.
+Aggiornato alla versione 2.8.23 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -45,6 +45,13 @@ Aggiornato alla versione 2.8.22 (9 novembre 2026), dopo circa 20 ore di gioco, 2
 - **Non intestardirti su un obiettivo irraggiungibile.** Se in un tempo breve (10 secondi) non fai progressi
   concreti, lascialo perdere per un po' e torna al lavoro, e non riprenderlo subito dopo.
   _Fatto: 20 minuti fermi a inseguire un nemico in acqua; dopo la regola, 41 compiti completati in 34 minuti._
+
+- **Se il posto stesso ti uccide, cambia posto, non tattica.** Notte del 9/11: 4 morti in 7 minuti, tutte in palude
+  intorno alla base (annegamenti e drowned). Riprovare lì non serviva: quando i pericoli si concentrano intorno alla
+  base (4 o più nello stesso raggio), si sposta la base in un luogo sicuro e si ricostruisce lì.
+- **Un piano di emergenza non deve avere un solo tentativo.** Il riparo notturno falliva al primo ostacolo ("occupato")
+  e il bot restava allo scoperto tutta la notte. Ora prova fino a 9 posti vicini e accetta anche un riparo già chiuso:
+  un'azione di sicurezza deve avere alternative pronte, non una sola via.
 
 ## 3. Trovare una soluzione e adattarsi
 
