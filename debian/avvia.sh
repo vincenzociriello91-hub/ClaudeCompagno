@@ -468,14 +468,17 @@ if command -v playit >/dev/null && [ ! -f "$IMP/no_playit" ]; then
   ( for _ in $(seq 1 2880); do  # 24 ore: finché il link non viene usato lo tiene su Drive
       sleep 30
       # copia leggibile su Drive per controllare playit da lontano (senza righe con chiavi)
-      { tail -n 25 "$LOGDIR/playit.log"; echo "--- collegamento:"; tail -n 15 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
-        | grep -viE 'secret|token|key|guest-account' > "$REP/playit_log.txt"
+      # (continua anche dopo il collegamento: serve a capire da lontano perché un giocatore non entra)
+      { echo "server: $(grep -E '^(transport|server-port)=' "$SRV/server.properties" | tr '\n' ' ')"
+        grep -E 'Accepting clients|Player (connected|disconnected|Spawned)' "$LOG" 2>/dev/null | tail -n 6
+        echo "--- playit:"; tail -n 25 "$LOGDIR/playit.log"; echo "--- collegamento:"; tail -n 8 "$LOGDIR/playit_setup.log"; } 2>/dev/null \
+        | grep -viE 'secret|token|key|guest-account' | sed -E 's/(xuid|pfid): *[A-Za-z0-9]*/\1: -/g' > "$REP/playit_log.txt"
       kill -0 "$PLAYIT" 2>/dev/null || { echo "(playit si è fermato)" >> "$REP/playit_log.txt"; break; }
       if [ -f "$IMP/playit_collegato" ]; then
         if [ -f "$REP/playit_accesso.txt" ]; then
           rm -f "$REP/playit_accesso.txt"; log "Tunnel playit collegato all'account"; notifica "✅ Tunnel playit collegato all'account"
         fi
-        break
+        continue
       fi
       u=$(grep -oE 'https://playit\.gg/claim/[A-Za-z0-9_-]+' "$LOGDIR/playit_setup.log" 2>/dev/null | tail -1)
       if [ -n "$u" ]; then

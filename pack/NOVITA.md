@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.47 — attuale (09/11/2026)
-- Server sul collegamento classico **RakNet** (richiesto dal tunnel playit): così da fuori casa si entra nel mondo con l'indirizzo del tunnel.
+## 2.8.48 — attuale (09/11/2026)
+- Controllo da lontano del tunnel: su Drive (`playit_log.txt`) restano aggiornati lo stato di playit, il tipo di collegamento del server e chi entra o esce, per capire subito perché un giocatore non riesce a entrare.
 
-## 2.8.46 — precedente (09/11/2026)
-- Tunnel playit: la versione nuova di playit è fatta di due programmi (il servizio e quello per collegarsi all'account). Ora la Odin scarica anche il secondo e lo usa per creare il link, che arriva su Drive in `playit_accesso.txt`. Comprende la 2.8.45 (registro di playit su Drive).
+## 2.8.47 — precedente (09/11/2026)
+- Server sul collegamento classico **RakNet** (richiesto dal tunnel playit): così da fuori casa si entra nel mondo con l'indirizzo del tunnel.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.

@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.47 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.48 (9 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -238,6 +238,7 @@ Aggiornato alla versione 2.8.47 (9 novembre 2026), dopo circa 30 ore di gioco, 2
 | Il link del tunnel non arrivava e non si sapeva perché | il registro di playit restava solo sulla Odin | ciò che controlli da lontano deve lasciare traccia dove puoi leggerla |
 | Il programma del tunnel girava ma non dava mai il link | la versione nuova era divisa in due programmi e se ne usava uno solo | quando uno strumento cambia versione, leggi com'è fatto adesso invece di fidarti di come era |
 | Da fuori casa il gioco non si collegava né con la rete privata né col tunnel | il server usava il collegamento nuovo (NetherNet), che quei canali non portano | quando due pezzi non si parlano, controlla prima che usino la stessa lingua |
+| Il registro del tunnel smetteva di aggiornarsi appena collegato | la copia si fermava al primo successo | un controllo deve continuare dopo il primo successo: i problemi veri arrivano quando si usa |
 | "Nessuno spiazzo" senza sapere perché | il messaggio di errore non diceva la causa | ogni rifiuto deve dire il motivo (acqua, pendenza, pericolo...): senza, non si può correggere |
 | Nessuno spiazzo libero per giorni, anche cercando lontano | il terreno naturale un blocco più alto contava come "costruzione" | distinguere ostacoli veri (opere di altri) da imperfezioni che si possono sistemare |
 | 6 rifugi cominciati in una notte, nessuno finito | spinto dai mostri ricominciava ogni volta altrove, e senza blocchi non poteva chiuderlo | non abbandonare un lavoro di protezione a metà; se mancano i mezzi, scegliere la protezione più semplice possibile (una tana) |
