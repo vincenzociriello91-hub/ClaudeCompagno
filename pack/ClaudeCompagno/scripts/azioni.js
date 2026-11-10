@@ -1418,6 +1418,15 @@ const ESECUTORI = {
       }
     }
     bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
+    // pareti della buca aperte su una grotta (zona piena di cavità): mostri e frecce entravano di lato
+    // (09-10/11: 3 morti dentro la tana). Si tappano con lo stesso materiale del tetto.
+    for (const dy of [-1, -2]) for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const q = { x: b.x + ax, y: b.y + dy, z: b.z + az };
+      const k = dim.getBlock(q);
+      if (!k || !(k.isAir || SOSTITUIBILI.test(k.typeId))) continue;
+      const tappo = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
+      if (!tappo || piazza(bot, q, tappo) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "tana aperta su una grotta: non riesco a chiuderla");
+    }
     const testa = dim.getBlock(b);
     // già chiusa da un blocco pieno (succedeva con "occupato"): va bene così; se è altro (fiori, neve, foglie) lo tolgo
     const chiusa = testa && !testa.isAir && !testa.isLiquid && testa.isSolid;

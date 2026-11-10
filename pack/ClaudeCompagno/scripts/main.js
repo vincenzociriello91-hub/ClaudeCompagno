@@ -324,7 +324,9 @@ world.afterEvents.entityDie.subscribe(({ deadEntity, damageSource }) => {
           assegna({ tipo: "tana", routine: "notte_sicura" }, "autonomia");
         }
         // gli oggetti a terra spariscono dopo 5 minuti: va subito a riprenderli
-        if (recuperabile && vivo()) assegna({ tipo: "recupera", ...dove, scadenza: system.currentTick + 5600 }, "autonomia");
+        // di notte da solo niente recupero: usciva dalla tana appena scavata e moriva di nuovo (10/11: 00:12 e 00:13)
+        const buio = world.getTimeOfDay() >= 12500 && world.getTimeOfDay() < 23000;
+        if (recuperabile && vivo() && !(buio && !giocatoriVeri().length)) assegna({ tipo: "recupera", ...dove, scadenza: system.currentTick + 5600 }, "autonomia");
       }, 20);
     }, 60);
     return;
