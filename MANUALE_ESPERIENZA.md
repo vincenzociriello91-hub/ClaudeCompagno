@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.66 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.67 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -269,6 +269,7 @@ Aggiornato alla versione 2.8.66 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Due morti in 5 minuti appena indossata la prima armatura | la regola "con l'armatura si può stare fuori di notte" non distingueva un'armatura debole da una vera | un miglioramento piccolo non autorizza un rischio grande: la soglia va messa sul livello che protegge davvero |
 | Niente erba né legna intorno a casa | ogni morte per un mostro lasciava una zona vietata permanente, anche sulla soglia di casa | un pericolo che si sposta (un mostro) non va ricordato come un pericolo del luogo: la memoria dei rischi deve scadere quando il rischio non c'è più |
 | Ucciso da uno zombie dentro la tana chiusa, dopo 8 minuti fermo | la tana era profonda 2 blocchi: la testa restava a 20 centimetri dal suolo e in questo gioco i mostri colpiscono anche attraverso un blocco | un riparo si misura sulla distanza dal pericolo, non sul fatto che sia "chiuso": serve un margine vero (2 blocchi pieni) tra sé e chi sta fuori |
+| Tana nuova rifiutata alla prima notte: "non riesco a chiudere (giocatore)" | nel gioco lo spostamento del bot si vede solo un attimo dopo, mentre le prove lo davano per immediato: il controllo "non murare un giocatore" vedeva il bot ancora in piedi sul tetto | una prova che passa con un mondo finto troppo gentile non prova niente: il finto deve avere gli stessi ritardi del vero, e una correzione va guardata alla prima occasione reale |
 
 ---
 

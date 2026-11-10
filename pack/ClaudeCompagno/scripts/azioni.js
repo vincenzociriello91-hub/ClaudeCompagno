@@ -222,7 +222,9 @@ function attesaScavo(id, bot) {
   return Math.max(2, Math.round(base / Math.max(1, lv)));
 }
 
-export function piazza(bot, p, id) {
+// suDiMe: il bot può chiudersi il tetto sopra la testa (tana). Appena teletrasportato in fondo alla buca la sua posizione
+// risulta ancora quella di prima fino al tick dopo, e il blocco al posto dei piedi veniva rifiutato ("giocatore").
+export function piazza(bot, p, id, suDiMe = false) {
   id = ns(id);
   const b = bot.dimension.getBlock(p);
   if (!b) return "scarico";
@@ -230,7 +232,7 @@ export function piazza(bot, p, id) {
   if (!b.isAir && !b.isLiquid && !SOSTITUIBILI.test(b.typeId)) return "occupato";
   // mai murare un giocatore (o il bot stesso): un blocco sui piedi o sulla testa soffoca
   const q = pav(p);
-  if (world.getAllPlayers().some((g) => { const f = pav(g.location); return g.dimension.id === bot.dimension.id && f.x === q.x && f.z === q.z && (q.y === f.y || q.y === f.y + 1); })) return "giocatore";
+  if (world.getAllPlayers().some((g) => { if (suDiMe && g.id === bot.id) return false; const f = pav(g.location); return g.dimension.id === bot.dimension.id && f.x === q.x && f.z === q.z && (q.y === f.y || q.y === f.y + 1); })) return "giocatore";
   if (contaOggetti(bot, id) < 1) return "manca";
   try { b.setType(id); } catch (e) { errore(`piazza ${id}`, e); return "invalido"; }
   togli(bot, id, 1);
@@ -1517,8 +1519,8 @@ const ESECUTORI = {
       if (testa && !testa.isAir && !testa.isLiquid && testa.isSolid) continue;
       const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
       if (!alt) return (mem.tanaKo = Date.now()), finito(false, "niente blocchi per chiudere la tana");
-      let esito = piazza(bot, q, alt);
-      if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt);
+      let esito = piazza(bot, q, alt, true);
+      if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt, true);
       if (esito !== "ok" && esito !== "gia") return (mem.tanaKo = Date.now()), finito(false, `non riesco a chiudere la tana (${esito})`);
     }
     mem.rifugio = { x: b.x, y: b.y - fondo, z: b.z, ok: true };
