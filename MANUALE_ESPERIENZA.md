@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.71 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.72 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -274,6 +274,7 @@ Aggiornato alla versione 2.8.71 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Deposito mai riuscito (0 su 39): "servono assi per le casse" con la legna appena raccolta | per fare la cassa serviva il banco: il bot lo costruiva e lo piazzava subito, poi scopriva che le assi rimaste non bastavano, andava a prendere altra legna e al ritorno ne faceva un altro altrove | prima di spendere per un passo intermedio si controlla di poter pagare anche il risultato finale; altrimenti si accumula, non si spende |
 | "Fa sempre gli stessi errori": le stesse routine fallite riprovate tutto il giorno | il ricordo dei fallimenti durava 10 minuti e stava in una memoria che si svuota a ogni aggiornamento; le lezioni scritte le legge solo il cervello a pagamento, che viene chiamato pochissimo | chi decide ogni giorno deve avere accesso a quello che si è imparato: una lezione che nessuno rilegge non è imparata. Dopo ogni fallimento di fila si aspetta il doppio prima di riprovare |
 | Morti di giorno senza armatura: zombie a vita 6 "in ritirata", creeper andando a legna | il bot debole si comportava come uno forte: inseguiva i mostri a 8 blocchi, andava addosso ai creeper, si ritirava solo a vita quasi finita e poi tornava a combattere | la prudenza va proporzionata alla forza: chi è debole non cerca lo scontro, si allontana prima e usa il riparo che funziona (la tana) anche di giorno. E prima di ogni altro lavoro si rimette l'armatura |
+| Morto 20 secondi dopo un aggiornamento arrivato di notte, mentre era al sicuro nella tana | l'aggiornamento fa rinascere il bot: per qualche istante non si considerava più "nel riparo", ha attaccato un creeper ed è scappato fuori | chi aggiorna un sistema in funzione deve rimetterlo esattamente nello stato sicuro in cui era: l'aggiornamento stesso è un momento di rischio, e più aggiornamenti si fanno più conta |
 
 ---
 

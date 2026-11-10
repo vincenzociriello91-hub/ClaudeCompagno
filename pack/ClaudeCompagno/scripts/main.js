@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -99,6 +99,7 @@ function generaBot(vicino) {
     for (const p of world.getAllPlayers()) if (p.name === CFG.nome) { try { dim.runCommand(`kick "${CFG.nome}"`); } catch {} }
     bot = spawnSimulatedPlayer({ dimension: salvata ? dim : vicino.dimension, x: l.x, y: l.y, z: l.z }, CFG.nome, GameMode.Survival);
     if (mem.inventario.length) ripristinaInventario(bot, mem.inventario);
+    try { rientraNelRiparo(bot, l); } catch (e) { errore("rientro nel riparo", e); }
     evento(`${CFG.nome} entra nel mondo a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}`);
     // autodiagnosi gratis una volta per sessione, 10 secondi dopo l'ingresso (il risultato va nel rapporto)
     if (!sessione.diagnosi) system.runTimeout(() => { if (vivo()) { try { autodiagnosi(bot); } catch (e) { errore("autodiagnosi", e); } } }, 200);

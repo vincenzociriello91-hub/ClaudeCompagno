@@ -491,6 +491,19 @@ const debole = (bot) => !bot.getComponent("minecraft:equippable")?.getEquipment(
 // chiuso nel riparo d'emergenza: fino alla scadenza non esce e non prende lavori
 export const inEmergenza = (bot) => !!mem.rifugio?.fino && Date.now() < mem.rifugio.fino && dist(bot.location, mem.rifugio) < 6; // 6: appena sceso la posizione è ancora quella di sopra
 
+// Rinato (aggiornamento o riavvio) mentre era chiuso nel riparo: torna esattamente al suo posto, 30 secondi protetto e senza
+// lotte. Il 10/11 alle 12:50 un aggiornamento arrivato di notte lo ha fatto rinascere nella tana: ha attaccato un creeper,
+// è scappato ed è morto in una grotta 20 secondi dopo. dove = punto in cui è stato fatto rinascere.
+export function rientraNelRiparo(bot, dove) {
+  const r = mem.rifugio;
+  if (!r?.ok || dist(dove, r) > 6) return false;
+  bot.teleport({ x: r.x + 0.5, y: r.y, z: r.z + 0.5 });
+  try { bot.addEffect("resistance", 600, { amplifier: 4, showParticles: false }); } catch {}
+  mem.protettoFino = Math.max(mem.protettoFino ?? 0, Date.now() + 30000);
+  evento("Rinato dentro il riparo: 30 secondi protetto, niente lotte");
+  return true;
+}
+
 export function difendi(bot) {
   // rinato protetto dopo una raffica di morti: niente lotte, solo la tana (combattendo usciva e moriva di nuovo)
   if (Date.now() < (mem.protettoFino ?? 0)) { lotta.bersaglio = null; return false; }
@@ -536,7 +549,8 @@ export function difendi(bot) {
     return true;
   }
   // riparo d'emergenza: tana subito, 90 secondi; se la tana non riesce resta la ritirata qui sotto
-  if (fragile && vita <= 10 && dist(b.location, bot.location) < 8 && mem.compito?.tipo !== "tana" && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
+  // 16 blocchi: gli scheletri tirano da lontano (10/11 12:58: rinato da 47 secondi, ucciso dalle frecce senza armatura)
+  if (fragile && vita <= 10 && dist(b.location, bot.location) < 16 && mem.compito?.tipo !== "tana" && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
     mem.emergenzaT = Date.now();
     evento(`Vita ${Math.round(vita)}/20 senza armatura e ${b.typeId.replace("minecraft:", "")} vicino: mi chiudo in una tana`);
     mem.coda = []; lotta.bersaglio = null;
