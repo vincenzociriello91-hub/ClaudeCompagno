@@ -627,6 +627,8 @@ const PREREQ = {
   "minecraft:iron_ingot": { tipo: "fondi", oggetto: "raw_iron" }, "minecraft:copper_ingot": { tipo: "fondi", oggetto: "raw_copper" },
   "minecraft:gold_ingot": { tipo: "fondi", oggetto: "raw_gold" }, "minecraft:glass": { tipo: "fondi", oggetto: "sand" },
   "minecraft:wheat_seeds": { tipo: "raccogli", blocco: "short_grass" }, "minecraft:torch": { tipo: "routine", nome: "torce" },
+  // assi e bastoni vengono dai tronchi: senza questa riga "crafta stick" falliva con "manca #assi" invece di andare a far legna
+  "#assi": { tipo: "raccogli", blocco: "legna" }, "minecraft:stick": { tipo: "raccogli", blocco: "legna" },
 };
 function rinvia(c, ingrediente, quantita) {
   const pre = PREREQ[ingrediente];
@@ -1435,7 +1437,10 @@ const ESECUTORI = {
     const qui = pav({ x: bot.location.x, y: bot.location.y + 0.5, z: bot.location.z });
     // 2.8.23: prima falliva al primo posto storto ("occupato", acqua sotto) e il bot restava fuori tutta la notte:
     // ora prova la cella dove sta e 8 vicine, sempre all'asciutto, e si chiude nella prima buona
-    const posti = [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [3, 3], [-3, 3], [3, -3], [-3, -3]];
+    // 2.8.62: in palude i 9 posti vicini erano tutti bagnati ("acqua o grotte tutto intorno") e il bot restava fuori
+    // (10/11: 3 tane fallite, 7 rifugi costruiti in acqua, morto per uno scheletro): si cerca anche a 6, 10 e 14 blocchi
+    const posti = [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [3, 3], [-3, 3], [3, -3], [-3, -3],
+      ...[6, 10, 14].flatMap((d) => [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, d], [d, -d], [-d, -d]])];
     const adatto = (b) => {
       const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
       if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return false;
