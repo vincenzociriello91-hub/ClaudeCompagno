@@ -484,6 +484,13 @@ function scegliBersaglio(bot) {
   return candidati[0]?.[1] ?? null;
 }
 
+// 2.8.71: senza corazza e senza giocatori da proteggere il bot è "debole": non va a cercare lotte, dai creeper scappa sempre
+// e con metà vita si chiude in una tana invece di combattere (10/11: morto di giorno a vita 6 "in ritirata" da uno zombie
+// e per un creeper mentre andava a legna; di notte in tana 3 su 3 senza un graffio).
+const debole = (bot) => !bot.getComponent("minecraft:equippable")?.getEquipment("Chest") && !giocatoriVeri().length;
+// chiuso nel riparo d'emergenza: fino alla scadenza non esce e non prende lavori
+export const inEmergenza = (bot) => !!mem.rifugio?.fino && Date.now() < mem.rifugio.fino && dist(bot.location, mem.rifugio) < 6; // 6: appena sceso la posizione è ancora quella di sopra
+
 export function difendi(bot) {
   // rinato protetto dopo una raffica di morti: niente lotte, solo la tana (combattendo usciva e moriva di nuovo)
   if (Date.now() < (mem.protettoFino ?? 0)) { lotta.bersaglio = null; return false; }
@@ -497,6 +504,8 @@ export function difendi(bot) {
       let nuovo = scegliBersaglio(bot);
       // con vita ≤ 6 non va a cercare lotte: solo chi è già addosso (a vita 1 attaccava un drowned dopo l'altro e moriva)
       if (nuovo && (bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 6 && dist(nuovo.location, bot.location) > 3) nuovo = null;
+      // debole: solo chi è già a 4 blocchi o lo ha colpito; i creeper li "vede" da lontano per allontanarsi in tempo
+      if (nuovo && debole(bot) && dist(nuovo.location, bot.location) > 4 && nuovo.typeId !== "minecraft:creeper" && !aggressori.has(nuovo.id)) nuovo = null;
       if (nuovo && nuovo !== b) evento(`Attacco ${nuovo.typeId.replace("minecraft:", "")}`);
       lotta.bersaglio = nuovo;
       if (nuovo && nuovo !== b) lotta.progresso = tick();
@@ -517,13 +526,23 @@ export function difendi(bot) {
   const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
   // creeper con metà vita o meno: niente corpo a corpo, scappa lontano (2 morti per esplosione a vita 5 il 09/11:
   // la ritirata di 6-8 blocchi per 2 secondi non basta, il creeper insegue e scoppia)
-  if (b.typeId === "minecraft:creeper" && vita <= 10) {
+  const fragile = debole(bot);
+  if (b.typeId === "minecraft:creeper" && (vita <= 10 || fragile)) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
     if (d > 16) { ignorati.set(b.id, tick() + 600); lotta.bersaglio = null; return false; }
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 14, y: l.y, z: l.z + ((l.z - e.z) / d) * 14 }); } catch {}
     lotta.ritirata = tick() + 60;
     if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Scappo dal creeper: vita ${Math.round(vita)}/20`); }
     return true;
+  }
+  // riparo d'emergenza: tana subito, 90 secondi; se la tana non riesce resta la ritirata qui sotto
+  if (fragile && vita <= 10 && dist(b.location, bot.location) < 8 && mem.compito?.tipo !== "tana" && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
+    mem.emergenzaT = Date.now();
+    evento(`Vita ${Math.round(vita)}/20 senza armatura e ${b.typeId.replace("minecraft:", "")} vicino: mi chiudo in una tana`);
+    mem.coda = []; lotta.bersaglio = null;
+    try { bot.isSneaking = false; } catch {}
+    assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "autonomia");
+    return false;
   }
   if (vita <= 6 && dist(b.location, bot.location) < 6) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
@@ -615,7 +634,7 @@ export function vuotoSotto(dim, l) {
 // risultava "bloccata" dopo 15 secondi: il 10/11 ha passato la mattina nel rifugio, caccia fallita su 19 posti senza muoversi.
 export function esciDalRiparo(bot) {
   const r = mem.rifugio;
-  if (!r) return false;
+  if (!r || inEmergenza(bot)) return false;
   mem.rifugio = null;
   if (!r.ok || dist(bot.location, r) > 4) return false;
   const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
@@ -1152,6 +1171,14 @@ const ESECUTORI = {
 
   fondi(bot, c) {
     const s = c.stato;
+    // "carne": la carne cruda che ha in tasca, qualunque sia (la routine cibo cuoceva solo manzo e maiale: il 10/11
+    // aveva montone e pollo crudi e li ha mangiati crudi, un terzo del nutrimento)
+    const CRUDE = ["beef", "porkchop", "mutton", "chicken", "rabbit", "cod", "salmon"];
+    if (c.oggetto === "carne") {
+      const cruda = CRUDE.find((n) => contaOggetti(bot, `minecraft:${n}`) > 0);
+      if (!cruda) return finito(false, "non ho carne da cuocere");
+      c.oggetto = cruda;
+    }
     const o = String(c.oggetto ?? "");
     const ingresso = /^#?tronc|^log$|^legn/.test(o) || GRUPPI["#tronco"](ns(o)) ? "#tronco" : ns(o);
     const uscita = FUSIONI[ingresso];
@@ -1541,7 +1568,7 @@ const ESECUTORI = {
       if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt, true);
       if (esito !== "ok" && esito !== "gia") return (mem.tanaKo = Date.now()), finito(false, `non riesco a chiudere la tana (${esito})`);
     }
-    mem.rifugio = { x: b.x, y: b.y - fondo, z: b.z, ok: true };
+    mem.rifugio = { x: b.x, y: b.y - fondo, z: b.z, ok: true, ...(c.emergenza ? { fino: Date.now() + 90000 } : {}) };
     nav.meta = null;
     // di notte i lavori rimasti in coda (legna, deposito) lo facevano uscire subito dalla tana: 4 morti in 15 minuti il 09/11.
     // Si cancellano: all'alba il piano li riassegna.

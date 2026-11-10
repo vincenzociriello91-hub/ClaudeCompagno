@@ -180,7 +180,7 @@ export const ROUTINE = {
     { tipo: "crafta", oggetto: "iron_chestplate" }, { tipo: "crafta", oggetto: "iron_leggings" }, { tipo: "crafta", oggetto: "iron_helmet" }, { tipo: "crafta", oggetto: "iron_boots" }] },
   cibo: { desc: "caccia mucche e maiali e cuoce la carne", passi: [
     { tipo: "caccia", oggetto: "cow", quantita: 3 }, { tipo: "caccia", oggetto: "pig", quantita: 3 },
-    { tipo: "fondi", oggetto: "beef", quantita: 6 }, { tipo: "fondi", oggetto: "porkchop", quantita: 6 }] },
+    { tipo: "fondi", oggetto: "carne", quantita: 12 }, { tipo: "fondi", oggetto: "carne", quantita: 12 }] },
   letto: { desc: "trova pecore, prende la lana e fa il letto", passi: [
     { tipo: "esplora", lunghezza: 64 }, { tipo: "caccia", oggetto: "sheep", quantita: 3 }, { tipo: "crafta", oggetto: "white_bed" }] },
   vetro: { desc: "sabbia fusa in vetro", passi: [{ tipo: "raccogli", blocco: "sand", quantita: 16 }, { tipo: "fondi", oggetto: "sand", quantita: 16 }] },

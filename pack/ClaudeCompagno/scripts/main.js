@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -18,6 +18,7 @@ const vivo = () => bot?.isValid === true;
 // Di notte senza armatura e lontano da casa non cammina al buio (stamattina 6 morti in 20 minuti così):
 // si chiude in un rifugio dove si trova e aspetta l'alba. true = notte gestita, non assegnare altro.
 function notteFuori() {
+  if (inEmergenza(bot)) return true; // chiuso nel riparo d'emergenza: niente lavori fino alla scadenza
   const ora = world.getTimeOfDay();
   // vicino a casa ci si ripara nella casetta; senza casetta anche lì tana o rifugio (4 morti per scheletri a casa)
   // fino a 500 dopo l'alba i mostri sono ancora in giro: usciva alle 23000 con poca vita e moriva (10/11: vita 1/20, mandato a cacciare)
@@ -517,6 +518,8 @@ ogniTick(4, () => {
   }
   const inLotta = difendi(bot);
   if (gestisciFame(bot, inLotta) || inLotta) return;
+  // riparo d'emergenza: fermo nella tana finché scade (con un giocatore online torna subito disponibile)
+  if (inEmergenza(bot) && !giocatoriVeri().length && mem.compito?.tipo !== "tana") return;
   // passo successivo del piano, senza chiamare l'API
   if (!mem.compito && mem.coda.length && !progettando) {
     const prossimo = mem.coda.shift();
@@ -643,6 +646,11 @@ function pianoGratis() {
   if (mem.luoghi.casa && ha((id) => id.endsWith("_sapling")) >= 2 && minuti(mem.ultimoBosco) > 120) candidati.push("compito:bosco");
   if (!ha((id) => id.endsWith("_pickaxe"))) candidati.push("kit_legno");
   if (!ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))) candidati.push("attrezzi_pietra");
+  // senza corazza l'armatura di rame viene prima di cibo, torce e deposito: basta avere il rame o sapere dov'è, e un piccone
+  // che lo scava (10/11: rinato senza armatura con 6 lingotti, il piano ha scelto deposito, fattoria e allevamento: 2 morti di giorno)
+  const corazza = bot.getComponent("minecraft:equippable")?.getEquipment("Chest")?.typeId ?? "";
+  if (!corazza && !ha((id) => id.endsWith("_chestplate")) && (ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8
+    || ((mem.risorse?.copper_ore ?? []).length > 0 && ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))))) candidati.push("armatura_rame");
   if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria ? ["compito:fattoria"] : []));
   if (ha("minecraft:torch") < 8) candidati.push("torce", "carbonella");
   if (notte && !mem.luoghi.casa) candidati.push("notte_sicura");
@@ -650,9 +658,6 @@ function pianoGratis() {
   // ferro: prima la miniera a rami (porta minerale vero), poi la routine che fonde e crafta (i lingotti mancanti li procura da sola)
   if (!pickFerro && ha("minecraft:raw_iron") + ha("minecraft:iron_ingot") < 3) candidati.push("miniera:ferro");
   if (!pickFerro) candidati.push("attrezzi_ferro");
-  // senza armatura: prima quella di rame se ha già il rame (stanotte ne aveva 23 grezzi ed è morto 2 volte senza armatura)
-  const corazza = bot.getComponent("minecraft:equippable")?.getEquipment("Chest")?.typeId ?? "";
-  if (!corazza && !ha((id) => id.endsWith("_chestplate")) && ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8) candidati.push("armatura_rame");
   if (!ha((id) => /(iron|diamond|netherite)_chestplate$/.test(id)) && !/(iron|diamond|netherite)_chestplate$/.test(corazza)) candidati.push("armatura_ferro");
   if (mem.luoghi.casa && !mem.luoghi.casetta && minuti(mem.ultimaCasetta) > 30) candidati.push("compito:casetta");
   if (!ha((id) => /_bed$/.test(id))) candidati.push("letto");
