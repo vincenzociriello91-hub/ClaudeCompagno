@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.62 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.63 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -264,6 +264,7 @@ Aggiornato alla versione 2.8.62 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Inventario pieno, niente posto per le cose utili | teneva tutto ciò che raccoglieva, anche oggetti che non sa usare | ciò che non serve a nessun piano occupa il posto di ciò che serve: si butta prima di restare bloccati |
 | Compiti interrotti di continuo da "sotto c'era il vuoto" in collina | l'allarme guardava solo la velocità di caduta, non cosa c'era sotto | un allarme deve misurare il pericolo vero (il vuoto), non un suo indizio (la velocità): altrimenti ferma il lavoro a ogni gradino |
 | Di notte in palude: tana "impossibile", rifugio costruito in acqua 7 volte di fila, morte | il riparo veniva cercato solo a 3 blocchi e, fallito, si riprovava nello stesso punto ogni 30 secondi | se il posto non va bene, il rimedio è cambiare posto: allargare la ricerca prima di ripetere il tentativo |
+| Caccia fallita su 19 posti in 5 minuti, uno ogni 15 secondi esatti | il bot era ancora chiuso nel riparo della notte e non poteva muoversi | fallimenti a intervalli regolari sono il segno di un blocco a monte, non di 19 problemi diversi: prima controllare di potersi muovere |
 
 ---
 

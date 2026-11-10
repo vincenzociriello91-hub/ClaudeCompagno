@@ -602,6 +602,20 @@ export function vuotoSotto(dim, l) {
   return true;
 }
 
+// Di giorno, se è ancora chiuso nel riparo della notte (tana o rifugio), esce in superficie. Restando dentro ogni meta
+// risultava "bloccata" dopo 15 secondi: il 10/11 ha passato la mattina nel rifugio, caccia fallita su 19 posti senza muoversi.
+export function esciDalRiparo(bot) {
+  const r = mem.rifugio;
+  if (!r) return false;
+  mem.rifugio = null;
+  if (!r.ok || dist(bot.location, r) > 4) return false;
+  const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
+  if (!g || g.liquido) return false;
+  bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0;
+  evento("È giorno: esco dal riparo");
+  return true;
+}
+
 // Punto libero a terra a 2 blocchi da p. suolo() sulla colonna del tronco scende dentro il legno: il bot ci veniva
 // teletrasportato, soffocava, veniva salvato in cima all'albero, cadeva, e l'albero diventava "zona pericolosa" (legna 10%).
 export function accanto(dim, p) {

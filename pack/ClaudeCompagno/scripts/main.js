@@ -4,7 +4,7 @@ import { variables } from "@minecraft/server-admin";
 import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, stampaRapporto, proteggi, protetti, chiaveBlocco, adesso, ogniTick, conta, VERSIONE } from "./memoria.js";
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
-  notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto,
+  notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
   istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
@@ -21,7 +21,8 @@ function notteFuori() {
   const ora = world.getTimeOfDay();
   // vicino a casa ci si ripara nella casetta; senza casetta anche lì tana o rifugio (4 morti per scheletri a casa)
   // fino a 500 dopo l'alba i mostri sono ancora in giro: usciva alle 23000 con poca vita e moriva (10/11: vita 1/20, mandato a cacciare)
-  if ((ora >= 500 && ora < 12500) || !mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
+  if (ora >= 500 && ora < 12500) { esciDalRiparo(bot); return false; }
+  if (!mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
   const eq = bot.getComponent("minecraft:equippable");
   if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
