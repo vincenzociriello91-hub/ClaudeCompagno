@@ -506,19 +506,26 @@ function scegliBersaglio(bot) {
 // 2.8.75: la corazza di rame non basta (10/11 15:56-16:04: 4 morti in 8 minuti con corazza e gambali di rame addosso):
 // come per la notte, solo ferro o meglio fa uscire dallo stato "debole"
 const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComponent("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && !giocatoriVeri().length;
+// dentro il riparo chiuso: stessa cella e stessa quota (a 16 blocchi, o sul tetto, non è "al riparo")
+export const nelRiparo = (bot) => { const r = mem.rifugio; return !!r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5; };
+// creeper da cui la fuga non è servita: per 5 minuti lo si riguarda solo se arriva a 4 blocchi
+const creeperFermi = new Map();
 // chiuso nel riparo d'emergenza: fino alla scadenza non esce e non prende lavori
 export const inEmergenza = (bot) => !!mem.rifugio?.fino && Date.now() < mem.rifugio.fino && dist(bot.location, mem.rifugio) < 6; // 6: appena sceso la posizione è ancora quella di sopra
 
 // Rinato (aggiornamento o riavvio) mentre era chiuso nel riparo: torna esattamente al suo posto, 30 secondi protetto e senza
 // lotte. Il 10/11 alle 12:50 un aggiornamento arrivato di notte lo ha fatto rinascere nella tana: ha attaccato un creeper,
 // è scappato ed è morto in una grotta 20 secondi dopo. dove = punto in cui è stato fatto rinascere.
-export function rientraNelRiparo(bot, dove) {
+export function rientraNelRiparo(bot, dove, come = "Rinato dentro il riparo") {
   const r = mem.rifugio;
   if (!r?.ok || dist(dove, r) > 6) return false;
+  // buca non più libera (franata, riempita): niente teletrasporto dentro un blocco
+  const pieno = (dy) => { const k = bot.dimension?.getBlock?.({ x: r.x, y: r.y + dy, z: r.z }); return !!k && !k.isAir && !SOSTITUIBILI.test(k.typeId ?? ""); };
+  if (pieno(0) || pieno(1)) return false;
   bot.teleport({ x: r.x + 0.5, y: r.y, z: r.z + 0.5 });
   try { bot.addEffect("resistance", 600, { amplifier: 4, showParticles: false }); } catch {}
   mem.protettoFino = Math.max(mem.protettoFino ?? 0, Date.now() + 30000);
-  evento("Rinato dentro il riparo: 30 secondi protetto, niente lotte");
+  evento(`${come}: 30 secondi protetto, niente lotte`);
   return true;
 }
 
@@ -526,8 +533,9 @@ export function difendi(bot) {
   // rinato protetto dopo una raffica di morti: niente lotte, solo la tana (combattendo usciva e moriva di nuovo)
   if (Date.now() < (mem.protettoFino ?? 0)) { lotta.bersaglio = null; return false; }
   // chiuso nella tana: niente lotte né ritirate (inseguendo mostri irraggiungibili usciva e moriva: 19:57 e 23:07 del 09/11)
-  const r = mem.rifugio;
-  if (r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5) { lotta.bersaglio = null; return false; }
+  // mentre scava la tana niente lotte né fughe: finché questa funzione rispondeva "in lotta" il compito non veniva eseguito
+  // (10/11 18:49: tana della notte assegnata e mai scavata, 14 minuti fuori al buio a scappare da un creeper)
+  if (nelRiparo(bot) || mem.compito?.tipo === "tana") { lotta.bersaglio = null; return false; }
   if (tick() - lotta.scelta >= 10) {
     lotta.scelta = tick();
     const b = lotta.bersaglio;
@@ -537,6 +545,7 @@ export function difendi(bot) {
       if (nuovo && (bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 6 && dist(nuovo.location, bot.location) > 3) nuovo = null;
       // debole: solo chi è già a 4 blocchi o lo ha colpito; i creeper li "vede" da lontano per allontanarsi in tempo
       if (nuovo && debole(bot) && dist(nuovo.location, bot.location) > 4 && nuovo.typeId !== "minecraft:creeper" && !aggressori.has(nuovo.id)) nuovo = null;
+      if (nuovo && (creeperFermi.get(nuovo.id) ?? 0) > tick() && dist(nuovo.location, bot.location) > 4) nuovo = null;
       if (nuovo && nuovo !== b) evento(`Attacco ${nuovo.typeId.replace("minecraft:", "")}`);
       lotta.bersaglio = nuovo;
       if (nuovo && nuovo !== b) lotta.progresso = tick();
@@ -576,14 +585,25 @@ export function difendi(bot) {
     lotta.bersaglio = null;
     return false;
   }
-  // un creeper da cui si scappa non si ignora mai (ignorato anche solo 10 secondi è tornato ed è esploso: 10/11 15:59):
-  // dopo 30 secondi, se è oltre 8 blocchi, si torna al lavoro e lo si rivede appena rientra negli 8
-  if (fuga && tick() - lotta.progresso > 600 && dist(b.location, bot.location) > 8) { lotta.bersaglio = null; return false; }
   // creeper con metà vita o meno: scappa lontano (2 morti per esplosione a vita 5 il 09/11:
   // la ritirata di 6-8 blocchi per 2 secondi non basta, il creeper insegue e scoppia)
   if (fuga) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
     if (d > 16) { lotta.bersaglio = null; return false; }
+    // 10 secondi di fuga e il creeper è ancora entro 16 blocchi: la fuga non serve (lui non si muoveva, o il creeper era
+    // irraggiungibile sotto terra). Il 10/11 18:35-19:03: 28 minuti di "Scappo dal creeper" a vita 20/20, nessun lavoro,
+    // notte passata fuori. Debole si chiude in una tana lì dov'è; quel creeper lo riguarda solo a 4 blocchi.
+    if (tick() - lotta.progresso > 200) {
+      creeperFermi.set(b.id, tick() + 6000);
+      lotta.bersaglio = null;
+      if (fragile && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
+        mem.emergenzaT = Date.now();
+        evento("Il creeper resta vicino e scappare non serve: mi chiudo in una tana");
+        mem.coda = [];
+        assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "autonomia");
+      }
+      return false;
+    }
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 14, y: l.y, z: l.z + ((l.z - e.z) / d) * 14 }); } catch {}
     lotta.ritirata = tick() + 60;
     if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Scappo dal creeper: vita ${Math.round(vita)}/20`); }

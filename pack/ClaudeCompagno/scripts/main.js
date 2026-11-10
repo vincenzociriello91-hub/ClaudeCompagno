@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -31,6 +31,9 @@ function notteFuori() {
   if (/(iron|diamond|netherite)_chestplate$/.test(eq?.getEquipment("Chest")?.typeId ?? "")) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
   const lavori = mem.compito?.routine === "notte_sicura" || mem.compito?.tipo === "tana";
+  // riparo fatto ma lui è fuori (10/11 18:34: ucciso da un ragno mentre chiudeva la tana, è rimasto sul tetto tutta la notte
+  // perché "entro 16 blocchi dal riparo" contava come al riparo): rientra; se è lontano o la buca non c'è più, se ne fa un'altra
+  if (!lavori && mem.rifugio?.ok && !nelRiparo(bot) && !rientraNelRiparo(bot, bot.location, "Ero fuori dal riparo: rientro")) mem.rifugio = null;
   // riparo non riuscito (rifugio senza blocchi, tana fallita): si riprova ogni 30 secondi invece di restare scoperti
   const daRifare = !mem.rifugio?.ok && Date.now() - (mem.rifugioT ?? 0) > 30000;
   if (!lavori && (!mem.rifugio || dist(mem.rifugio, bot.location) > 16 || daRifare)) {

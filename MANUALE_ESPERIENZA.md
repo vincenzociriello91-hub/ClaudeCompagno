@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.78 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.79 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -282,6 +282,7 @@ Aggiornato alla versione 2.8.78 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | 6 visite di fila alla fattoria vuota: "raccolti 0, piantati 0", ogni volta "completato" | un lavoro che finisce senza errori veniva contato come riuscito anche se non produceva niente, quindi non scattava nessuna pausa | il successo si misura su quello che si porta a casa, non sul fatto di essere arrivati in fondo: un giro a vuoto deve allungare l'attesa prima del prossimo |
 | Stivali di rame mai fatti: "fondi 2 lingotti" assegnato a ogni alba per 4 giornate e mai finito | il compito camminava verso la fornace di casa (40 blocchi) e, tra mostri e palude, la notte arrivava prima; non c'era nessun limite al tempo di avvicinamento | ogni fase di un lavoro deve avere una scadenza e un piano B, non solo il lavoro intero: "sto arrivando" non può durare all'infinito |
 | Dopo ogni aggiornamento: tana rifiutata, mostri addensati, decine di oggetti doppi a terra | a ogni aggiornamento il bot vecchio restava nel mondo come un fantasma senza comandi, e quello nuovo prendeva un nome numerato ("Claude(2)"… "Claude(6)"); la pulizia cercava solo il nome esatto | quando si sostituisce un pezzo di un sistema in funzione bisogna verificare che il vecchio sia davvero sparito, e riconoscerlo per quello che è, non per come si chiama; un indizio piccolo e ripetuto (il numero accanto al nome che cresce) vale un'indagine |
+| 28 minuti a "scappare" da un creeper con vita piena: nessun lavoro, notte passata all'aperto sul tetto della propria tana | la fuga non controllava se funzionava (il bot non si allontanava e il creeper restava vicino); finché il bot era "in lotta" nessun compito veniva eseguito, nemmeno la tana; e "vicino al riparo" contava come "al riparo" | una manovra di emergenza deve avere una durata massima e una verifica del risultato; lo stato "al sicuro" si misura (è dentro?), non si deduce (è vicino?) |
 
 ---
 

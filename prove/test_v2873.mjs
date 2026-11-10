@@ -13,13 +13,8 @@ const base = { id: "bot", isValid: true, location: { x: 10.5, y: 64, z: 10.5 }, 
 const bot = new Proxy(base, { get: (o, k) => (k in o ? o[k] : () => {}), set: (o, k, v) => { o[k] = v; return true; } });
 mem.protettoFino = 0; mem.rifugio = null; mem.compito = null; mem.coda = []; mem.modalita = "autonomo";
 system.currentTick = 10000;
-// 30 secondi con il creeper fermo a 6 blocchi (il bot nel test non si sposta): non deve mai smettere di scappare
-for (let i = 0; i < 60; i++) { system.currentTick += 10; assert.equal(difendi(bot), true, `ha smesso di scappare dopo ${i / 2} secondi`); }
-assert.ok(mosso >= 8, "si è allontanato solo " + mosso + " volte");
-// il creeper resta a 12 blocchi: dopo 10 secondi torna al lavoro, ma lo ricontrolla dopo altri 10 (non dopo un minuto)
-creeper.location = { x: 22.5, y: 64, z: 10.5 };
-let libero = false; for (let i = 0; i < 40 && !libero; i++) { system.currentTick += 10; libero = difendi(bot) === false; }
-assert.ok(libero, "con il creeper lontano non è mai tornato al lavoro");
-creeper.location = { x: 15.5, y: 64, z: 10.5 }; system.currentTick += 220;
-assert.equal(difendi(bot), true, "creeper tornato vicino dopo 11 secondi e non visto");
+// 2.8.79: la fuga dura al massimo 10 secondi. Se il creeper è ancora lì (il bot nel test non si sposta) scappare non serve:
+// il 10/11 è rimasto 28 minuti a "scappare" senza muoversi né lavorare. Fino ad allora non smette.
+for (let i = 0; i < 19; i++) { system.currentTick += 10; assert.equal(difendi(bot), true, `ha smesso di scappare dopo ${i / 2} secondi`); }
+assert.ok(mosso >= 3, "si è allontanato solo " + mosso + " volte");
 console.log("test v2.8.73 ok");
