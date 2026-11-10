@@ -589,6 +589,19 @@ export function annotaRisorse(bot) {
   }
 }
 
+// Caduta nel vuoto vera? Solo se entro 3 blocchi sotto non c'è terreno. Scendendo da un albero o da un gradino di collina
+// scattava il salvataggio "grotta": compito interrotto e zona segnata pericolosa (10/11: legna e fornace fermate 6 volte in mezz'ora).
+export function vuotoSotto(dim, l) {
+  for (let i = 1; i <= 3; i++) {
+    const b = dim.getBlock({ x: Math.floor(l.x), y: Math.floor(l.y) - i, z: Math.floor(l.z) });
+    if (!b) return true; // zona non caricata: prudenza
+    if (/lava/.test(b.typeId)) return true;
+    if (b.isLiquid) return false; // l'acqua attutisce; dell'annegamento si occupa l'altro salvataggio
+    if (!b.isAir && !SOSTITUIBILI.test(b.typeId)) return false;
+  }
+  return true;
+}
+
 // Punto libero a terra a 2 blocchi da p. suolo() sulla colonna del tronco scende dentro il legno: il bot ci veniva
 // teletrasportato, soffocava, veniva salvato in cima all'albero, cadeva, e l'albero diventava "zona pericolosa" (legna 10%).
 export function accanto(dim, p) {
@@ -911,7 +924,10 @@ const ESECUTORI = {
       // all'aria ma non a contatto con l'acqua: due volte è annegato inseguendo pietra sott'acqua
       const esposto = (b) => { const v = [b.above(), b.below(), b.north(), b.south(), b.east(), b.west()]; return v.some((n) => n?.isAir) && !v.some((n) => n?.typeId.includes("water")); };
       // raggio 12x6 (~8.000 blocchi): 20x10 erano 35.000 controlli in un tick e il server laggava
-      s.lista = cercaBlocchi(bot, (b) => filtro(b.typeId) && !protetto(bot, b) && (vicino(b) || esposto(b)) && !inPericolo(b.location), 12, 6);
+      // i blocchi già provati senza riuscire ad arrivarci non si riprovano (10 minuti persi sullo stesso tronco alto)
+      const fuori = new Set(s.fuori ?? []);
+      s.lista = cercaBlocchi(bot, (b) => filtro(b.typeId) && !protetto(bot, b) && (vicino(b) || esposto(b)) && !inPericolo(b.location)
+        && !fuori.has(`${b.location.x},${b.location.y},${b.location.z}`), 12, 6);
       // minerali chiusi nella roccia: ci si arriva scavando una galleria
       if (!s.lista.length && /_ore$|ancient_debris/.test(`minecraft:${String(c.blocco).replace("minecraft:", "")}`) && !s.galleriaProvata) {
         const chiuso = cercaBlocchi(bot, (b) => filtro(b.typeId) && !protetto(bot, b) && !inPericolo(b.location), 12, 8, 1)[0];
@@ -938,9 +954,11 @@ const ESECUTORI = {
     const b = bot.dimension.getBlock(t);
     if (!b || !filtro(b.typeId)) { s.lista.shift(); return; }
     if (s.bersaglio !== `${t.x},${t.y},${t.z}`) { s.bersaglio = `${t.x},${t.y},${t.z}`; s.tBersaglio = tick(); }
-    const r = vaiVerso(bot, centro(t), 4);
+    // tronco alto sopra la testa: da sotto è a portata di braccio anche se in linea d'aria dista più di 4
+    const daSotto = Math.hypot(t.x + 0.5 - bot.location.x, t.z + 0.5 - bot.location.z) <= 2.5 && t.y - bot.location.y > 0 && t.y - bot.location.y <= 5.5;
+    const r = daSotto ? true : vaiVerso(bot, centro(t), 4);
     // 10 secondi per raggiungere un blocco, poi passa al prossimo e svuota la lista per ricercare da dove si trova
-    if (r === "bloccato" || (r !== true && tick() - s.tBersaglio > 200)) { s.lista = []; nav.meta = null; nav.bloccato = 0; return; }
+    if (r === "bloccato" || (r !== true && tick() - s.tBersaglio > 200)) { (s.fuori ??= []).push(s.bersaglio); if (s.fuori.length > 40) s.fuori.shift(); s.lista = []; nav.meta = null; nav.bloccato = 0; return; }
     if (r !== true) return;
     const id = b.typeId;
     const esito = scava(bot, t);

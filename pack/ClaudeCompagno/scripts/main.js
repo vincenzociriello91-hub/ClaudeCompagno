@@ -4,7 +4,7 @@ import { variables } from "@minecraft/server-admin";
 import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, stampaRapporto, proteggi, protetti, chiaveBlocco, adesso, ogniTick, conta, VERSIONE } from "./memoria.js";
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
-  notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri,
+  notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto,
   istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
@@ -487,7 +487,8 @@ ogniTick(4, () => {
   // (dopo ~3 blocchi) o resta sott'acqua 10 s, torna all'ultimo punto sicuro e lo scavo si interrompe.
   if (bot.isOnGround && !bot.isInWater && !testaInAcqua) ultimoSicuro = { x: l.x, y: l.y, z: l.z, dim: bot.dimension.id };
   sottAcqua = testaInAcqua ? sottAcqua + 1 : 0;
-  const cade = bot.getVelocity().y < -0.6;
+  // con poca vita ogni caduta si ferma; altrimenti solo quelle nel vuoto (non il salto giù da un albero o da un gradino)
+  const cade = bot.getVelocity().y < -0.6 && ((bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 8 || vuotoSotto(bot.dimension, l));
   if ((cade || sottAcqua > 50) && ultimoSicuro?.dim === bot.dimension.id && dist(l, ultimoSicuro) > 1.5) {
     bot.clearVelocity();
     // 3 salvataggi in 30 s = il "punto sicuro" non lo è (ieri 40 cadute di fila dallo stesso punto, ogni compito fallito
