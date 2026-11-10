@@ -577,6 +577,18 @@ export function annotaRisorse(bot) {
   }
 }
 
+// Punto libero a terra a 2 blocchi da p. suolo() sulla colonna del tronco scende dentro il legno: il bot ci veniva
+// teletrasportato, soffocava, veniva salvato in cima all'albero, cadeva, e l'albero diventava "zona pericolosa" (legna 10%).
+export function accanto(dim, p) {
+  for (const [dx, dz] of [[2, 0], [-2, 0], [0, 2], [0, -2], [2, 2], [-2, -2], [2, -2], [-2, 2]]) {
+    const g = suolo(dim, Math.floor(p.x) + dx, Math.floor(p.z) + dz);
+    if (!g || g.liquido || inPericolo(g)) continue;
+    const piedi = dim.getBlock(g), testa = dim.getBlock({ x: g.x, y: g.y + 1, z: g.z });
+    if (piedi && testa && SOSTITUIBILI.test(piedi.typeId) && (testa.isAir || /leaves/.test(testa.typeId))) return g;
+  }
+  return null;
+}
+
 // ---------- prerequisiti ----------
 // Se manca un ingrediente, prima lo procura e poi riprova (senza chiamare l'IA e senza contarlo come fallimento).
 const PREREQ = {
@@ -623,7 +635,11 @@ export function segnaPericolo(p, raggio, motivo) {
   mem.pericoli.push({ x: Math.round(p.x), y: Math.round(p.y), z: Math.round(p.z), r: raggio, motivo: String(motivo).slice(0, 60), t: Date.now() });
   if (mem.pericoli.length > 20) mem.pericoli.shift();
 }
-export const inPericolo = (p) => (mem.pericoli ?? []).some((z) => Math.hypot(z.x - p.x, z.z - p.z) <= z.r && Math.abs(z.y - p.y) <= z.r);
+// Le zone nate da un salvataggio (caduta, soffocamento) scadono dopo 3 ore: non sono morti, e restando per sempre
+// nascondevano i boschi (10/11: 9 zone "grotta" su 20 erano alberi da cui il bot era caduto, legna "trovati 0").
+const SCADE = /grotta|soffocamento/;
+export const inPericolo = (p) => (mem.pericoli ?? []).some((z) => Math.hypot(z.x - p.x, z.z - p.z) <= z.r && Math.abs(z.y - p.y) <= z.r
+  && !(SCADE.test(z.motivo ?? "") && Date.now() - (z.t ?? 0) > 3 * 3600000));
 
 // Lezioni scritte dal codice (gratis): alla soglia-esima volta che succede la stessa cosa diventa una regola.
 // La riflessione giornaliera di Opus le fonde poi con le lezioni vere.
@@ -847,8 +863,8 @@ const ESECUTORI = {
       const r = vaiVerso(bot, s.esplora, 3);
       if (r === "bloccato") {
         // percorso bloccato: raggiunge il punto saltando sul terreno sicuro lì (prima restava fermo e falliva)
-        const g = suolo(bot.dimension, Math.floor(s.esplora.x), Math.floor(s.esplora.z));
-        if (g && !g.liquido) { bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0; }
+        const g = accanto(bot.dimension, s.esplora);
+        if (g) { bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0; }
       }
       if (r === true || r === "bloccato") s.esplora = null;
       return;

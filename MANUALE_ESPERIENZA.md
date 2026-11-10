@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.58 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.59 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -259,6 +259,7 @@ Aggiornato alla versione 2.8.58 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Riflessioni che ripetono consigli già falliti ("fai la fornace" con fornace 0 su 21) | il modello che riflette non risaliva alla causa, riproponeva il compito | per la riflessione usare il modello più capace disponibile: è 1 chiamata al giorno, costa poco e guida tutto il resto |
 | Morto dentro la tana chiusa, più volte | la buca era chiusa sopra ma aperta di lato su una grotta | un riparo va controllato su tutti i lati, non solo dove si guarda di solito |
 | Morto due volte in un minuto di notte | dopo la prima morte usciva subito dal riparo per riprendere gli oggetti | di notte la roba persa si lascia: prima restare vivi |
+| "Trovati 0 blocchi di legna" con gli alberi lì davanti | un salvataggio automatico (teletrasporto sul punto esatto della risorsa) metteva il bot dentro il tronco, e i salvataggi successivi segnavano l'albero come pericolo | un meccanismo di sicurezza che scatta spesso va guardato come un guasto: può essere lui la causa del fallimento |
 
 ---
 
