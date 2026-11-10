@@ -22,7 +22,7 @@ const giro = () => { system.currentTick += 20; return difendi(bot); };
 mem.protettoFino = 0; mem.rifugio = null; mem.compito = null; mem.coda = []; mem.modalita = "autonomo"; mem.esperienza = {}; mem.luoghi = {};
 system.currentTick = 1000;
 // zombie a 6 blocchi: con la corazza lo affronta, senza lo lascia stare
-mostri = [mostro("z1", "zombie", 16.5)]; corazza = { typeId: "minecraft:copper_chestplate" };
+mostri = [mostro("z1", "zombie", 16.5)]; corazza = { typeId: "minecraft:iron_chestplate" }; // dalla 2.8.75 quella di rame non basta
 assert.equal(giro(), true, "con la corazza combatte");
 const cambia = (nuovi) => { for (const m of mostri) m.isValid = false; mostri = nuovi; system.currentTick += 1000; };
 cambia([mostro("z3", "zombie", 16.5)]); corazza = undefined;

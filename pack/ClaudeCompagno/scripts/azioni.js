@@ -487,7 +487,9 @@ function scegliBersaglio(bot) {
 // 2.8.71: senza corazza e senza giocatori da proteggere il bot è "debole": non va a cercare lotte, dai creeper scappa sempre
 // e con metà vita si chiude in una tana invece di combattere (10/11: morto di giorno a vita 6 "in ritirata" da uno zombie
 // e per un creeper mentre andava a legna; di notte in tana 3 su 3 senza un graffio).
-const debole = (bot) => !bot.getComponent("minecraft:equippable")?.getEquipment("Chest") && !giocatoriVeri().length;
+// 2.8.75: la corazza di rame non basta (10/11 15:56-16:04: 4 morti in 8 minuti con corazza e gambali di rame addosso):
+// come per la notte, solo ferro o meglio fa uscire dallo stato "debole"
+const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComponent("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && !giocatoriVeri().length;
 // chiuso nel riparo d'emergenza: fino alla scadenza non esce e non prende lavori
 export const inEmergenza = (bot) => !!mem.rifugio?.fino && Date.now() < mem.rifugio.fino && dist(bot.location, mem.rifugio) < 6; // 6: appena sceso la posizione è ancora quella di sopra
 
@@ -524,6 +526,23 @@ export function difendi(bot) {
       if (nuovo && nuovo !== b) lotta.progresso = tick();
     }
   }
+  // riparo d'emergenza: debole, metà vita, e un mostro entro 16 blocchi oppure un colpo preso negli ultimi 5 secondi
+  // (uno scheletro "irraggiungibile" veniva lasciato perdere e continuava a tirare: 2 morti il 10/11). Tana subito, 90 secondi;
+  // se la tana non riesce restano fuga e ritirata qui sotto.
+  const vita0 = bot.getComponent("minecraft:health")?.currentValue ?? 20;
+  if (vita0 <= 10 && mem.compito?.tipo !== "tana" && Date.now() - (mem.emergenzaT ?? 0) > 20000 && debole(bot)) {
+    const b0 = lotta.bersaglio;
+    const vicino = b0?.isValid && dist(b0.location, bot.location) < 16 ? b0.typeId : null;
+    const colpito = !vicino && [...aggressori.values()].some((a) => a.vittima === (bot.name ?? bot.typeId) && tick() - a.t < 100);
+    if (vicino || colpito) {
+      mem.emergenzaT = Date.now();
+      evento(`Vita ${Math.round(vita0)}/20 senza armatura vera e ${vicino ? vicino.replace("minecraft:", "") + " vicino" : "sotto tiro"}: mi chiudo in una tana`);
+      mem.coda = []; lotta.bersaglio = null;
+      try { bot.isSneaking = false; } catch {}
+      assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "autonomia");
+      return false;
+    }
+  }
   const b = lotta.bersaglio;
   if (!b?.isValid) { lotta.bersaglio = null; try { if (bot.isSneaking) bot.isSneaking = false; } catch {} return false; }
   if (mem.modalita === "fermo" && dist(b.location, bot.location) > 3.5) return false;
@@ -535,31 +554,24 @@ export function difendi(bot) {
   // 10 secondi senza riuscire a colpirlo: lo lascia perdere e torna al compito. Non un creeper da cui sta scappando e che è
   // ancora entro 8 blocchi: "lasciato perdere" restava ignorato per un minuto e poteva arrivargli addosso non visto;
   // più lontano lo perde di vista solo per 10 secondi
-  if (tick() - lotta.progresso > 200 && !(fuga && dist(b.location, bot.location) <= 8)) {
-    ignorati.set(b.id, tick() + (fuga ? 200 : 1200));
-    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: ${fuga ? "si è allontanato" : "non riesco a raggiungerlo"}`);
+  if (tick() - lotta.progresso > 200 && !fuga) {
+    ignorati.set(b.id, tick() + 1200);
+    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: non riesco a raggiungerlo`);
     lotta.bersaglio = null;
     return false;
   }
+  // un creeper da cui si scappa non si ignora mai (ignorato anche solo 10 secondi è tornato ed è esploso: 10/11 15:59):
+  // dopo 30 secondi, se è oltre 8 blocchi, si torna al lavoro e lo si rivede appena rientra negli 8
+  if (fuga && tick() - lotta.progresso > 600 && dist(b.location, bot.location) > 8) { lotta.bersaglio = null; return false; }
   // creeper con metà vita o meno: scappa lontano (2 morti per esplosione a vita 5 il 09/11:
   // la ritirata di 6-8 blocchi per 2 secondi non basta, il creeper insegue e scoppia)
   if (fuga) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
-    if (d > 16) { ignorati.set(b.id, tick() + 600); lotta.bersaglio = null; return false; }
+    if (d > 16) { lotta.bersaglio = null; return false; }
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 14, y: l.y, z: l.z + ((l.z - e.z) / d) * 14 }); } catch {}
     lotta.ritirata = tick() + 60;
     if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Scappo dal creeper: vita ${Math.round(vita)}/20`); }
     return true;
-  }
-  // riparo d'emergenza: tana subito, 90 secondi; se la tana non riesce resta la ritirata qui sotto
-  // 16 blocchi: gli scheletri tirano da lontano (10/11 12:58: rinato da 47 secondi, ucciso dalle frecce senza armatura)
-  if (fragile && vita <= 10 && dist(b.location, bot.location) < 16 && mem.compito?.tipo !== "tana" && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
-    mem.emergenzaT = Date.now();
-    evento(`Vita ${Math.round(vita)}/20 senza armatura e ${b.typeId.replace("minecraft:", "")} vicino: mi chiudo in una tana`);
-    mem.coda = []; lotta.bersaglio = null;
-    try { bot.isSneaking = false; } catch {}
-    assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "autonomia");
-    return false;
   }
   if (vita <= 6 && dist(b.location, bot.location) < 6) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
@@ -652,6 +664,12 @@ export function vuotoSotto(dim, l) {
 export function esciDalRiparo(bot) {
   const r = mem.rifugio;
   if (!r || inEmergenza(bot)) return false;
+  // mostri ancora intorno all'uscita (all'ombra degli alberi non bruciano): si aspetta dentro, al massimo fino a metà mattina.
+  // Il 10/11 15:59 è uscito all'alba tra i mostri: 7 secondi dopo aveva 6/20 di vita, 24 secondi dopo era morto.
+  if (r.ok && dist(bot.location, r) <= 4 && (world.getTimeOfDay?.() ?? 6000) < 4000) {
+    const fuori = bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 12, families: ["monster"] }) ?? [];
+    if (fuori.some((e) => !NEUTRALI.test(e.typeId))) return "aspetta";
+  }
   mem.rifugio = null;
   if (!r.ok || dist(bot.location, r) > 4) return false;
   const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));

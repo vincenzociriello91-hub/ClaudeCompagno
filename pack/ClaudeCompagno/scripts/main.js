@@ -22,7 +22,8 @@ function notteFuori() {
   const ora = world.getTimeOfDay();
   // vicino a casa ci si ripara nella casetta; senza casetta anche lì tana o rifugio (4 morti per scheletri a casa)
   // fino a 500 dopo l'alba i mostri sono ancora in giro: usciva alle 23000 con poca vita e moriva (10/11: vita 1/20, mandato a cacciare)
-  if (ora >= 500 && ora < 12500) { esciDalRiparo(bot); return false; }
+  // "aspetta" = mostri ancora intorno all'uscita: resta nel riparo e non prende lavori
+  if (ora >= 500 && ora < 12500) return esciDalRiparo(bot) === "aspetta";
   if (!mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
   const eq = bot.getComponent("minecraft:equippable");
   // solo un'armatura vera (corazza di ferro o meglio) permette di restare fuori: con quella di rame appena indossata
@@ -774,14 +775,16 @@ ogniTick(100, () => {
   if (!vivo()) return;
   const ora = world.getTimeOfDay();
   const notte = ora >= 12500 && ora < 23000;
-  if (notte && !notteAvvisata) {
-    if (giocatoriVeri().length) avvisa("sta calando la notte: organizzati (lavoro sicuro vicino a casa, giocatori protetti)");
-    // offline: al tramonto molla i lavori lontani e torna a casa (di notte creeper e scheletri lo uccidevano lontano da casa)
-    else if (mem.luoghi.casa && dist(bot.location, mem.luoghi.casa) > 24 && !/fattoria|alleva|illumina|sistema_deposito|recupera/.test(mem.compito?.tipo ?? "") && !notteFuori()) {
-      mem.coda = [];
-      assegna({ tipo: "vai", x: mem.luoghi.casa.x, y: mem.luoghi.casa.y, z: mem.luoghi.casa.z }, "piano");
-      evento("Tramonto: torno a casa per la notte");
-    }
+  if (notte && !notteAvvisata && giocatoriVeri().length) avvisa("sta calando la notte: organizzati (lavoro sicuro vicino a casa, giocatori protetti)");
+  // offline: di notte molla i lavori e si ripara (di notte creeper e scheletri lo uccidevano lontano da casa). Si controlla per
+  // tutta la notte e non solo al tramonto: il 10/11 al tramonto era a 20 blocchi da casa, il compito lo ha poi portato lontano
+  // e ha cercato rame al buio per 7 minuti (4 morti in 8 minuti). Con un lavoro in corso il pilota non passa da notteFuori.
+  else if (notte && !giocatoriVeri().length && mem.compito && mem.compito.routine !== "notte_sicura"
+    && !/^(tana|vai|fattoria|alleva|illumina|sistema_deposito|recupera)$/.test(mem.compito.tipo) && !notteFuori()
+    && mem.luoghi.casa && dist(bot.location, mem.luoghi.casa) > 24) {
+    mem.coda = [];
+    assegna({ tipo: "vai", x: mem.luoghi.casa.x, y: mem.luoghi.casa.y, z: mem.luoghi.casa.z }, "piano");
+    evento("Notte: torno a casa");
   }
   notteAvvisata = notte;
   aiutoAttivo();
