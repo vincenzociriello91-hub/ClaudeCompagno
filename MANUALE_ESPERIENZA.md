@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.76 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.77 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -280,6 +280,7 @@ Aggiornato alla versione 2.8.76 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Armatura di rame mai completata: corazza e gambali sì, elmo e stivali mai | la regola diceva "fai l'armatura se non hai la corazza": avuta quella, il resto non veniva più considerato | un obiettivo fatto di più pezzi va controllato pezzo per pezzo, non sul primo che arriva |
 | 4 morti in 8 minuti con l'armatura di rame appena fatta | (1) al tramonto il controllo "è notte, riparati" si faceva una volta sola: era vicino a casa, poi il lavoro lo ha portato lontano al buio; (2) con la corazza di rame si credeva forte e non usava più il riparo d'emergenza; (3) un mostro "lasciato perdere" continuava a colpirlo; (4) all'alba usciva dalla tana in mezzo ai mostri | una condizione di sicurezza va ricontrollata per tutto il tempo in cui vale, non solo quando comincia; la soglia di "forte" va messa dove i fatti dicono che si smette di morire; chi ti sta colpendo non si ignora mai; prima di uscire da un riparo si guarda fuori |
 | 6 visite di fila alla fattoria vuota: "raccolti 0, piantati 0", ogni volta "completato" | un lavoro che finisce senza errori veniva contato come riuscito anche se non produceva niente, quindi non scattava nessuna pausa | il successo si misura su quello che si porta a casa, non sul fatto di essere arrivati in fondo: un giro a vuoto deve allungare l'attesa prima del prossimo |
+| Stivali di rame mai fatti: "fondi 2 lingotti" assegnato a ogni alba per 4 giornate e mai finito | il compito camminava verso la fornace di casa (40 blocchi) e, tra mostri e palude, la notte arrivava prima; non c'era nessun limite al tempo di avvicinamento | ogni fase di un lavoro deve avere una scadenza e un piano B, non solo il lavoro intero: "sto arrivando" non può durare all'infinito |
 
 ---
 

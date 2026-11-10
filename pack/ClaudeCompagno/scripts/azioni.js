@@ -1240,7 +1240,19 @@ const ESECUTORI = {
       if (!s.fornace) return finito(false, "serve una fornace (o 8 pietre per farne una)");
       s.fatti = 0; s.carica = 0; s.t = tick();
     }
-    if (dist(bot.location, s.fornace) > 4) { vaiVerso(bot, centro(s.fornace), 3); return; }
+    if (dist(bot.location, s.fornace) > 4) {
+      // fornace non raggiunta: strada bloccata, oppure 90 secondi di cammino senza arrivare (mostri, palude, giri a vuoto).
+      // Come negli altri compiti ci si porta accanto. Il 10/11 "fondi x2" è stato assegnato a ogni alba per 4 giornate di
+      // gioco e non è mai finito in 10 minuti: 2 lingotti di rame mancanti, niente stivali.
+      s.partenza ??= tick();
+      if (vaiVerso(bot, centro(s.fornace), 3) === "bloccato" || tick() - s.partenza > 1800) {
+        const q = accanto(bot.dimension, s.fornace);
+        bot.teleport(q ? centro(q) : { x: s.fornace.x + 0.5, y: s.fornace.y + 1, z: s.fornace.z + 0.5 });
+        nav.meta = null; nav.bloccato = 0; s.partenza = tick();
+        evento("Non arrivavo alla fornace: mi ci porto accanto");
+      }
+      return;
+    }
     if (tick() - s.t < 200) return; // 10 secondi a pezzo
     s.t = tick();
     if (s.fatti >= (c.quantita ?? 1) || contaOggetti(bot, ingresso) < 1) return finito(s.fatti > 0, `fusi ${s.fatti} ${uscita.replace("minecraft:", "")}`);
