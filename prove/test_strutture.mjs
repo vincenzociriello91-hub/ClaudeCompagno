@@ -29,7 +29,7 @@ for (const [n, r] of Object.entries(ROUTINE)) for (const p of r.passi) if (p.tip
 for (const [n, r] of Object.entries(ROUTINE)) for (const p of r.passi) if (p.tipo === "costruisci") assert.ok(SCHEMI_BASE[p.schema], `${n}: schema ${p.schema}`);
 mem.coda = [{ tipo: "esplora" }];
 assegna({ tipo: "routine", nome: "attrezzi_pietra" }, "test");
-eseguiCompito({});
+eseguiCompito({ getComponent: () => ({ container: { size: 0, getItem() {} } }) }); // inventario vuoto: nessun passo di raccolta saltato
 assert.equal(mem.coda.length, ROUTINE.attrezzi_pietra.passi.length + 1);
 assert.equal(mem.coda[0].tipo, "raccogli"); assert.equal(mem.coda.at(-1).tipo, "esplora");
 console.log(`test strutture ok: ${Object.keys(SCHEMI_BASE).length} schemi, ${Object.keys(ROUTINE).length} routine`);

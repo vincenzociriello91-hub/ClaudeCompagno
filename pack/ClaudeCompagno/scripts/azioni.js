@@ -282,7 +282,10 @@ export function vaiVerso(bot, p, raggio = 2) {
     }
     nav.prima = bot.location; nav.tPos = tick();
   }
-  return nav.bloccato >= 300 ? "bloccato" : false;
+  // un solo avviso per blocco, poi si riparte da zero: restando "bloccato" a ogni chiamata, la caccia scartava e
+  // dimenticava un posto della mappa ogni 4 tick (10/11: 16 posti di animali cancellati in 2 secondi, caccia 1%)
+  if (nav.bloccato >= 300) { nav.bloccato = 0; nav.meta = null; return "bloccato"; }
+  return false;
 }
 
 export function seguiGiocatore(bot, p, distanza = 3) {
@@ -357,7 +360,11 @@ export function gestisciFame(bot, inLotta) {
 // ---------- inventario in ordine ----------
 // Butta la roba inutile e i doppioni (aveva 106 leaf_litter, 12 banchi, 4 picconi di pietra insieme a quello di ferro).
 const ROBACCIA = /leaf_litter|rotten_flesh|spider_eye|poisonous_potato|pufferfish|dead_bush|^minecraft:(short_grass|tall_grass|fern|large_fern)$/;
-const LIMITI = [[/^minecraft:(dirt|diorite|granite|andesite|tuff|gravel|cobbled_deepslate|netherrack|calcite)$/, 64], [/^minecraft:(crafting_table|furnace)$/, 1], [/_seeds$/, 32], [/_sapling$/, 16]];
+const LIMITI = [[/^minecraft:(dirt|diorite|granite|andesite|tuff|cobbled_deepslate|netherrack|calcite)$/, 64], [/^minecraft:(crafting_table|furnace)$/, 1], [/_seeds$/, 32], [/_sapling$/, 16],
+  // cose che il bot non usa: 7 archi (uno per casella) e ghiaia, ossa, frecce riempivano l'inventario (10/11: 0 posti liberi)
+  [/^minecraft:(bow|crossbow|fishing_rod)$/, 1], [/^minecraft:(gravel|bone|arrow)$/, 16]];
+// con meno di 4 posti liberi butta anche questi, dal meno utile, finché non ne ha 4
+const CIANFRUSAGLIE = ["nautilus_shell", "lead", "sugar", "brown_mushroom", "red_mushroom", "gunpowder", "feather", "flint", "arrow", "bone", "gravel", "leather"].map((n) => `minecraft:${n}`);
 export function riordinaInventario(bot) {
   const c = inv(bot);
   const tenuti = {};
@@ -379,6 +386,11 @@ export function riordinaInventario(bot) {
     for (let i = 0; i < c.size; i++) { const it = c.getItem(i); if (it?.typeId.endsWith(`_${tipo}`)) slot.push([livelloOggetto(it.typeId), i]); }
     slot.sort((a, b) => b[0] - a[0]);
     for (const [, i] of slot.slice(2)) { c.setItem(i); via++; }
+  }
+  const liberi = () => { let n = 0; for (let i = 0; i < c.size; i++) if (!c.getItem(i)) n++; return n; };
+  for (const id of CIANFRUSAGLIE) {
+    if (liberi() >= 4) break;
+    for (let i = 0; i < c.size; i++) { const it = c.getItem(i); if (it?.typeId === id) { via += it.amount; c.setItem(i); } }
   }
   if (via) evento(`Inventario riordinato: buttati ${via} oggetti inutili o doppi`);
 }
@@ -1186,7 +1198,9 @@ const ESECUTORI = {
     if (!passi) return finito(false, `routine sconosciuta: ${c.nome}`);
     // lingotti già in tasca per il piccone (09/11: 4 lingotti, piccone rotto, e andava a scavare 10 minerali di ferro
     // senza piccone): si crafta subito; i lingotti che mancano per spada e ascia li procura il crafta stesso
-    const lista = c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi;
+    // materiale già in tasca: il passo di raccolta si salta (10/11: sabbia cercata con 31 in tasca, carbone con 54)
+    const gia = (p) => p.tipo === "raccogli" && GIA_IN_TASCA[p.blocco] && contaOggetti(bot, GIA_IN_TASCA[p.blocco]) >= (p.quantita ?? 8);
+    const lista = (c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi).filter((p) => !gia(p));
     mem.coda.unshift(...lista.map((p) => ({ ...p, routine: c.nome })));
     finito(true, `routine ${c.nome} avviata: ${lista.length} passi`);
   },
@@ -1225,7 +1239,9 @@ const ESECUTORI = {
         }
         if (s.verso) {
           const r = vaiVerso(bot, s.verso, 4);
-          if (r === true || r === "bloccato") { dimenticaRisorsa(s.cat ?? cat, s.verso); (s.escluse ??= []).push(s.verso); s.verso = null; }
+          // un posto si dimentica solo dopo esserci arrivati a vuoto; se la strada è bloccata si salta per questa volta
+          if (r === true) dimenticaRisorsa(s.cat ?? cat, s.verso);
+          if (r === true || r === "bloccato") { (s.escluse ??= []).push(s.verso); s.verso = null; }
           return;
         }
         return finito(s.fatti > 0, `trovati solo ${s.fatti} ${cat} qui intorno`);
@@ -1824,6 +1840,10 @@ export function assegna(compito, da) {
   evento(`Nuovo compito da ${da}: ${JSON.stringify({ ...compito, blocchi: compito.blocchi ? `${compito.blocchi.length} blocchi` : undefined })}`);
 }
 
+// cosa resta in inventario dopo aver raccolto quel blocco (per saltare le raccolte inutili nelle routine)
+const GIA_IN_TASCA = { sand: "minecraft:sand", coal_ore: (id) => /^minecraft:(coal|charcoal)$/.test(id), copper_ore: "minecraft:raw_copper",
+  iron_ore: "minecraft:raw_iron", legna: (id) => /_log$|_stem$/.test(id), pietra: "#pietra" };
+
 export function eseguiCompito(bot) {
   const c = mem.compito;
   if (c) {
@@ -1833,6 +1853,8 @@ export function eseguiCompito(bot) {
     // non fermarsi: oltre 10 minuti (30 per costruzioni e miniere) senza finire si cambia strada
     const max = /costruisci|miniera|scava_area|tunnel/.test(c.tipo) ? 36000 : 12000;
     if (c.t === undefined || c.t > tick()) c.t = tick(); // compito ripreso dopo un riavvio: i tick ripartono da zero
+    // finché avanza non scade: il tempo conta dall'ultimo blocco raccolto (pietra x100 falliva a 10 minuti con 80 già presi)
+    if ((c.stato.fatti ?? 0) !== (c.visti ?? 0)) { c.visti = c.stato.fatti; c.t = tick(); }
     if (!["segui", "fermo"].includes(c.tipo) && tick() - c.t > max) return finito(false, `troppo tempo senza finire (${Math.round(max / 1200)} min): cambio strada`);
     try { f(bot, c); } catch (e) { errore(`compito ${c.tipo}`, e); finito(false, `errore: ${e?.message ?? e}`); }
     return;

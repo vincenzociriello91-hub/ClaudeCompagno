@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.59 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.60 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -260,6 +260,8 @@ Aggiornato alla versione 2.8.59 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Morto dentro la tana chiusa, più volte | la buca era chiusa sopra ma aperta di lato su una grotta | un riparo va controllato su tutti i lati, non solo dove si guarda di solito |
 | Morto due volte in un minuto di notte | dopo la prima morte usciva subito dal riparo per riprendere gli oggetti | di notte la roba persa si lascia: prima restare vivi |
 | "Trovati 0 blocchi di legna" con gli alberi lì davanti | un salvataggio automatico (teletrasporto sul punto esatto della risorsa) metteva il bot dentro il tronco, e i salvataggi successivi segnavano l'albero come pericolo | un meccanismo di sicurezza che scatta spesso va guardato come un guasto: può essere lui la causa del fallimento |
+| Caccia all'1% e costruzioni al 17%: "trovati 0", "blocchi irraggiungibili" | un segnale di errore ("strada bloccata") restava acceso dopo il primo uso e veniva letto come nuovo a ogni giro, cancellando tutte le alternative una dopo l'altra | un segnale di errore si consuma quando lo si legge: se resta acceso, un solo intoppo diventa cento |
+| Inventario pieno, niente posto per le cose utili | teneva tutto ciò che raccoglieva, anche oggetti che non sa usare | ciò che non serve a nessun piano occupa il posto di ciò che serve: si butta prima di restare bloccati |
 
 ---
 

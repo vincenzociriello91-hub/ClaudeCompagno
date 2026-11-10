@@ -20,7 +20,8 @@ const vivo = () => bot?.isValid === true;
 function notteFuori() {
   const ora = world.getTimeOfDay();
   // vicino a casa ci si ripara nella casetta; senza casetta anche lì tana o rifugio (4 morti per scheletri a casa)
-  if (ora < 12500 || ora >= 23000 || !mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
+  // fino a 500 dopo l'alba i mostri sono ancora in giro: usciva alle 23000 con poca vita e moriva (10/11: vita 1/20, mandato a cacciare)
+  if ((ora >= 500 && ora < 12500) || !mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
   const eq = bot.getComponent("minecraft:equippable");
   if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
