@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 
-export const VERSIONE = "2.8.69";
+export const VERSIONE = "2.8.70";
 
 // Stato persistente (sopravvive ai riavvii del server)
 export const mem = {

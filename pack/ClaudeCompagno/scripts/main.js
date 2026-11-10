@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -622,7 +622,7 @@ function pianoGratis() {
   const candidati = [];
   const minuti = (t) => (Date.now() - (t ?? 0)) / 60000;
   const vuoti = [...Array(inv(bot).size).keys()].filter((i) => !inv(bot).getItem(i)).length;
-  const valida = (c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000);
+  const valida = (c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c);
   if (!notte) spostaBaseSeAllagata(bot);
   // ritmo giorno/notte: di notte lontano da casa prima si torna; vicino a casa solo lavori sicuri, poi la ronda
   if (notte && mem.luoghi.casa) {
@@ -673,7 +673,7 @@ function pianoGratis() {
   // zona povera per quella routine (3 fallimenti e nessun successo qui): la salta finché non cambia zona
   const zona = zonaDi(bot.location);
   const povera = (n) => { const z = mem.statRoutine?.[n]?.zone?.[zona]; return z && z.ko >= 3 && z.ok === 0; };
-  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !povera(c));
+  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c) && !povera(c));
 }
 
 // Salvataggio ogni 30 secondi, armatura ogni 10, rapporto ogni 15 minuti.

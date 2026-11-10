@@ -677,6 +677,13 @@ function rinvia(c, ingrediente, quantita) {
 export const interrompi = (msg) => finito(false, msg);
 // routine -> tick dell'ultimo fallimento: il piano gratis non la riprova per 10 minuti
 export const routineKo = new Map();
+// 2.8.70: i fallimenti si ricordano anche dopo reload e riavvii (la Map qui sopra si svuota a ogni aggiornamento: il 10/11,
+// con 14 aggiornamenti, il pilota ha riprovato le stesse routine fallite tutto il giorno) e l'attesa raddoppia a ogni
+// fallimento di fila: 10, 20, 40, 80 minuti, al massimo 2 ore. Un successo azzera. Il riparo della notte non si mette mai in pausa.
+export const routineInPausa = (nome) => {
+  const k = nome === "notte_sicura" ? null : mem.routineKo?.[nome];
+  return !!k && Date.now() - k.t < Math.min(120, 10 * 2 ** (k.n - 1)) * 60000;
+};
 export const zonaDi = (p) => `${Math.floor(p.x / 64)},${Math.floor(p.z / 64)}`;
 
 // Prestazioni del server: main.js misura i TPS; se il server rallenta il bot alleggerisce le scansioni.
@@ -726,7 +733,11 @@ function finito(ok, msg) {
   if (ok && !["autonomia", "piano"].includes(c.da) && !["segui", "fermo"].includes(c.tipo) && !mem.coda?.length) mem.modalita = "autonomo";
   // passo di una routine fallito: i passi successivi dipendono da questo (fondi senza minerali, crafta senza lingotti),
   // quindi si scartano. Di notte ne fallivano 5-6 di fila ogni minuto, 1131 fallimenti in 3 ore.
-  if (!ok && c.routine) routineKo.set(c.routine, tick());
+  if (!ok && c.routine) {
+    routineKo.set(c.routine, tick());
+    (mem.routineKo ??= {})[c.routine] = { t: Date.now(), n: (mem.routineKo[c.routine]?.n ?? 0) + 1 };
+  }
+  if (ok && c.routine && mem.routineKo?.[c.routine] && !mem.coda?.some((x) => x.routine === c.routine)) delete mem.routineKo[c.routine];
   // statistiche gratis: una routine riesce se finisce tutti i passi, fallisce al primo passo fallito; per zona di 64x64 blocchi
   if (c.routine && (!ok || !mem.coda?.some((x) => x.routine === c.routine))) {
     const st = ((mem.statRoutine ??= {})[c.routine] ??= { ok: 0, ko: 0, zone: {} });
