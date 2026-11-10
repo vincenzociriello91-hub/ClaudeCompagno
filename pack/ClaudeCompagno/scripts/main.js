@@ -273,6 +273,19 @@ world.afterEvents.entityHurt.subscribe(({ hurtEntity, damage, damageSource }) =>
   if (vivo() && hurtEntity.id === bot.id) {
     sessione.danniSubiti += damage;
     // soffoca dentro un blocco (è morto così a 110,64,350): esce subito sul terreno libero sopra
+    // danno da annegamento: il conto "testa sott'acqua da 10 secondi" si azzera a ogni salto (il bot non nuota, salta),
+    // l'aria no. Il 10/11 14:41 è annegato in palude a 3 blocchi di profondità con due "salvataggi" appena fatti.
+    // Al primo danno esce subito su terra asciutta e cambia compito.
+    if (damageSource.cause === "drowning") {
+      const casa = mem.luoghi.casa;
+      const asciutto = terraSicura(bot.dimension, bot.location) ?? (casa ? { x: casa.x + 0.5, y: casa.y + 1, z: casa.z + 0.5 } : ultimoSicuro);
+      if (asciutto) {
+        segnaPericolo(bot.location, 8, "acqua (annegamento)");
+        bot.teleport(asciutto); sottAcqua = 0;
+        if (mem.compito) interrompi("stavo annegando: uscito dall'acqua, cambio strada");
+        evento("Salvataggio: stavo annegando, esco dall'acqua");
+      }
+    }
     if (damageSource.cause === "suffocation") {
       // si esce verso l'alto: suolo() scende dentro i tronchi e rimetteva il bot nel legno (morto a 87,73,361)
       const g = ariaSopra(bot.dimension, bot.location);
@@ -650,7 +663,10 @@ function pianoGratis() {
   // senza corazza l'armatura di rame viene prima di cibo, torce e deposito: basta avere il rame o sapere dov'è, e un piccone
   // che lo scava (10/11: rinato senza armatura con 6 lingotti, il piano ha scelto deposito, fattoria e allevamento: 2 morti di giorno)
   const corazza = bot.getComponent("minecraft:equippable")?.getEquipment("Chest")?.typeId ?? "";
-  if (!corazza && !ha((id) => id.endsWith("_chestplate")) && (ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8
+  // anche con la corazza addosso, finché manca un pezzo (elmo, gambali, stivali): la routine fa solo quelli che mancano
+  const eqA = bot.getComponent("minecraft:equippable");
+  const incompleta = ["Head", "Chest", "Legs", "Feet"].some((p) => !eqA?.getEquipment(p));
+  if (incompleta && !/(iron|diamond|netherite)_chestplate$/.test(corazza) && (ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8
     || ((mem.risorse?.copper_ore ?? []).length > 0 && ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))))) candidati.push("armatura_rame");
   if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria ? ["compito:fattoria"] : []));
   if (ha("minecraft:torch") < 8) candidati.push("torce", "carbonella");

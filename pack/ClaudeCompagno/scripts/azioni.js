@@ -1305,7 +1305,17 @@ const ESECUTORI = {
     // senza piccone): si crafta subito; i lingotti che mancano per spada e ascia li procura il crafta stesso
     // materiale già in tasca: il passo di raccolta si salta (10/11: sabbia cercata con 31 in tasca, carbone con 54)
     const gia = (p) => p.tipo === "raccogli" && GIA_IN_TASCA[p.blocco] && contaOggetti(bot, GIA_IN_TASCA[p.blocco]) >= (p.quantita ?? 8);
-    const lista = (c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi).filter((p) => !gia(p));
+    // pezzi di armatura già addosso o in tasca: non si rifanno (10/11: con corazza e gambali indossati la routine non veniva
+    // più scelta e elmo e stivali non arrivavano mai; rifarla intera avrebbe sprecato 15 lingotti in doppioni)
+    const POSTO = { helmet: "Head", chestplate: "Chest", leggings: "Legs", boots: "Feet" }, COSTO = { helmet: 5, chestplate: 8, leggings: 7, boots: 4 };
+    const pezzo = (p) => (p.tipo === "crafta" ? /_(helmet|chestplate|leggings|boots)$/.exec(p.oggetto ?? "")?.[1] : null);
+    const fatto = (p) => !!pezzo(p) && (bot.getComponent("minecraft:equippable")?.getEquipment?.(POSTO[pezzo(p)])?.typeId === ns(p.oggetto) || contaOggetti(bot, ns(p.oggetto)) > 0);
+    let lista = (c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi).filter((p) => !gia(p) && !fatto(p));
+    if (c.nome === "armatura_rame") {
+      // si fonde solo il rame che manca per i pezzi rimasti
+      const serve = lista.reduce((n, p) => n + (COSTO[pezzo(p)] ?? 0), 0) - contaOggetti(bot, "minecraft:copper_ingot");
+      lista = lista.filter((p) => p.tipo !== "fondi" || serve > 0).map((p) => (p.tipo === "fondi" ? { ...p, quantita: serve } : p));
+    }
     mem.coda.unshift(...lista.map((p) => ({ ...p, routine: c.nome })));
     finito(true, `routine ${c.nome} avviata: ${lista.length} passi`);
   },

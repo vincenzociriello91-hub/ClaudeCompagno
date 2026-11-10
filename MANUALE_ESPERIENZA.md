@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.73 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.74 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -276,6 +276,8 @@ Aggiornato alla versione 2.8.73 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Morti di giorno senza armatura: zombie a vita 6 "in ritirata", creeper andando a legna | il bot debole si comportava come uno forte: inseguiva i mostri a 8 blocchi, andava addosso ai creeper, si ritirava solo a vita quasi finita e poi tornava a combattere | la prudenza va proporzionata alla forza: chi è debole non cerca lo scontro, si allontana prima e usa il riparo che funziona (la tana) anche di giorno. E prima di ogni altro lavoro si rimette l'armatura |
 | Morto 20 secondi dopo un aggiornamento arrivato di notte, mentre era al sicuro nella tana | l'aggiornamento fa rinascere il bot: per qualche istante non si considerava più "nel riparo", ha attaccato un creeper ed è scappato fuori | chi aggiorna un sistema in funzione deve rimetterlo esattamente nello stato sicuro in cui era: l'aggiornamento stesso è un momento di rischio, e più aggiornamenti si fanno più conta |
 | Regola nuova con un buco: "scappa dal creeper" lo faceva ignorare per un minuto dopo 10 secondi | la fuga passava dal vecchio controllo "non riesco a colpirlo, lascio perdere", pensato per chi insegue, non per chi scappa | quando si aggiunge un comportamento nuovo vanno rilette le regole vecchie che lo attraversano: una regola giusta per l'attacco può essere sbagliata per la fuga |
+| Annegato in palude con due "salvataggi" appena fatti | l'allarme contava i secondi con la testa sott'acqua e si azzerava a ogni salto, mentre l'aria continuava a finire | un allarme va legato al danno vero (la vita che scende), non a un segnale che si può azzerare da solo; il primo danno deve bastare per reagire |
+| Armatura di rame mai completata: corazza e gambali sì, elmo e stivali mai | la regola diceva "fai l'armatura se non hai la corazza": avuta quella, il resto non veniva più considerato | un obiettivo fatto di più pezzi va controllato pezzo per pezzo, non sul primo che arriva |
 
 ---
 
