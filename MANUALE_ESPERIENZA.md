@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.64 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.65 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -266,6 +266,8 @@ Aggiornato alla versione 2.8.64 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Di notte in palude: tana "impossibile", rifugio costruito in acqua 7 volte di fila, morte | il riparo veniva cercato solo a 3 blocchi e, fallito, si riprovava nello stesso punto ogni 30 secondi | se il posto non va bene, il rimedio è cambiare posto: allargare la ricerca prima di ripetere il tentativo |
 | Caccia fallita su 19 posti in 5 minuti, uno ogni 15 secondi esatti | il bot era ancora chiuso nel riparo della notte e non poteva muoversi | fallimenti a intervalli regolari sono il segno di un blocco a monte, non di 19 problemi diversi: prima controllare di potersi muovere |
 | Pannello irraggiungibile da fuori casa dopo un riavvio | il collegamento veniva aperto una volta all'avvio e poi nessuno lo sorvegliava | un servizio che deve restare acceso ha bisogno di un guardiano che lo controlli e lo riavvii, non di un solo tentativo iniziale |
+| Due morti in 5 minuti appena indossata la prima armatura | la regola "con l'armatura si può stare fuori di notte" non distingueva un'armatura debole da una vera | un miglioramento piccolo non autorizza un rischio grande: la soglia va messa sul livello che protegge davvero |
+| Niente erba né legna intorno a casa | ogni morte per un mostro lasciava una zona vietata permanente, anche sulla soglia di casa | un pericolo che si sposta (un mostro) non va ricordato come un pericolo del luogo: la memoria dei rischi deve scadere quando il rischio non c'è più |
 
 ---
 

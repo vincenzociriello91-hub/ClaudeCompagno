@@ -24,7 +24,9 @@ function notteFuori() {
   if (ora >= 500 && ora < 12500) { esciDalRiparo(bot); return false; }
   if (!mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
   const eq = bot.getComponent("minecraft:equippable");
-  if (["Head", "Chest", "Legs", "Feet"].some((s) => eq?.getEquipment(s))) return false;
+  // solo un'armatura vera (corazza di ferro o meglio) permette di restare fuori: con quella di rame appena indossata
+  // è rimasto all'aperto ed è morto 2 volte in 5 minuti (10/11, scheletro e creeper)
+  if (/(iron|diamond|netherite)_chestplate$/.test(eq?.getEquipment("Chest")?.typeId ?? "")) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
   const lavori = mem.compito?.routine === "notte_sicura" || mem.compito?.tipo === "tana";
   // riparo non riuscito (rifugio senza blocchi, tana fallita): si riprova ogni 30 secondi invece di restare scoperti
@@ -37,7 +39,7 @@ function notteFuori() {
     // (il rifugio riusciva 7 volte su 55: il 09/11 4 morti per scheletri mentre lo costruiva senza ciottoli)
     const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
     const rifugio = mem.tanaKo && Date.now() - mem.tanaKo < 120000 && blocchi >= 34;
-    evento(`Notte senza armatura e senza casetta: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    evento(`Notte senza armatura di ferro e senza casetta: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
     assegna(rifugio ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;

@@ -649,6 +649,10 @@ function rinvia(c, ingrediente, quantita) {
   if (!pre || (c.prereq ?? 0) >= 3) return false;
   // di notte nel rifugio non si esce a cercare legna o animali (4 morti in 2 minuti andando a prendere tronchi per le torce)
   if (c.routine === "notte_sicura" && (pre.tipo === "raccogli" || pre.tipo === "caccia")) return false;
+  // di notte, da solo, nessun lavoro "sicuro" manda fuori a prendere il materiale che manca (10/11: con l'armatura di rame
+  // appena fatta, deposito e fattoria di notte lo hanno mandato a legna ed erba: ucciso da uno scheletro e da un creeper)
+  const ora = world.getTimeOfDay?.() ?? 0;
+  if (ora >= 12500 && ora < 23000 && !giocatoriVeri().length && (pre.tipo === "raccogli" || pre.tipo === "caccia")) return false;
   const { stato, t, ...orig } = c;
   orig.prereq = (orig.prereq ?? 0) + 1;
   const q = pre.tipo === "caccia" ? Math.max(1, Math.ceil(quantita / 2)) : Math.max(1, quantita);
@@ -679,8 +683,11 @@ export function segnaPericolo(p, raggio, motivo) {
 // Le zone nate da un salvataggio (caduta, soffocamento) scadono dopo 3 ore: non sono morti, e restando per sempre
 // nascondevano i boschi (10/11: 9 zone "grotta" su 20 erano alberi da cui il bot era caduto, legna "trovati 0").
 const SCADE = /grotta|soffocamento/;
-export const inPericolo = (p) => (mem.pericoli ?? []).some((z) => Math.hypot(z.x - p.x, z.z - p.z) <= z.r && Math.abs(z.y - p.y) <= z.r
-  && !(SCADE.test(z.motivo ?? "") && Date.now() - (z.t ?? 0) > 3 * 3600000));
+// Le morti per mostri scadono dopo 30 minuti: il mostro si sposta, il posto non è pericoloso in sé. Restando per sempre
+// chiudevano la zona di casa (10/11: zona "zombie" r12 proprio sulla casa: lì intorno niente erba, legna né tana).
+const MOSTRO = /entityAttack|projectile|[Ee]xplosion|magic/;
+const scaduta = (z) => { const eta = Date.now() - (z.t ?? 0), m = z.motivo ?? ""; return (SCADE.test(m) && eta > 3 * 3600000) || (MOSTRO.test(m) && eta > 30 * 60000); };
+export const inPericolo = (p) => (mem.pericoli ?? []).some((z) => Math.hypot(z.x - p.x, z.z - p.z) <= z.r && Math.abs(z.y - p.y) <= z.r && !scaduta(z));
 
 // Lezioni scritte dal codice (gratis): alla soglia-esima volta che succede la stessa cosa diventa una regola.
 // La riflessione giornaliera di Opus le fonde poi con le lezioni vere.

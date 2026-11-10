@@ -10,9 +10,9 @@ mem.pericoli = [];
 assert.equal(tipo(suolo(dim, 10, 10)), "minecraft:oak_log", "premessa: suolo() sul tronco dà una cella di legno");
 const g = accanto(dim, { x: 10, y: 66, z: 10 });
 assert.ok(g && tipo(g) === "minecraft:air" && g.y === 64 && Math.abs(g.x - 10) + Math.abs(g.z - 10) > 0, "accanto() non dà un punto libero: " + JSON.stringify(g));
-// zone nate da un salvataggio: scadono dopo 3 ore; le morti restano
+// zone nate da un salvataggio: scadono dopo 3 ore; le morti per acqua, cadute e lava restano (dalla 2.8.65 quelle per mostri scadono in 30 minuti: test_v2865)
 const vecchio = Date.now() - 4 * 3600000;
-mem.pericoli = [{ x: 0, y: 64, z: 0, r: 8, motivo: "grotta (caduta)", t: vecchio }, { x: 50, y: 64, z: 0, r: 12, motivo: "entityAttack da zombie", t: vecchio },
+mem.pericoli = [{ x: 0, y: 64, z: 0, r: 8, motivo: "grotta (caduta)", t: vecchio }, { x: 50, y: 64, z: 0, r: 12, motivo: "acqua (annegamento)", t: vecchio },
   { x: 100, y: 64, z: 0, r: 8, motivo: "grotta (caduta)", t: Date.now() }];
 assert.equal(inPericolo({ x: 0, y: 64, z: 0 }), false, "caduta di 4 ore fa ancora pericolosa");
 assert.equal(inPericolo({ x: 50, y: 64, z: 0 }), true, "morte dimenticata");
