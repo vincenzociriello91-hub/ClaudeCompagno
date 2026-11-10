@@ -528,19 +528,22 @@ export function difendi(bot) {
   if (!b?.isValid) { lotta.bersaglio = null; try { if (bot.isSneaking) bot.isSneaking = false; } catch {} return false; }
   if (mem.modalita === "fermo" && dist(b.location, bot.location) > 3.5) return false;
   if (tick() < lotta.ritirata) return true;
-  // 10 secondi senza riuscire a colpirlo: lo lascia perdere e torna al compito
-  if (tick() - lotta.progresso > 200) {
-    ignorati.set(b.id, tick() + 1200);
-    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: non riesco a raggiungerlo`);
+  const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
+  const fragile = debole(bot);
+  // creeper da cui si scappa (metà vita o meno, oppure debole): niente corpo a corpo
+  const fuga = b.typeId === "minecraft:creeper" && (vita <= 10 || fragile);
+  // 10 secondi senza riuscire a colpirlo: lo lascia perdere e torna al compito. Non un creeper da cui sta scappando e che è
+  // ancora entro 8 blocchi: "lasciato perdere" restava ignorato per un minuto e poteva arrivargli addosso non visto;
+  // più lontano lo perde di vista solo per 10 secondi
+  if (tick() - lotta.progresso > 200 && !(fuga && dist(b.location, bot.location) <= 8)) {
+    ignorati.set(b.id, tick() + (fuga ? 200 : 1200));
+    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: ${fuga ? "si è allontanato" : "non riesco a raggiungerlo"}`);
     lotta.bersaglio = null;
     return false;
   }
-  // vita bassa: si ritira per 2 secondi e intanto mangia (gestisciFame in lotta mangia sotto 4 cuori), poi torna
-  const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
-  // creeper con metà vita o meno: niente corpo a corpo, scappa lontano (2 morti per esplosione a vita 5 il 09/11:
+  // creeper con metà vita o meno: scappa lontano (2 morti per esplosione a vita 5 il 09/11:
   // la ritirata di 6-8 blocchi per 2 secondi non basta, il creeper insegue e scoppia)
-  const fragile = debole(bot);
-  if (b.typeId === "minecraft:creeper" && (vita <= 10 || fragile)) {
+  if (fuga) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
     if (d > 16) { ignorati.set(b.id, tick() + 600); lotta.bersaglio = null; return false; }
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 14, y: l.y, z: l.z + ((l.z - e.z) / d) * 14 }); } catch {}
