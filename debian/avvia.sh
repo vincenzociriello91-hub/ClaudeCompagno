@@ -421,30 +421,45 @@ fuori_casa() {
     else rm -rf "$tmp"; log "Tailscale: download fallito, pannello solo in casa"; return 1; fi
   fi
   pkill -f "$TS/tailscaled" 2>/dev/null; sleep 1  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
-  "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
-    > "$LOGDIR/tailscaled.log" 2>&1 &
-  sleep 5
-  # già collegata: basta "up"; altrimenti "up" stampa il link di accesso, che va in Drive (cartella privata)
-  # il link resta valido finché "up" aspetta: si rinnova ogni 10 minuti per 24 ore, così si può aprire quando si vuole
-  ( for _ in $(seq 1 144); do
-      timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
-        | while read -r r; do
-            case "$r" in *https://login.tailscale.com/*)
-              u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
-              printf 'Per vedere il pannello da fuori casa apri questo link (una volta sola) ed entra con il tuo account Tailscale:\n%s\n(il link si rinnova ogni 10 minuti: usa sempre quello scritto qui)\n' "$u" \
-                > "$REP/tailscale_accesso.txt" ;;
-            esac
-          done
-      [ -n "$(ip_tailscale)" ] && break
-    done
-    i=$(ip_tailscale)
-    if [ -n "$i" ]; then
-      # inoltro esplicito della porta del pannello (in userspace non sempre arriva da solo ai servizi locali)
-      timeout 30 "$TS/tailscale" --socket="$TS/tailscaled.sock" serve --bg --tcp 8080 tcp://127.0.0.1:8080 >> "$LOGDIR/tailscaled.log" 2>&1 || true
-      rm -f "$REP/tailscale_accesso.txt"
-      log "Pannello da fuori casa (Tailscale): http://$i:8080"
-      notifica "🌍 Pannello anche da fuori casa: http://$i:8080 (con Tailscale acceso sul telefono)"
-    fi ) &
+  # 2.8.64: guardiano. Prima si provava a collegarsi una volta e poi basta: se tailscaled moriva (10/11, dopo un riavvio
+  # della Odin il pannello da fuori non rispondeva più) nessuno lo faceva ripartire. Ora ogni minuto si controlla:
+  # demone spento = riavviato, senza indirizzo = "up" di nuovo. Lo stato si legge su Drive in tailscale_stato.txt.
+  # Il gettone ferma il guardiano vecchio dopo un riavvio di avvia.sh (exec) e alla chiusura del server.
+  local gettone="$$-$(date +%s)" detto=""
+  echo "$gettone" > "$TS/guardiano"
+  ( while [ "$(cat "$TS/guardiano" 2>/dev/null)" = "$gettone" ]; do
+      if ! pgrep -f "$TS/tailscaled" >/dev/null 2>&1; then
+        "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
+          > "$LOGDIR/tailscaled.log" 2>&1 &
+        sleep 5
+      fi
+      if [ -z "$(ip_tailscale)" ]; then
+        # già collegata: basta "up"; altrimenti "up" stampa il link di accesso, che va in Drive (cartella privata)
+        timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
+          | while read -r r; do
+              case "$r" in *https://login.tailscale.com/*)
+                u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
+                printf 'Per vedere il pannello da fuori casa apri questo link (una volta sola) ed entra con il tuo account Tailscale:\n%s\n(il link si rinnova ogni 10 minuti: usa sempre quello scritto qui)\n' "$u" \
+                  > "$REP/tailscale_accesso.txt" ;;
+              esac
+            done
+        detto=""
+      fi
+      i=$(ip_tailscale)
+      if [ -n "$i" ] && [ "$detto" != "$i" ]; then
+        # inoltro esplicito della porta del pannello (in userspace non sempre arriva da solo ai servizi locali)
+        timeout 30 "$TS/tailscale" --socket="$TS/tailscaled.sock" serve --bg --tcp 8080 tcp://127.0.0.1:8080 >> "$LOGDIR/tailscaled.log" 2>&1 || true
+        rm -f "$REP/tailscale_accesso.txt"
+        log "Pannello da fuori casa (Tailscale): http://$i:8080"
+        notifica "🌍 Pannello anche da fuori casa: http://$i:8080 (con Tailscale acceso sul telefono)"
+        detto=$i
+      fi
+      { echo "Tailscale sulla Odin, $(date '+%d/%m %H:%M:%S') | indirizzo: ${i:-NESSUNO} | demone: $(pgrep -f "$TS/tailscaled" >/dev/null 2>&1 && echo acceso || echo SPENTO)"
+        timeout 20 "$TS/tailscale" --socket="$TS/tailscaled.sock" status 2>&1 | head -n 8
+        echo "--- registro:"; tail -n 12 "$LOGDIR/tailscaled.log"; } 2>/dev/null \
+        | grep -viE 'authkey|secret|token|privkey|nodekey|login\.tailscale' | cut -c1-240 > "$REP/tailscale_stato.txt"
+      sleep 60
+    done ) &
 }
 fuori_casa &  # in sottofondo: il primo download non ritarda l'avvio del server
 
@@ -542,6 +557,7 @@ while true; do
   sleep 10
 done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
+rm -f "$TS/guardiano"  # ferma il guardiano di Tailscale prima di spegnere il demone
 pkill -f "$TS/tailscaled" 2>/dev/null
 pkill -x playit 2>/dev/null
 pkill -f "playit-cli setup" 2>/dev/null
