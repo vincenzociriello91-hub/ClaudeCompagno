@@ -45,6 +45,22 @@ const ns = (id) => (String(id).includes(":") ? String(id) : `minecraft:${id}`).t
 export const DIREZIONI = { nord: { x: 0, y: 0, z: -1 }, sud: { x: 0, y: 0, z: 1 }, est: { x: 1, y: 0, z: 0 }, ovest: { x: -1, y: 0, z: 0 } };
 
 export const giocatoriVeri = () => world.getAllPlayers().filter((p) => !(p instanceof SimulatedPlayer));
+// Dopo un reload il "vecchio" Claude resta nel mondo senza script e quello nuovo nasce come "Claude(2)", "Claude(3)"...
+// Si toglieva solo chi si chiamava esattamente "Claude", quindi gli altri si accumulavano a ogni aggiornamento (10/11: fino a
+// "Claude(6)"). Questi fantasmi attirano i mostri, bloccano i blocchi dove stanno ("non riesco a chiudere la tana
+// (giocatore)" dopo ogni reload fatto in superficie) e morendo lasciano a terra copie dell'inventario ("buttati 43 doppi").
+// Va chiamata prima di far nascere il bot nuovo: toglie tutti i giocatori simulati e chiunque porti il suo nome.
+export function togliFantasmi(nome, dim) {
+  const suo = new RegExp(`^${String(nome).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\(\\d+\\))?$`);
+  let tolti = 0;
+  for (const p of world.getAllPlayers()) {
+    if (!(p instanceof SimulatedPlayer) && !suo.test(p.name ?? "")) continue;
+    try { if (typeof p.disconnect === "function") p.disconnect(); else dim.runCommand(`kick "${p.name}"`); tolti++; }
+    catch { try { dim.runCommand(`kick "${p.name}"`); tolti++; } catch {} }
+  }
+  if (tolti > 1) evento(`Tolti ${tolti} vecchi ${nome} rimasti nel mondo dopo gli aggiornamenti`);
+  return tolti;
+}
 export const giocatore = (nome) => giocatoriVeri().find((p) => p.name.toLowerCase() === String(nome ?? "").toLowerCase());
 
 // ---------- inventario ----------

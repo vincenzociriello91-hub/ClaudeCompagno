@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -97,7 +97,7 @@ function generaBot(vicino) {
     if (!salvata && !vicino) return; // senza giocatori serve la posizione salvata, col chunk caricato
     const l = salvata ?? { x: vicino.location.x + 1.5, y: vicino.location.y, z: vicino.location.z + 1.5 };
     // dopo un reload può restare il "vecchio" Claude senza script: si toglie prima di farne entrare uno nuovo (mai due)
-    for (const p of world.getAllPlayers()) if (p.name === CFG.nome) { try { dim.runCommand(`kick "${CFG.nome}"`); } catch {} }
+    togliFantasmi(CFG.nome, dim);
     bot = spawnSimulatedPlayer({ dimension: salvata ? dim : vicino.dimension, x: l.x, y: l.y, z: l.z }, CFG.nome, GameMode.Survival);
     if (mem.inventario.length) ripristinaInventario(bot, mem.inventario);
     try { rientraNelRiparo(bot, l); } catch (e) { errore("rientro nel riparo", e); }

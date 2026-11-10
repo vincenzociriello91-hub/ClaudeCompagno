@@ -1,11 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.77 — attuale (10/11/2026)
-- **Arriva alla fornace**: da 4 giornate di gioco il bot provava a fondere 2 lingotti di rame per gli stivali e non ci riusciva: camminava verso la fornace di casa e la notte arrivava prima. Ora, se dopo un minuto e mezzo non è arrivato (o la strada è bloccata), si porta direttamente accanto alla fornace.
+## 2.8.78 — attuale (10/11/2026)
+- **Via i "fantasmi" del bot**: a ogni aggiornamento il bot vecchio restava nel mondo, fermo e senza comandi, e quello nuovo nasceva con un numero accanto al nome (fino a "Claude(6)"). Questi doppioni attirano i mostri, impediscono di chiudere la tana nel punto in cui stanno e, quando muoiono, lasciano a terra copie degli oggetti. Ora, prima di far nascere il bot nuovo, vengono tolti tutti. Era anche la causa dell'errore "non riesco a chiudere la tana" visto dopo gli aggiornamenti.
 
-## 2.8.76 — precedente (10/11/2026)
-- **Niente giri a vuoto alla fattoria**: con il campo vuoto e senza semi il bot ci tornava di continuo (6 volte di fila, "raccolti 0, piantati 0"), perdendo mezza giornata di gioco. Ora, dopo una visita a vuoto, aspetta 15 minuti prima di tornarci.
-- La 2.8.75 nel gioco: 45 minuti senza morti, maturità 55/100 (massimo), elmo di rame fatto e indossato.
+## 2.8.77 — precedente (10/11/2026)
+- **Arriva alla fornace**: da 4 giornate di gioco il bot provava a fondere 2 lingotti di rame per gli stivali e non ci riusciva: camminava verso la fornace di casa e la notte arrivava prima. Ora, se dopo un minuto e mezzo non è arrivato (o la strada è bloccata), si porta direttamente accanto alla fornace.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.
