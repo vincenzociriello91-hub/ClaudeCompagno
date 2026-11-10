@@ -669,7 +669,7 @@ function pianoGratis() {
   const incompleta = ["Head", "Chest", "Legs", "Feet"].some((p) => !eqA?.getEquipment(p));
   if (incompleta && !/(iron|diamond|netherite)_chestplate$/.test(corazza) && (ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8
     || ((mem.risorse?.copper_ore ?? []).length > 0 && ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))))) candidati.push("armatura_rame");
-  if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria ? ["compito:fattoria"] : []));
+  if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria && minuti(mem.ultimaFattoria) > 5 ? ["compito:fattoria"] : []));
   if (ha("minecraft:torch") < 8) candidati.push("torce", "carbonella");
   if (notte && !mem.luoghi.casa) candidati.push("notte_sicura");
   const pickFerro = ha((id) => /(iron|diamond|netherite)_pickaxe$/.test(id));

@@ -1433,7 +1433,9 @@ const ESECUTORI = {
     if (s.i >= s.celle.length) {
       const grano = contaOggetti(bot, "minecraft:wheat");
       if (grano >= 3) fabbrica(bot, "minecraft:bread", Math.floor(grano / 3));
-      mem.ultimaFattoria = Date.now();
+      // campo senza niente da raccogliere né da piantare: la prossima visita slitta di 10 minuti (10/11 17:00: 6 visite
+      // inutili di fila, "raccolti 0, piantati 0", mezza giornata di gioco persa)
+      mem.ultimaFattoria = Date.now() + (!s.raccolti && !s.piantati ? 600000 : 0);
       return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${grano >= 3 ? `, fatto il pane` : ""}`);
     }
     const p = s.celle[s.i];
