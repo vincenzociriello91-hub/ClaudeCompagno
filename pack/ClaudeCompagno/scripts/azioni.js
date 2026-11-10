@@ -119,22 +119,29 @@ export function riassuntoInventario(bot) {
   return Object.entries(tot).map(([k, v]) => `${k} x${v}`).join(", ") || "vuoto";
 }
 
-export function istantaneaInventario(bot) {
+// conIndossati: anche armatura e scudo, col nome del posto come quarto elemento. Senza, a ogni reload o riavvio il bot
+// rinasceva nudo (10/11: armatura di rame rifatta 3 volte, equipaggiamento 11/30 -> 7/30 dopo un reload senza morti).
+const INDOSSATI = ["Head", "Chest", "Legs", "Feet", "Offhand"];
+export function istantaneaInventario(bot, conIndossati = false) {
   const c = inv(bot);
   const out = [];
+  const voce = (it, posto) => out.push([it.typeId, it.amount, it.getComponent("minecraft:durability")?.damage ?? 0, ...(posto ? [posto] : [])]);
   for (let i = 0; i < c.size; i++) {
     const it = c.getItem(i);
-    if (it) out.push([it.typeId, it.amount, it.getComponent("minecraft:durability")?.damage ?? 0]);
+    if (it) voce(it);
   }
+  const eq = conIndossati ? bot.getComponent("minecraft:equippable") : null;
+  for (const posto of eq ? INDOSSATI : []) { const it = eq.getEquipment(posto); if (it) voce(it, posto); }
   return out;
 }
 
 export function ripristinaInventario(bot, lista) {
-  for (const [id, n, danno] of lista) {
+  for (const [id, n, danno, posto] of lista) {
     try {
       const st = new ItemStack(id, n);
       const dur = st.getComponent("minecraft:durability");
       if (dur && danno) dur.damage = Math.min(danno, dur.maxDurability - 1);
+      if (posto && bot.getComponent("minecraft:equippable")?.setEquipment(posto, st)) continue;
       inv(bot).addItem(st);
     } catch (e) { errore(`ripristino ${id}`, e); }
   }

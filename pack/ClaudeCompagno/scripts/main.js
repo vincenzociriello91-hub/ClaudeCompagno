@@ -681,7 +681,7 @@ ogniTick(600, () => {
   if (vivo()) {
     const l = bot.location;
     mem.pos = { x: l.x, y: l.y, z: l.z, dim: bot.dimension.id };
-    mem.inventario = istantaneaInventario(bot);
+    mem.inventario = istantaneaInventario(bot, true);
   }
   if (pronto) salva();
 });
