@@ -16,11 +16,11 @@ const bot = { isValid: true, location: { x: 5.5, y: 64, z: 5.5 }, selectedSlotIn
 system.currentTick = 10; mem.coda = []; mem.modalita = "autonomo"; mem.esperienza = {}; mem.luoghi = {};
 assegna({ tipo: "tana", routine: "notte_sicura" }, "piano");
 eseguiCompito(bot);
-assert.equal(tipo({ x: 5, y: 63, z: 5 }), "minecraft:air", "non ha scavato");
-assert.equal(tipo({ x: 5, y: 62, z: 5 }), "minecraft:air", "non ha scavato abbastanza");
-assert.equal(bot.location.y, 62, "non è sceso nella tana");
-assert.equal(tipo({ x: 5, y: 64, z: 5 }), "minecraft:dirt", "tana non chiusa sopra la testa");
-assert.equal(mem.rifugio?.y, 62, "rifugio non registrato");
+assert.equal(tipo({ x: 5, y: 61, z: 5 }), "minecraft:air", "non ha scavato");
+assert.equal(tipo({ x: 5, y: 60, z: 5 }), "minecraft:air", "non ha scavato abbastanza");
+assert.equal(bot.location.y, 60, "non è sceso nella tana"); // dalla 2.8.66 profonda 4, tetto di 2 blocchi a filo del terreno
+assert.equal(tipo({ x: 5, y: 62, z: 5 }), "minecraft:dirt", "tana non chiusa sopra la testa");
+assert.equal(mem.rifugio?.y, 60, "rifugio non registrato");
 // sopra una grotta: niente tana lì (dalla 2.8.23 prova un posto vicino senza grotta)
 blocchi.clear(); blocchi.set("9,61,9", "minecraft:air"); bot.location = { x: 9.5, y: 64, z: 9.5 }; mem.compito = null;
 assegna({ tipo: "tana", routine: "notte_sicura" }, "piano"); eseguiCompito(bot);
@@ -28,6 +28,6 @@ assert.ok(!(Math.floor(bot.location.x) === 9 && Math.floor(bot.location.z) === 9
 // sopra un blocco basso (piedi a 63.94): la tana si chiude lo stesso
 blocchi.clear(); bot.location = { x: 20.5, y: 63.94, z: 20.5 }; mem.compito = null; slot[0] = { typeId: "minecraft:dirt", amount: 3 };
 assegna({ tipo: "tana", routine: "notte_sicura" }, "piano"); eseguiCompito(bot);
-assert.equal(bot.location.y, 62, "sentiero: non è sceso");
-assert.equal(tipo({ x: 20, y: 64, z: 20 }), "minecraft:dirt", "sentiero: tana non chiusa");
+assert.equal(bot.location.y, 60, "sentiero: non è sceso");
+assert.equal(tipo({ x: 20, y: 62, z: 20 }), "minecraft:dirt", "sentiero: tana non chiusa");
 console.log("test v2.8.13/14 ok");

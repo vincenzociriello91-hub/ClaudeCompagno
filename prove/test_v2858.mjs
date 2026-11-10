@@ -15,10 +15,10 @@ const bot = { isValid: true, location: { x: 40.5, y: 64, z: 40.5 }, selectedSlot
   getComponent: (c) => c === "minecraft:inventory" ? { container } : { getEquipment: () => undefined, setEquipment: () => true },
   stopMoving() {}, lookAtBlock() {}, attack() {}, teleport(p) { this.location = p; } };
 system.currentTick = 10; mem.coda = []; mem.modalita = "autonomo"; mem.esperienza = {}; mem.luoghi = {}; mem.compito = null;
-blocchi.set("41,63,40", "minecraft:air"); blocchi.set("41,62,40", "minecraft:air"); // grotta a est della buca
+blocchi.set("41,61,40", "minecraft:air"); blocchi.set("41,60,40", "minecraft:air"); // grotta a est della buca (dalla 2.8.66 il bot sta a y 60-61)
 assegna({ tipo: "tana", routine: "notte_sicura" }, "piano");
 for (let i = 0; i < 6 && mem.compito; i++) { system.currentTick += 5; eseguiCompito(bot); }
-assert.equal(bot.location.y, 62, "tana non scavata");
-assert.equal(tipo({ x: 41, y: 63, z: 40 }), "minecraft:dirt", "parete alta rimasta aperta");
-assert.equal(tipo({ x: 41, y: 62, z: 40 }), "minecraft:dirt", "parete bassa rimasta aperta");
+assert.equal(bot.location.y, 60, "tana non scavata");
+assert.equal(tipo({ x: 41, y: 61, z: 40 }), "minecraft:dirt", "parete alta rimasta aperta");
+assert.equal(tipo({ x: 41, y: 60, z: 40 }), "minecraft:dirt", "parete bassa rimasta aperta");
 console.log("test v2.8.58 ok");

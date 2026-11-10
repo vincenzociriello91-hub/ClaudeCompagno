@@ -1450,7 +1450,9 @@ const ESECUTORI = {
     finito(true, `fornace fissa a ${p.x},${p.y},${p.z}`);
   },
 
-  // tana: scende di 2 blocchi dove si trova e chiude sopra la testa con un blocco (anche quello appena scavato)
+  // tana: scende di 4 blocchi dove si trova e richiude con 2 blocchi pieni sopra la testa.
+  // 2.8.66: profonda solo 2 la testa restava a 0,2 blocchi dal suolo, e in Bedrock gli zombie colpiscono attraverso i blocchi
+  // (10/11 10:10: ucciso da uno zombie dentro la tana chiusa, dopo 8 minuti fermo). Senza piccone su roccia resta a 2-3.
   tana(bot, c) {
     const s = c.stato;
     const dim = bot.dimension;
@@ -1469,7 +1471,7 @@ const ESECUTORI = {
       if (!testa || testa.isLiquid) return false;
       // anche ai lati della buca: l'acqua accanto entra appena si scava (annegato nella tana a 107,61,422 il 09/11)
       const bagnato = (q) => { const k = dim.getBlock(q); return !!k && (k.isLiquid || /water|lava/.test(k.typeId)); };
-      return [0, -1, -2].every((dy) => !bagnato({ x: b.x, y: b.y + dy, z: b.z })
+      return [0, -1, -2, -3, -4].every((dy) => !bagnato({ x: b.x, y: b.y + dy, z: b.z })
         && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([ax, az]) => !bagnato({ x: b.x + ax, y: b.y + dy, z: b.z + az })));
     };
     if (!s.base) {
@@ -1484,42 +1486,48 @@ const ESECUTORI = {
       if (!s.base) return (mem.tanaKo = Date.now()), finito(false, "acqua o grotte tutto intorno: niente tana qui");
     }
     const b = s.base;
-    for (const dy of [-1, -2]) {
+    let fondo = 4;
+    for (const dy of [-1, -2, -3, -4]) {
       const blk = dim.getBlock({ x: b.x, y: b.y + dy, z: b.z });
-      // blocco che non si scava (protetto, troppo duro): si prova il posto successivo invece di arrendersi
-      if (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok") {
-        s.scartati.push(s.posto); s.base = null;
-        if (s.scartati.length >= posti.length) return (mem.tanaKo = Date.now()), finito(false, "terreno troppo duro per la tana");
-        return;
-      }
+      // grotta sotto o blocco che non si scava (roccia senza piccone, protetto): oltre i 2 blocchi ci si ferma lì,
+      // prima si prova il posto successivo invece di arrendersi
+      const giu = dim.getBlock({ x: b.x, y: b.y + dy - 1, z: b.z });
+      const ko = (dy < -2 && (!giu || giu.isAir || giu.isLiquid)) || (blk && !blk.isAir && scava(bot, { x: b.x, y: b.y + dy, z: b.z }) !== "ok");
+      if (!ko) continue;
+      if (dy < -2) { fondo = -dy - 1; break; }
+      s.scartati.push(s.posto); s.base = null;
+      if (s.scartati.length >= posti.length) return (mem.tanaKo = Date.now()), finito(false, "terreno troppo duro per la tana");
+      return;
     }
-    bot.teleport({ x: b.x + 0.5, y: b.y - 2, z: b.z + 0.5 });
+    bot.teleport({ x: b.x + 0.5, y: b.y - fondo, z: b.z + 0.5 });
     // pareti della buca aperte su una grotta (zona piena di cavità): mostri e frecce entravano di lato
     // (09-10/11: 3 morti dentro la tana). Si tappano con lo stesso materiale del tetto.
-    for (const dy of [-1, -2]) for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const dy of [1 - fondo, -fondo]) for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const q = { x: b.x + ax, y: b.y + dy, z: b.z + az };
       const k = dim.getBlock(q);
       if (!k || !(k.isAir || SOSTITUIBILI.test(k.typeId))) continue;
       const tappo = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
       if (!tappo || piazza(bot, q, tappo) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "tana aperta su una grotta: non riesco a chiuderla");
     }
-    const testa = dim.getBlock(b);
-    // già chiusa da un blocco pieno (succedeva con "occupato"): va bene così; se è altro (fiori, neve, foglie) lo tolgo
-    const chiusa = testa && !testa.isAir && !testa.isLiquid && testa.isSolid;
-    if (!chiusa) {
+    // tetto: le 2 celle sopra la testa (a filo del terreno con la tana profonda 4; con 2 solo quella al livello dei piedi di prima)
+    for (const dy of [2 - fondo, 3 - fondo].filter((d) => d <= 0)) {
+      const q = { x: b.x, y: b.y + dy, z: b.z };
+      const testa = dim.getBlock(q);
+      // già chiusa da un blocco pieno (succedeva con "occupato"): va bene così; se è altro (fiori, neve, foglie) lo tolgo
+      if (testa && !testa.isAir && !testa.isLiquid && testa.isSolid) continue;
       const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
       if (!alt) return (mem.tanaKo = Date.now()), finito(false, "niente blocchi per chiudere la tana");
-      let esito = piazza(bot, b, alt);
-      if (esito === "occupato" && scava(bot, b) === "ok") esito = piazza(bot, b, alt);
+      let esito = piazza(bot, q, alt);
+      if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt);
       if (esito !== "ok" && esito !== "gia") return (mem.tanaKo = Date.now()), finito(false, `non riesco a chiudere la tana (${esito})`);
     }
-    mem.rifugio = { x: b.x, y: b.y - 2, z: b.z, ok: true };
+    mem.rifugio = { x: b.x, y: b.y - fondo, z: b.z, ok: true };
     nav.meta = null;
     // di notte i lavori rimasti in coda (legna, deposito) lo facevano uscire subito dalla tana: 4 morti in 15 minuti il 09/11.
     // Si cancellano: all'alba il piano li riassegna.
     const ora = world.getTimeOfDay?.() ?? 0;
     if (ora >= 12500 && ora < 23000) mem.coda = [];
-    finito(true, `tana scavata a ${b.x},${b.y - 2},${b.z}: resto qui fino all'alba`);
+    finito(true, `tana scavata a ${b.x},${b.y - fondo},${b.z}: resto qui fino all'alba`);
   },
 
   // bosco: pianta gli alberelli accanto a casa, così la legna è sempre a due passi (i viaggi per la legna finivano nelle grotte)
