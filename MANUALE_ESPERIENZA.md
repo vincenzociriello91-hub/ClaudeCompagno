@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.56 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.57 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -256,6 +256,7 @@ Aggiornato alla versione 2.8.56 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | 4 morti in 2 minuti di notte | il rifugio notturno rinviava a "vai a prendere legna" per le torce | in modalità protetta i prerequisiti che portano fuori si saltano, non si rinviano |
 | Bosco, casetta e deposito "nessuno spiazzo" | ricerca fatta da lontano in zone non caricate | andare sul posto prima di cercare |
 | Morto fuori dalla tana appena scavata, di notte | inseguiva mostri che non poteva raggiungere e così usciva allo scoperto | chiuso nel rifugio non si combatte: si aspetta l'alba |
+| Riflessioni che ripetono consigli già falliti ("fai la fornace" con fornace 0 su 21) | il modello che riflette non risaliva alla causa, riproponeva il compito | per la riflessione usare il modello più capace disponibile: è 1 chiamata al giorno, costa poco e guida tutto il resto |
 
 ---
 

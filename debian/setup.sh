@@ -35,7 +35,7 @@ curl -fsSL -o /usr/local/bin/playit https://github.com/playit-cloud/playit-agent
 echo "[*] Salvo le impostazioni..."
 jq -n --arg p "$GAMERTAG" --argjson b "${BUDGET:-1}" '{
   proprietario: $p, nome_bot: "Claude",
-  modello_rapido: "claude-haiku-5-5", modello_medio: "claude-sonnet-5-5", modello_complesso: "claude-opus-5-5",
+  modello_rapido: "claude-haiku-5-5", modello_medio: "claude-sonnet-5-5", modello_complesso: "claude-fable-5-2",
   budget_giornaliero_usd: $b, attivo_senza_giocatori: true }' > "$IMP/variables.json"
 umask 077
 jq -n --arg k "$APIKEY" '{ANTHROPIC_API_KEY: $k}' > "$IMP/secrets.json"

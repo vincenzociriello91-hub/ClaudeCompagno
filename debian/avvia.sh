@@ -152,6 +152,11 @@ configura() {
   imposta_prop content-log-file-enabled true
   imposta_prop content-log-console-output-enabled true
   local perm='{"allowed_modules":["@minecraft/server","@minecraft/server-ui","@minecraft/server-gametest","@minecraft/server-admin","@minecraft/server-net","@minecraft/server-editor"]}'
+  # 2.8.57: cervello complesso da Opus 5.5 a Fable 5.2 (scelta di Vincenzo del 10/11), una volta sola: chi poi lo cambia a mano non viene sovrascritto
+  if [ ! -f "$IMP/.fable52" ]; then
+    jq 'if .modello_complesso == "claude-opus-5-5" then .modello_complesso = "claude-fable-5-2" else . end' "$IMP/variables.json" > "$IMP/v.tmp" \
+      && mv "$IMP/v.tmp" "$IMP/variables.json" && touch "$IMP/.fable52" && log "Cervello complesso: Fable 5.2"
+  fi
   # shortcut: non è documentato se la cartella usa l'UUID del pacchetto o del modulo, quindi scrivo in entrambe
   for d in default "$PACK_UUID" "$MOD_UUID"; do
     mkdir -p "$SRV/config/$d"

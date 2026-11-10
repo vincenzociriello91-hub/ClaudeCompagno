@@ -12,7 +12,7 @@ function variabile(nome, def) {
 }
 
 // Tre cervelli: rapido (avvisi semplici), medio (chat quotidiana), complesso (piani, errori, progetti, memoria).
-export const CFG = { proprietario: "", nome: "Claude", modello: "claude-haiku-5-5", medio: "claude-sonnet-5-5", complesso: "claude-opus-5-5", budget: 1, senzaGiocatori: true };
+export const CFG = { proprietario: "", nome: "Claude", modello: "claude-haiku-5-5", medio: "claude-sonnet-5-5", complesso: "claude-fable-5-2", budget: 1, senzaGiocatori: true };
 
 // Da chiamare a mondo caricato: le variabili del server non sono leggibili all'avvio dello script.
 export function caricaConfig() {
@@ -33,6 +33,7 @@ const PREZZI = {
   "claude-sonnet-5-5": [2, 10, 2.5, 0.1],
   "claude-opus-5-5": [4, 20, 5, 0.2],
   "claude-fable-5-1": [10, 50, 12.5, 0.25],
+  "claude-fable-5-2": [8, 40, 10, 0.2],
 };
 
 export function budgetOk() {
@@ -455,10 +456,7 @@ function datiGiornata() {
   ].join("\n\n");
 }
 
-// Prova alternata dall'8 al 15 novembre 2026: Opus nei giorni pari, Fable nei dispari. Il giorno dopo si confrontano
-// maturità e successo dei compiti (diario + andamenti) per decidere con i dati quale modello tenere. Poi Opus.
-const PROVA_FINE = "2026-11-15";
-export const modelloRiflessione = (giorno) => (giorno <= PROVA_FINE && Number(giorno.slice(8, 10)) % 2 === 1 ? "claude-fable-5-1" : CFG.complesso);
+// 10/11/2026: la prova alternata Opus/Fable 5.1 è chiusa in anticipo: Vincenzo ha scelto Fable 5.2 per il cervello complesso.
 
 export async function riflessione() {
   const oggi = adesso().slice(0, 10);
@@ -506,15 +504,15 @@ export async function riflessione() {
       requests: [{
         custom_id: "riflessione",
         params: {
-          model: modelloRiflessione(oggi), max_tokens: 8000,
+          model: CFG.complesso, max_tokens: 8000,
           system: `Sei l'allenatore di ${CFG.nome}, un bot che gioca a Minecraft Bedrock in sopravvivenza con il suo proprietario ${CFG.proprietario}. Ogni giorno rileggi come è andata e lo rendi più bravo: riscrivi le sue lezioni (le regole che legge prima di ogni decisione) e scegli le priorità del suo pilota automatico gratis. La sua missione, in ordine: sopravvivere, trovare una soluzione, adattarsi, evolversi, costruire, esplorare, e sempre non fermarsi; giudica la giornata su questi sette punti. Basati solo sui dati, niente lezioni inventate.`,
           tools: [RIFLESSIONE], tool_choice: { type: "auto" },
           messages: [{ role: "user", content: `${datiGiornata()}\n\nRispondi chiamando lo strumento "riflessione".` }],
         },
       }],
     }));
-    mem.riflessione = { giorno: oggi, stato: "inviata", id: b.id, nota: "", t: Date.now(), modello: modelloRiflessione(oggi) };
-    evento(`Riflessione giornaliera inviata a ${modelloRiflessione(oggi).replace("claude-", "")} (batch ${b.id})`);
+    mem.riflessione = { giorno: oggi, stato: "inviata", id: b.id, nota: "", t: Date.now(), modello: CFG.complesso };
+    evento(`Riflessione giornaliera inviata a ${CFG.complesso.replace("claude-", "")} (batch ${b.id})`);
   } catch (e) {
     errore("riflessione", e);
     if (r?.stato === "inviata" && Date.now() - (r.t ?? Date.now()) > 26 * 3600000) r.stato = "errore";
