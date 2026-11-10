@@ -1730,6 +1730,9 @@ export function fabbrica(bot, oggetto, quantita = 1, livello = 0) {
   if (r.banco && !assicuraBlocco(bot, "minecraft:crafting_table")) {
     // un banco nuovo solo se non ne ha già uno in tasca (stanotte ne aveva 12: ne craftava uno a ogni tentativo fallito)
     const giaInTasca = contaOggetti(bot, "minecraft:crafting_table") > 0;
+    // legna che non basta per banco + oggetto: non si fa nemmeno il banco, si aspettano altri tronchi (10/11: per una cassa
+    // 3 banchi piazzati in 8 minuti in 3 posti diversi, 12 assi buttate e alla fine "servono assi per le casse")
+    if (!giaInTasca && contaOggetti(bot, "#assi") + 4 * contaOggetti(bot, "#tronco") < 4 + (r.ing["#assi"] ?? 0)) return [false, "serve un banco da lavoro"];
     if (giaInTasca || livello > 1 || !fabbrica(bot, "minecraft:crafting_table", 1, livello + 1)[0] || !assicuraBlocco(bot, "minecraft:crafting_table")) return [false, "serve un banco da lavoro"];
   }
   let fatti = 0;
