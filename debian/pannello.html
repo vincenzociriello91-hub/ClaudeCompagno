@@ -4,63 +4,140 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Claude Compagno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;700&display=swap">
 <style>
-  :root { --sfondo:#f6f5f2; --carta:#fff; --testo:#1d1d1b; --tenue:#6b6a66; --linea:#e3e1dc; --acc:#c45a2c;
-          --ok:#2f7d4f; --ko:#b3261e; --pensiero:#5a4fcf; --api:#8a6d00; --chat:#1f6fb2; }
-  @media (prefers-color-scheme: dark) { :root { --sfondo:#161615; --carta:#21201e; --testo:#ecebe7; --tenue:#a19f99;
-          --linea:#34332f; --acc:#e07a4b; --ok:#5cb37f; --ko:#ef6b62; --pensiero:#9d93ff; --api:#d9b440; --chat:#6fb0ea; } }
+  /* Pietra, erba e diamante: i colori del mondo del bot. Chiaro di giorno, ardesia di notte (segue il telefono). */
+  :root { --sfondo:#e9ede8; --carta:#fbfcfa; --incavo:#dfe5de; --testo:#1c2420; --tenue:#5d6b63; --linea:#cfd8d0;
+          --acc:#3f8a35; --acc2:#1f8f8c; --ok:#3f8a35; --ko:#c0392b; --pensiero:#6352c9; --api:#a87412; --chat:#1f74b8;
+          --cuore:#d63a3a; --fame:#b06a2c; --pixel:"Pixelify Sans",ui-monospace,monospace; --r:10px; }
+  @media (prefers-color-scheme: dark) { :root { --sfondo:#161c19; --carta:#1f2723; --incavo:#28322d; --testo:#e4ebe6; --tenue:#93a39a;
+          --linea:#33403a; --acc:#7cc46a; --acc2:#5cd3cf; --ok:#7cc46a; --ko:#ff7a6b; --pensiero:#a99cff; --api:#e0b448; --chat:#72b6ef;
+          --cuore:#ff5d5d; --fame:#e0995a; } }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--sfondo); color:var(--testo); }
-  header { position:sticky; top:0; z-index:2; background:var(--carta); border-bottom:1px solid var(--linea); padding:10px 16px 0; }
-  h1 { margin:0; font-size:17px; display:flex; gap:8px; align-items:center; }
-  .punto { width:10px; height:10px; border-radius:50%; background:var(--tenue); display:inline-block; }
-  .vivo { background:var(--ok); } .morto { background:var(--ko); }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font:16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--sfondo); color:var(--testo); }
+  :focus-visible { outline:2px solid var(--acc2); outline-offset:2px; border-radius:6px; }
+  header { position:sticky; top:0; z-index:3; background:color-mix(in srgb, var(--sfondo) 88%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--linea); padding:10px 16px 0; }
+  .testa { max-width:760px; margin:0 auto; }
+  h1 { margin:0; font:700 20px/1.2 var(--pixel); display:flex; gap:10px; align-items:center; letter-spacing:.2px; }
+  h1 small { font:400 13px "Atkinson Hyperlegible",system-ui,sans-serif; color:var(--tenue); }
+  .punto { width:10px; height:10px; border-radius:2px; background:var(--tenue); display:inline-block; flex:none; }
+  .vivo { background:var(--ok); box-shadow:0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); } .morto { background:var(--ko); }
   .sotto { color:var(--tenue); font-size:13px; margin:2px 0 8px; }
-  nav { display:flex; gap:4px; overflow-x:auto; }
-  nav button { border:0; background:none; color:var(--tenue); font:inherit; padding:8px 10px; border-bottom:2px solid transparent; white-space:nowrap; }
-  nav button.on { color:var(--testo); border-color:var(--acc); font-weight:600; }
-  main { padding:12px 16px 40px; max-width:960px; margin:0 auto; }
+  nav { display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; scrollbar-width:none; } nav::-webkit-scrollbar { display:none; }
+  nav button { border:1px solid var(--linea); background:var(--carta); color:var(--tenue); font:inherit; font-size:14px; padding:6px 12px; border-radius:999px; white-space:nowrap; cursor:pointer; }
+  nav button.on { background:var(--testo); border-color:var(--testo); color:var(--sfondo); font-weight:700; }
+  main { padding:16px 16px 48px; max-width:760px; margin:0 auto; }
   section { display:none; } section.on { display:block; }
-  .griglia { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-bottom:12px; }
-  .box { background:var(--carta); border:1px solid var(--linea); border-radius:10px; padding:10px 12px; }
-  .box b { display:block; font-size:12px; color:var(--tenue); font-weight:500; }
-  .box span { font-size:17px; font-weight:600; font-variant-numeric:tabular-nums; }
+  h2 { font-size:15px; font-weight:700; margin:22px 0 8px; }
+  .griglia { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; margin-bottom:8px; }
+  .box { background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); padding:12px 14px; }
+  .griglia .box { padding:10px 12px; }
+  .box > b { display:block; font-size:13px; color:var(--tenue); font-weight:400; }
+  .box > span { font-size:18px; font-weight:700; font-variant-numeric:tabular-nums; }
+  #maturita span { font-size:14.5px; }
   .filtri { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
-  .filtri button { border:1px solid var(--linea); background:var(--carta); color:var(--testo); border-radius:16px; padding:4px 10px; font:inherit; font-size:13px; }
-  .filtri button.on { border-color:var(--acc); color:var(--acc); }
-  .ev { display:grid; grid-template-columns:62px 1fr; gap:8px; padding:6px 0; border-bottom:1px solid var(--linea); font-size:14px; }
-  .ev time { color:var(--tenue); font-variant-numeric:tabular-nums; font-size:12px; padding-top:2px; }
+  .filtri button { border:1px solid var(--linea); background:var(--carta); color:var(--testo); border-radius:999px; padding:5px 12px; font:inherit; font-size:13px; cursor:pointer; }
+  .filtri button.on { border-color:var(--acc); background:color-mix(in srgb, var(--acc) 14%, var(--carta)); color:var(--testo); font-weight:700; }
+  .cerca { width:100%; font:inherit; font-size:15px; padding:9px 12px; border-radius:var(--r); border:1px solid var(--linea); background:var(--carta); color:var(--testo); margin-bottom:10px; }
+  #eventi, #chiamate, #ultimi { background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); padding:0 14px; }
+  .ev { display:grid; grid-template-columns:64px 1fr; gap:10px; padding:8px 0 8px 10px; border-bottom:1px solid var(--linea); font-size:14.5px; position:relative; }
+  .ev:last-child { border-bottom:0; }
+  .ev::before { content:""; position:absolute; left:0; top:12px; width:4px; height:12px; border-radius:1px; background:var(--linea); }
+  .ev time { color:var(--tenue); font-variant-numeric:tabular-nums; font-size:12.5px; padding-top:2px; }
+  .ev.azione::before { background:var(--acc2); } .ev.pensiero::before { background:var(--pensiero); } .ev.api::before { background:var(--api); }
+  .ev.chat::before { background:var(--chat); } .ev.errore::before, .ev.pericolo::before, .ev.notifica::before { background:var(--ko); } .ev.lezione::before { background:var(--ok); }
   .ev.pensiero div { color:var(--pensiero); font-style:italic; } .ev.api div { color:var(--api); }
   .ev.chat div { color:var(--chat); } .ev.errore div, .ev.pericolo div { color:var(--ko); } .ev.lezione div { color:var(--ok); }
-  .ev.notifica div { font-weight:600; }
-  ul { margin:0; padding-left:18px; } li { margin:3px 0; }
-  .lista { columns:2 160px; font-size:14px; }
-  canvas { width:100%; height:auto; background:var(--carta); border:1px solid var(--linea); border-radius:10px; touch-action:none; }
-  .leg { display:flex; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--tenue); margin:6px 0; }
-  .leg i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
-  pre { white-space:pre-wrap; word-break:break-word; font:12px/1.4 ui-monospace,Menlo,monospace; background:var(--carta); border:1px solid var(--linea); border-radius:10px; padding:10px; max-height:70vh; overflow:auto; }
-  a { color:var(--acc); }
-  h2 { font-size:15px; margin:16px 0 6px; }
+  .ev.notifica div { font-weight:700; }
+  ul, ol { margin:0; padding-left:20px; } li { margin:4px 0; }
+  .lista { columns:2 170px; font-size:14.5px; }
+  #inv { list-style:none; padding:0; columns:auto; display:flex; flex-wrap:wrap; gap:6px; }
+  #inv li { margin:0; background:var(--incavo); border-radius:6px; padding:3px 8px; font-size:13.5px; }
+  canvas { width:100%; height:auto; background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); touch-action:none; }
+  .leg { display:flex; flex-wrap:wrap; gap:12px; font-size:12.5px; color:var(--tenue); margin:8px 0; }
+  .leg i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  pre { white-space:pre-wrap; word-break:break-word; font:12.5px/1.45 ui-monospace,Menlo,monospace; background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); padding:12px; max-height:70vh; overflow:auto; }
+  a { color:var(--acc2); }
   .vuoto { color:var(--tenue); font-style:italic; }
   .salute { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
-  .salute .voto { font-size:34px; font-weight:700; font-variant-numeric:tabular-nums; }
-  .salute .frase { font-size:16px; font-weight:600; }
-  .salute ul { color:var(--tenue); font-size:13px; }
-  .grafico { width:100%; height:90px; display:block; }
-  .leggenda { font-size:12px; color:var(--tenue); }
+  .salute .voto { font:700 44px/1 var(--pixel); font-variant-numeric:tabular-nums; }
+  .salute .frase { font-size:17px; font-weight:700; }
+  .salute ul { color:var(--tenue); font-size:13.5px; }
+  .grafico { width:100%; height:100px; display:block; }
+  .leggenda { font-size:12.5px; color:var(--tenue); }
+  #elenco a { text-decoration:none; } #elenco li { padding:2px 0; }
+
+  /* Panoramica: il cielo segue l'ora del mondo, sopra vita, fame e armatura come nel gioco */
+  .cielo { position:relative; overflow:hidden; border-radius:16px; padding:18px 18px 16px; color:#fff; min-height:210px;
+           background:linear-gradient(180deg, var(--c1), var(--c2)); transition:background 2s; isolation:isolate; }
+  .cielo[data-fase="alba"] { --c1:#f0a36b; --c2:#f6d7a7; color:#2a1d12; }
+  .cielo[data-fase="giorno"] { --c1:#4f9bd9; --c2:#a8d6f2; color:#0f2236; }
+  .cielo[data-fase="tramonto"] { --c1:#7d4a8f; --c2:#ef8a5a; }
+  .cielo[data-fase="notte"] { --c1:#0e1630; --c2:#26335c; }
+  .cielo[data-fase="assente"] { --c1:#4a524e; --c2:#6c7570; }
+  .cielo .stelle { position:absolute; inset:0; z-index:-1; opacity:0; transition:opacity 2s;
+           background-image:radial-gradient(1.5px 1.5px at 12% 22%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 30% 12%,#fff 50%,transparent 51%),
+           radial-gradient(1.5px 1.5px at 52% 30%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 70% 16%,#fff 50%,transparent 51%),
+           radial-gradient(1.5px 1.5px at 86% 34%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 92% 10%,#fff 50%,transparent 51%),
+           radial-gradient(1px 1px at 42% 8%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 20% 40%,#fff 50%,transparent 51%); }
+  .cielo[data-fase="notte"] .stelle { opacity:.9; }
+  .astro { position:absolute; z-index:-1; width:30px; height:30px; border-radius:4px; transform:translate(-50%,-50%); transition:left 2s, top 2s; }
+  .astro.sole { background:#ffe36e; box-shadow:0 0 0 6px rgba(255,227,110,.25); }
+  .astro.luna { background:#e9eef7; box-shadow:inset -8px 0 0 #c6cfdd; }
+  .terreno { position:absolute; left:0; right:0; bottom:0; height:14px; z-index:-1;
+             background:linear-gradient(180deg,#5aa143 0 5px,#7a5634 5px 100%); image-rendering:pixelated; }
+  .cielo .orario { font-size:13px; opacity:.85; }
+  .cielo .titolo { font:700 26px/1.15 var(--pixel); margin:6px 0 4px; max-width:62%; }
+  .cielo .cosa { font-size:15px; opacity:.92; max-width:52ch; margin-bottom:14px; }
+  .hud { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; margin-bottom:18px; }
+  .fila { display:flex; gap:2px; filter:drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+  .fila svg { width:18px; height:18px; shape-rendering:crispEdges; display:block; }
+  .slot { display:flex; gap:4px; }
+  .slot i { width:26px; height:26px; border-radius:4px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); display:grid; place-items:center; font:700 11px var(--pixel); font-style:normal; }
+  .cielo[data-fase="giorno"] .slot i, .cielo[data-fase="alba"] .slot i { background:rgba(255,255,255,.45); border-color:rgba(0,0,0,.15); }
+  .slot i.pieno { background:rgba(255,255,255,.85); color:#1c2420; }
+  .tessere { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+  @media (max-width:520px) { .tessere { grid-template-columns:1fr 1fr; } .tessere .t3 { grid-column:1 / -1; } }
+  .tessera { background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); padding:12px; display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .tessera b { font-size:13px; color:var(--tenue); font-weight:400; }
+  .tessera .grande { font:700 30px/1 var(--pixel); font-variant-numeric:tabular-nums; }
+  .tessera small { color:var(--tenue); font-size:12.5px; }
+  .barra { height:6px; background:var(--incavo); border-radius:2px; overflow:hidden; } .barra > div { height:100%; background:var(--acc); }
+  .vai { background:none; border:0; color:var(--acc2); font:inherit; font-size:14px; padding:10px 0 0; cursor:pointer; }
+  @media (prefers-reduced-motion: reduce) { .cielo, .astro, .stelle { transition:none; } }
 </style>
 </head>
 <body>
-<header>
+<header><div class="testa">
   <h1><i class="punto" id="punto"></i> Claude Compagno <small id="ver" style="font-weight:400;color:var(--tenue)"></small></h1>
   <div class="sotto" id="riga">In attesa del server…</div>
   <nav id="nav">
-    <button data-s="diretta" class="on">Diretta</button><button data-s="stato">Stato</button><button data-s="mappa">Mappa</button>
+    <button data-s="panoramica" class="on">Panoramica</button><button data-s="diretta">Diretta</button><button data-s="stato">Stato</button><button data-s="mappa">Mappa</button>
     <button data-s="memoria">Memoria</button><button data-s="costi">Costi</button><button data-s="odin">Odin</button><button data-s="novita">Novità</button><button data-s="rapporti">Rapporti</button>
   </nav>
-</header>
+</div></header>
 <main>
-  <section id="diretta" class="on">
+  <section id="panoramica" class="on">
+    <div class="cielo" id="cielo" data-fase="assente">
+      <div class="stelle"></div><i class="astro sole" id="astro"></i><div class="terreno"></div>
+      <div class="orario" id="orario">In attesa del server</div>
+      <div class="titolo" id="titolo">Claude non è ancora nel mondo</div>
+      <div class="cosa" id="cosa">Quando il server è acceso qui vedi cosa sta facendo, in diretta.</div>
+      <div class="hud"><div class="fila" id="cuori" aria-label="Vita"></div><div class="fila" id="cosce" aria-label="Fame"></div><div class="slot" id="slot" aria-label="Armatura"></div></div>
+    </div>
+    <div class="tessere">
+      <div class="tessera"><b>Maturità</b><span class="grande" id="tMat">—</span><div class="barra"><div id="tMatB" style="width:0"></div></div><small id="tMatS">su 100</small></div>
+      <div class="tessera"><b>Salute della Odin</b><span class="grande" id="tOdin">—</span><small id="tOdinS">in attesa</small></div>
+      <div class="tessera t3"><b>Oggi</b><span class="grande" id="tSpesa">—</span><small id="tSpesaS">spesa per l'IA</small></div>
+    </div>
+    <h2>Ultime cose fatte</h2>
+    <div id="ultimi"><p class="vuoto">Ancora niente.</p></div>
+    <button class="vai" data-vai="diretta">Apri la diretta completa</button>
+  </section>
+  <section id="diretta">
+    <input class="cerca" id="cerca" type="search" placeholder="Cerca nella diretta (es. morto, tana, ferro)" aria-label="Cerca nella diretta">
     <div class="filtri" id="filtri"></div>
     <div id="eventi"></div>
   </section>
@@ -75,7 +152,7 @@
   </section>
   <section id="mappa">
     <canvas id="tela" width="900" height="900"></canvas>
-    <div class="leg"><span><i style="background:#c45a2c"></i>Claude</span><span><i style="background:#1f6fb2"></i>giocatori</span>
+    <div class="leg"><span><i style="background:#1f8f8c"></i>Claude</span><span><i style="background:#1f6fb2"></i>giocatori</span>
       <span><i style="background:#2f7d4f"></i>luoghi</span><span><i style="background:#8a6d00"></i>risorse</span>
       <span><i style="background:#b3261e"></i>zone pericolose</span><span><i style="background:#888"></i>percorso</span>
       <span><i style="background:#e03131"></i>mostri</span><span><i style="background:#2f9e44"></i>animali</span></div>
@@ -129,23 +206,79 @@ let dati = null, filtro = "tutto", percorso = [], zoom = 6, centro = null;
 try { filtro = localStorage.getItem("filtro") || "tutto"; } catch {}
 
 // schede
-$("nav").onclick = (e) => {
-  const s = e.target.dataset.s; if (!s) return;
+function apri(s) {
   document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.s === s));
   document.querySelectorAll("section").forEach((x) => x.classList.toggle("on", x.id === s));
   if (s === "rapporti") caricaRapporti();
   if (s === "mappa") disegna();
   if (s === "odin") aggiornaOdin();
   if (s === "novita") caricaNovita();
-};
+  scrollTo(0, 0);
+}
+$("nav").onclick = (e) => { if (e.target.dataset.s) apri(e.target.dataset.s); };
+document.querySelectorAll("[data-vai]").forEach((b) => (b.onclick = () => apri(b.dataset.vai)));
+let cerca = "";
+$("cerca").oninput = (e) => { cerca = e.target.value.trim().toLowerCase(); mostraEventi(); };
 const FILTRI = { tutto: "Tutto", azione: "Azioni", pensiero: "Pensieri", lezione: "Lezioni", pericolo: "Pericoli", chat: "Chat", api: "IA e costi", errore: "Errori" };
 $("filtri").innerHTML = Object.entries(FILTRI).map(([k, v]) => `<button data-f="${k}">${v}</button>`).join("");
 $("filtri").onclick = (e) => { if (!e.target.dataset.f) return; filtro = e.target.dataset.f; try { localStorage.setItem("filtro", filtro); } catch {} mostraEventi(); };
 
 function mostraEventi() {
   document.querySelectorAll("#filtri button").forEach((b) => b.classList.toggle("on", b.dataset.f === filtro));
-  const ev = (dati?.eventi ?? []).filter((e) => filtro === "tutto" || e.tipo === filtro || (filtro === "pericolo" && e.tipo === "notifica")).slice(-300).reverse();
+  const ev = (dati?.eventi ?? []).filter((e) => filtro === "tutto" || e.tipo === filtro || (filtro === "pericolo" && e.tipo === "notifica"))
+    .filter((e) => !cerca || bello(e.testo).toLowerCase().includes(cerca)).slice(-300).reverse();
   $("eventi").innerHTML = ev.length ? ev.map((e) => `<div class="ev ${e.tipo}"><time>${esc(ora(e.t))}</time><div>${esc(bello(e.testo))}</div></div>`).join("") : '<p class="vuoto">Ancora niente.</p>';
+}
+
+// Panoramica: cielo all'ora del mondo, cuori, cosce e armatura in pixel (disegni originali, non quelli del gioco)
+const PIX = {
+  cuore: ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"],
+  coscia: ["0000011", "0000111", "0001110", "0111100", "1111100", "1111000", "0110000"],
+};
+function icona(forma, colore, meta) {
+  const r = PIX[forma], w = r[0].length, h = r.length;
+  let q = "";
+  r.forEach((riga, y) => [...riga].forEach((c, x) => { if (c === "1") q += `<rect x="${x}" y="${y}" width="1" height="1" fill="${meta === 0 || (meta === 1 && x > (w - 1) / 2) ? "rgba(0,0,0,.28)" : colore}"/>`; }));
+  return `<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${q}</svg>`;
+}
+function fila(valore, forma, colore) {
+  let out = "";
+  for (let i = 0; i < 10; i++) { const resto = valore - i * 2; out += icona(forma, colore, resto >= 2 ? 2 : resto === 1 ? 1 : 0); }
+  return out;
+}
+function mostraPanoramica() {
+  const s = dati?.stato, cielo = $("cielo");
+  if (!s || !s.presente) {
+    cielo.dataset.fase = "assente"; $("cuori").innerHTML = $("cosce").innerHTML = $("slot").innerHTML = "";
+    $("orario").textContent = s ? "Server acceso" : "In attesa del server";
+    $("titolo").textContent = s ? "Claude non è nel mondo" : "Nessun dato dal bot";
+    $("cosa").textContent = s ? "Sta rinascendo o il mondo si sta caricando." : "Controlla che la Odin sia accesa e il server avviato.";
+  } else {
+    // ora del gioco: 0 = alba (6:00), 6000 = mezzogiorno, 12000 = tramonto, 18000 = mezzanotte
+    const t = ((s.ora ?? 0) % 24000 + 24000) % 24000, h = (t / 1000 + 6) % 24;
+    const fase = t >= 23000 || t < 1000 ? "alba" : t < 11500 ? "giorno" : t < 13500 ? "tramonto" : "notte";
+    cielo.dataset.fase = fase;
+    const giorno = t < 12000 || t >= 23500, p = giorno ? ((t + 500) % 24000) / 12500 : (t - 12000) / 12000;
+    const astro = $("astro"); astro.className = "astro " + (giorno ? "sole" : "luna");
+    // l'arco sta nella parte destra del cielo, lontano dal testo
+    const q = Math.min(1, Math.max(0, p)); astro.style.left = `${66 + q * 28}%`; astro.style.top = `${44 - Math.sin(q * Math.PI) * 30}%`;
+    $("orario").textContent = `Nel gioco sono le ${String(Math.floor(h)).padStart(2, "0")}:${String(Math.floor((h % 1) * 60)).padStart(2, "0")} · ${fase}`;
+    const vita = s.vita ?? 0, fame = s.fame ?? 0, nemico = s.bersaglio;
+    $("titolo").textContent = vita <= 6 ? "Claude è in pericolo" : nemico ? `Claude combatte: ${nemico}` : /tana|riparo/.test(s.compito ?? "") ? "Claude è al riparo" : !s.compito || s.compito === "nessuno" ? "Claude sta decidendo cosa fare" : "Claude sta lavorando";
+    $("cosa").textContent = `${s.compito || "nessun compito"} · posizione ${s.x}, ${s.y}, ${s.z}${(s.giocatori ?? []).length ? ` · online: ${s.giocatori.map((g) => g.n).join(", ")}` : ""}`;
+    $("cuori").innerHTML = fila(vita, "cuore", "var(--cuore)"); $("cuori").title = `Vita ${vita}/20`;
+    $("cosce").innerHTML = fila(fame, "coscia", "var(--fame)"); $("cosce").title = `Fame ${fame}/20${fame < 18 ? ": sotto 18 la vita non risale" : ""}`;
+    const arm = s.armatura ?? [], pezzi = [["helmet", "E"], ["chestplate", "C"], ["leggings", "G"], ["boots", "S"]];
+    $("slot").innerHTML = pezzi.map(([k, l]) => { const a = arm.find((x) => x.endsWith(k)); return `<i class="${a ? "pieno" : ""}" title="${esc(a ?? "manca: " + k)}">${l}</i>`; }).join("");
+  }
+  const mt = s?.maturita;
+  $("tMat").textContent = mt ? mt.totale : "—"; $("tMatB").style.width = (mt ? mt.totale : 0) + "%";
+  $("tMatS").textContent = mt ? `sopravvivenza ${mt.sopravvivenza}/25 · attrezzi ${mt.equipaggiamento}/30` : "su 100";
+  const morti = (dati?.eventi ?? []).filter((e) => /^Sono morto/.test(e.testo)).length;
+  $("tSpesa").textContent = `$${(s?.spesa ?? 0).toFixed(2)}`;
+  $("tSpesaS").textContent = `spesa per l'IA · ${morti ? morti + (morti === 1 ? " morte" : " morti") : "nessuna morte"} nel registro recente`;
+  const ult = (dati?.eventi ?? []).filter((e) => e.tipo !== "api").slice(-5).reverse();
+  $("ultimi").innerHTML = ult.length ? ult.map((e) => `<div class="ev ${e.tipo}"><time>${esc(ora(e.t))}</time><div>${esc(bello(e.testo))}</div></div>`).join("") : '<p class="vuoto">Ancora niente.</p>';
 }
 
 function casella(n, v) { return `<div class="box"><b>${n}</b><span>${esc(v)}</span></div>`; }
@@ -232,8 +365,8 @@ function disegna() {
   for (const g of s.giocatori ?? []) punto(g.x, g.z, 8, "#1f6fb2", g.n);
   for (const e of v?.mob ?? []) punto(e.x + 0.5, e.z + 0.5, Math.max(4, zoom * 0.35), e.o ? "#e03131" : "#2f9e44", zoom >= 12 ? e.t : "");
   if (s.presente) {
-    punto(s.x, s.z, 10, "#c45a2c", "Claude");
-    if (v) { const a = v.dir / 57.3; ctx.strokeStyle = "#c45a2c"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(px(s.x), pz(s.z)); ctx.lineTo(px(s.x) + Math.sin(a) * 30, pz(s.z) + Math.cos(a) * 30); ctx.stroke(); }
+    punto(s.x, s.z, 10, "#1f8f8c", "Claude");
+    if (v) { const a = v.dir / 57.3; ctx.strokeStyle = "#1f8f8c"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(px(s.x), pz(s.z)); ctx.lineTo(px(s.x) + Math.sin(a) * 30, pz(s.z) + Math.cos(a) * 30); ctx.stroke(); }
   }
   $("vivotesto").textContent = dalVivo && s.presente ? `Claude: vita ${s.vita}/20 · ${s.compito} · ${(v?.mob ?? []).filter((e) => e.o).length} mostri vicini` : "";
 }
@@ -277,9 +410,9 @@ $("elenco").onclick = async (e) => {
 async function aggiorna() {
   try {
     dati = await (await fetch("/api/stato")).json();
-    mostraStato(); mostraEventi(); mostraMemoria(); mostraCosti();
+    mostraStato(); mostraPanoramica(); mostraEventi(); mostraMemoria(); mostraCosti();
     if ($("mappa").classList.contains("on")) disegna();
-  } catch { $("riga").textContent = "Pannello non raggiungibile: la Odin è accesa e sulla stessa Wi-Fi?"; $("punto").className = "punto morto"; }
+  } catch { $("riga").textContent = "Pannello non raggiungibile: la Odin è accesa e sulla stessa Wi-Fi?"; $("punto").className = "punto morto"; dati = null; mostraPanoramica(); }
 }
 // stato della Odin ogni 10 secondi (batteria, temperature, memoria): leggerlo più spesso consumerebbe di più
 async function aggiornaOdin() {
@@ -289,6 +422,8 @@ async function aggiornaOdin() {
     const carica = { Charging: "in carica", Discharging: "a batteria", Full: "carica completa", "Not charging": "collegata, non carica" }[o.carica] ?? v(o.carica, "");
     const s = o.salute ?? { voto: null, frase: "", motivi: [] };
     const colore = s.voto >= 85 ? "var(--ok)" : s.voto >= 65 ? "var(--api)" : "var(--ko)";
+    $("tOdin").textContent = s.voto ?? "—"; $("tOdin").style.color = s.voto == null ? "" : colore;
+    $("tOdinS").textContent = [o.batteria != null ? `batteria ${o.batteria}%` : "", o.temp_cpu != null ? `CPU ${o.temp_cpu} °C` : ""].filter(Boolean).join(" · ") || s.frase || "in attesa";
     $("salute").innerHTML = `<b>Salute della Odin (0-100)</b><span class="voto" style="color:${colore}">${esc(v(s.voto, ""))}</span>`
       + `<span class="frase" style="color:${colore}">${esc(s.frase)}</span>`
       + (s.motivi.length ? `<ul>${s.motivi.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>` : `<span class="leggenda">Niente da segnalare.</span>`)
