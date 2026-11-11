@@ -723,9 +723,11 @@ export function esciDalRiparo(bot) {
   // Il 10/11 15:59 è uscito all'alba tra i mostri: 7 secondi dopo aveva 6/20 di vita, 24 secondi dopo era morto.
   // 2.8.81: con vita 10 o meno aspetta per tutto il giorno (11/11 08:43: uscito con vita 7 tra strega e zombie, poi vita 1)
   const fragile = (bot.getComponent?.("minecraft:health")?.currentValue ?? 20) <= 10;
+  // 2.8.97: raggio 12 -> 20. L'11/11 20:27 è uscito all'alba con strega e 3 scheletri appena oltre i 12 blocchi (gli scheletri
+  // tirano da 16): da vita 13 a 10 in 13 secondi, poi il veleno della strega lo ha portato a vita 1 dentro la tana.
   let uscita = null, creeper = null;
   if (r.ok && dist(bot.location, r) <= 4) {
-    const fuori = (bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 12, families: ["monster"] }) ?? [])
+    const fuori = (bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 20, families: ["monster"] }) ?? [])
       .filter((e) => !NEUTRALI.test(e.typeId));
     if (fuori.length && (fragile || (world.getTimeOfDay?.() ?? 6000) < 4000)) return "aspetta";
     // 2.8.87: un creeper di giorno non brucia e resta accanto alla tana. L'11/11 09:40-10:22: esce, "creeper a pochi passi",
