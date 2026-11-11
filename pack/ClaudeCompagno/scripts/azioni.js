@@ -1526,10 +1526,10 @@ const ESECUTORI = {
       if (grano >= 3) fabbrica(bot, "minecraft:bread", Math.floor(grano / 3));
       // campo senza niente da raccogliere né da piantare: la prossima visita slitta di 10 minuti (10/11 17:00: 6 visite
       // inutili di fila, "raccolti 0, piantati 0", mezza giornata di gioco persa)
-      mem.ultimaFattoria = Date.now() + (!s.raccolti && !s.piantati ? 600000 : 0);
+      mem.ultimaFattoria = Date.now() + (!s.raccolti && !s.piantati && !s.riparate ? 600000 : 0);
       // con una visita a vuoto si scrive cosa c'era nelle celle (acerbi senza farina, irraggiungibili, terreno non coltivabile)
-      const perche = !s.raccolti && !s.piantati ? ` (acerbi ${s.acerbi ?? 0}, irraggiungibili ${s.bloccate ?? 0}, semi ${semi.reduce((n, [it]) => n + contaOggetti(bot, it), 0)}, ossa ${contaOggetti(bot, "minecraft:bone")}; celle: ${Object.entries(s.altro ?? {}).map(([k, v]) => `${k} x${v}`).join(", ") || "-"})` : "";
-      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${s.concimati ? `, concimati ${s.concimati}` : ""}${grano >= 3 ? `, fatto il pane` : ""}${perche}`);
+      const perche = !s.raccolti && !s.piantati && !s.riparate ? ` (acerbi ${s.acerbi ?? 0}, irraggiungibili ${s.bloccate ?? 0}, semi ${semi.reduce((n, [it]) => n + contaOggetti(bot, it), 0)}, ossa ${contaOggetti(bot, "minecraft:bone")}; celle: ${Object.entries(s.altro ?? {}).map(([k, v]) => `${k} x${v}`).join(", ") || "-"})` : "";
+      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${s.riparate ? `, celle sistemate ${s.riparate}` : ""}${s.concimati ? `, concimati ${s.concimati}` : ""}${grano >= 3 ? `, fatto il pane` : ""}${perche}`);
     }
     const p = s.celle[s.i];
     const su = { x: p.x, y: p.y + 1, z: p.z };
@@ -1542,7 +1542,6 @@ const ESECUTORI = {
       s.bloccate = (s.bloccate ?? 0) + 1; s.i++; return;
     }
     if (r !== true) return;
-    const terra = bot.dimension.getBlock(p);
     let sopra = bot.dimension.getBlock(su);
     if (sopra && /^minecraft:(wheat|carrots|potatoes)$/.test(sopra.typeId)) {
       let cresciuto = 0;
@@ -1559,7 +1558,19 @@ const ESECUTORI = {
       if (scava(bot, su) === "ok") s.raccolti++;
       sopra = bot.dimension.getBlock(su);
     }
-    if (terra && /^minecraft:(grass_block|dirt|grass_path|coarse_dirt)$/.test(terra.typeId) && sopra?.isAir && !protetto(bot, terra)) terra.setType("minecraft:farmland");
+    // 2.8.94: campo rovinato da tane e nicchie scavate dentro (11/11 18:13: "cobblestone/leaf_litter x3, dirt/dirt x4,
+    // crafting_table/air, diorite/air"...): si sgombra la cella e sotto si rimette terra. Dentro il campo anche i blocchi che
+    // il bot stesso aveva protetto (tetti delle tane), altrimenti il campo non si ripara più.
+    if (sopra && !sopra.isAir && !sopra.isLiquid && !/^minecraft:(wheat|carrots|potatoes)$/.test(sopra.typeId)) {
+      if (scava(bot, su, true) === "ok") { s.riparate = (s.riparate ?? 0) + 1; sopra = bot.dimension.getBlock(su); }
+    }
+    let terraOra = bot.dimension.getBlock(p);
+    if (terraOra && !terraOra.isAir && !terraOra.isLiquid && !/^minecraft:(grass_block|dirt|grass_path|coarse_dirt|farmland|water)$/.test(terraOra.typeId)
+      && contaOggetti(bot, "minecraft:dirt") > 0 && scava(bot, p, true) === "ok") {
+      try { bot.dimension.getBlock(p).setType("minecraft:dirt"); togli(bot, "minecraft:dirt", 1); s.riparate = (s.riparate ?? 0) + 1; } catch {}
+      terraOra = bot.dimension.getBlock(p);
+    }
+    if (terraOra && /^minecraft:(grass_block|dirt|grass_path|coarse_dirt)$/.test(terraOra.typeId) && sopra?.isAir) terraOra.setType("minecraft:farmland");
     const seme = semi.find(([it]) => contaOggetti(bot, it) > 0);
     // 2.8.89: cosa c'era in ogni cella, per capire le visite "raccolti 0, piantati 0" (11/11: nessun dato per capirlo)
     const sotto = bot.dimension.getBlock(p)?.typeId?.replace("minecraft:", "") ?? "?", sopraOra = bot.dimension.getBlock(su);
@@ -1668,7 +1679,10 @@ const ESECUTORI = {
     // (10/11: 3 tane fallite, 7 rifugi costruiti in acqua, morto per uno scheletro): si cerca anche a 6, 10 e 14 blocchi
     const posti = [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [3, 3], [-3, 3], [3, -3], [-3, -3],
       ...[6, 10, 14].flatMap((d) => [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, d], [d, -d], [-d, -d]])];
+    const fa = mem.luoghi?.fattoria;
     const adatto = (b) => {
+      // 2.8.94: mai dentro o a ridosso del campo (le tane dell'11/11 lo avevano riempito di terra e ciottoli)
+      if (fa && b.x >= fa.x - 1 && b.x <= fa.x + 5 && b.z >= fa.z - 1 && b.z <= fa.z + 5) return false;
       const sotto3 = dim.getBlock({ x: b.x, y: b.y - 3, z: b.z });
       if (!sotto3 || sotto3.isAir || sotto3.isLiquid) return false;
       const testa = dim.getBlock(b);
