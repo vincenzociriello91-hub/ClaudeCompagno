@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.81 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.82 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -285,6 +285,7 @@ Aggiornato alla versione 2.8.81 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | 28 minuti a "scappare" da un creeper con vita piena: nessun lavoro, notte passata all'aperto sul tetto della propria tana | la fuga non controllava se funzionava (il bot non si allontanava e il creeper restava vicino); finché il bot era "in lotta" nessun compito veniva eseguito, nemmeno la tana; e "vicino al riparo" contava come "al riparo" | una manovra di emergenza deve avere una durata massima e una verifica del risultato; lo stato "al sicuro" si misura (è dentro?), non si deduce (è vicino?) |
 | Ucciso da un creeper mentre "scappava" con vita 17/20 | la fuga parte quando il creeper è già a pochi passi e su terreno accidentato il bot non si allontana abbastanza in fretta | quando il pericolo è più veloce della fuga, la difesa giusta è quella che si completa subito sul posto (chiudersi sotto terra), non quella che richiede tempo |
 | Vita scesa da 20 a 1 in una mattina senza morire, poi uscito dalla tana con vita 7 tra i mostri | mangiava solo a fame 14 o vita sotto 14, ma sotto 18 di fame la vita non si rigenera: ogni colpo restava; e l'uscita dal riparo controllava i mostri solo all'alba | una risorsa che si consuma va reintegrata alla soglia che la fa ricaricare, non a quella d'allarme; con le riserve basse si aspetta che il pericolo passi |
+| Caccia riuscita 2 volte su 100 e 0 pasti per ore | per proteggere la riproduzione saltava ogni animale isolato o in coppia, cioè quasi tutti quelli vicini a casa | una regola di prudenza che vale con le scorte piene va sospesa quando manca il necessario: sopravvivere viene prima di conservare |
 
 ---
 

@@ -1408,12 +1408,15 @@ const ESECUTORI = {
     if (s.fatti >= (c.quantita ?? 2)) return finito(true, `cacciati ${s.fatti} ${tipo.replace("minecraft:", "")}`);
     // per il cibo va bene qualsiasi animale: la mappa ne ricorda di tutti i tipi, le mucche spesso non ci sono più
     const tipi = c.routine === "cibo" ? [...new Set([tipo, "minecraft:cow", "minecraft:pig", "minecraft:sheep", "minecraft:chicken"])] : [tipo];
+    const affamato = (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18 || (bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 14
+      || contaOggetti(bot, (id) => id in CIBO) < 2;
     if (!preda?.isValid) {
       // mai animali con nome o addomesticati
       preda = tipi.flatMap((t) => bot.dimension.getEntities({ type: t, location: bot.location, maxDistance: 40 }))
         .filter((e) => !e.nameTag && !e.getComponent("minecraft:is_tamed"))
-        // lascia sempre almeno una coppia per la riproduzione
-        .filter((e) => bot.dimension.getEntities({ type: e.typeId, location: e.location, maxDistance: 16 }).length > 2)
+        // lascia sempre almeno una coppia per la riproduzione, ma non quando ha fame o poca vita: 11/11 mattina 0 pasti e vita
+        // da 20 a 1, la caccia riusciva il 2% delle volte perché gli animali isolati o in coppia venivano sempre saltati
+        .filter((e) => affamato || bot.dimension.getEntities({ type: e.typeId, location: e.location, maxDistance: 16 }).length > 2)
         .sort((a, b) => dist(a.location, bot.location) - dist(b.location, bot.location))[0];
       if (!preda) {
         // nessuno qui: va dove ne aveva visti (mappa delle risorse), poi riprova
