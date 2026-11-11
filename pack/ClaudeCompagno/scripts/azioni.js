@@ -1525,7 +1525,13 @@ const ESECUTORI = {
     const p = s.celle[s.i];
     const su = { x: p.x, y: p.y + 1, z: p.z };
     const r = vaiVerso(bot, centro(su), 4);
-    if (r === "bloccato") { s.bloccate = (s.bloccate ?? 0) + 1; s.i++; return; }
+    if (r === "bloccato") {
+      // 2.8.91: da lontano la strada per la fattoria (in palude) si blocca: l'11/11 13:10 "irraggiungibili 24" su 24 celle,
+      // 7 minuti persi. Una volta per visita ci si porta accanto al campo, come per la fornace (2.8.77)
+      const q = !s.portato && dist(bot.location, centro(su)) > 6 ? accanto(bot.dimension, { x: f.x + 2, y: f.y, z: f.z + 2 }) : null;
+      if (q) { s.portato = true; bot.teleport(centro(q)); nav.meta = null; nav.bloccato = 0; evento("Non arrivavo alla fattoria: mi ci porto accanto"); return; }
+      s.bloccate = (s.bloccate ?? 0) + 1; s.i++; return;
+    }
     if (r !== true) return;
     const terra = bot.dimension.getBlock(p);
     let sopra = bot.dimension.getBlock(su);
