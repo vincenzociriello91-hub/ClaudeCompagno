@@ -1496,7 +1496,7 @@ const ESECUTORI = {
       // campo senza niente da raccogliere né da piantare: la prossima visita slitta di 10 minuti (10/11 17:00: 6 visite
       // inutili di fila, "raccolti 0, piantati 0", mezza giornata di gioco persa)
       mem.ultimaFattoria = Date.now() + (!s.raccolti && !s.piantati ? 600000 : 0);
-      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${grano >= 3 ? `, fatto il pane` : ""}`);
+      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${s.concimati ? `, concimati ${s.concimati}` : ""}${grano >= 3 ? `, fatto il pane` : ""}`);
     }
     const p = s.celle[s.i];
     const su = { x: p.x, y: p.y + 1, z: p.z };
@@ -1508,7 +1508,15 @@ const ESECUTORI = {
     if (sopra && /^minecraft:(wheat|carrots|potatoes)$/.test(sopra.typeId)) {
       let cresciuto = 0;
       try { cresciuto = sopra.permutation.getState("growth") ?? 0; } catch {}
-      if (cresciuto < 7) { s.i++; return; }
+      if (cresciuto < 7) {
+        // 2.8.86: farina d'ossa (dalle ossa degli scheletri, che teneva in tasca senza usarle) fa crescere subito il raccolto:
+        // l'11/11 la fattoria dava "raccolti 0" quasi a ogni visita perché il grano non era ancora maturo
+        if (!contaOggetti(bot, "minecraft:bone_meal") && contaOggetti(bot, "minecraft:bone")) { try { fabbrica(bot, "minecraft:bone_meal", 1); } catch {} }
+        if (!contaOggetti(bot, "minecraft:bone_meal")) { s.i++; return; }
+        try { sopra.setPermutation(sopra.permutation.withState("growth", Math.min(7, cresciuto + 2 + Math.floor(Math.random() * 4)))); } catch { s.i++; return; }
+        togli(bot, "minecraft:bone_meal", 1); s.concimati = (s.concimati ?? 0) + 1;
+        return; // stesso posto al giro dopo: se è maturo lo raccoglie, se no altra farina
+      }
       if (scava(bot, su) === "ok") s.raccolti++;
       sopra = bot.dimension.getBlock(su);
     }
