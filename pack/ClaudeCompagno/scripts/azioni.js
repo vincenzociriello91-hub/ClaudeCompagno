@@ -510,7 +510,7 @@ function scegliBersaglio(bot) {
 // e per un creeper mentre andava a legna; di notte in tana 3 su 3 senza un graffio).
 // 2.8.75: la corazza di rame non basta (10/11 15:56-16:04: 4 morti in 8 minuti con corazza e gambali di rame addosso):
 // come per la notte, solo ferro o meglio fa uscire dallo stato "debole"
-const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComponent("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && !giocatoriVeri().length;
+const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComponent?.("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && !giocatoriVeri().length;
 // dentro il riparo chiuso: stessa cella e stessa quota (a 16 blocchi, o sul tetto, non è "al riparo")
 export const nelRiparo = (bot) => { const r = mem.rifugio; return !!r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5; };
 // creeper da cui la fuga non è servita: per 5 minuti lo si riguarda solo se arriva a 4 blocchi
@@ -734,6 +734,9 @@ export function esciDalRiparo(bot) {
     // di nuovo in tana, e così per mezz'ora (14 blocchi percorsi). Si aspetta 3 minuti che se ne vada; poi si esce
     // dalla parte opposta, a 12 blocchi (un cunicolo sotto terra)
     creeper = fuori.find((e) => e.typeId === "minecraft:creeper");
+    // 2.8.98: senza corazza di ferro anche scheletri e streghe (all'ombra della palude non bruciano) si aspettano e poi si
+    // evitano con il cunicolo. L'11/11 21:05, a metà mattina con vita 20: uscito sopra la tana, 2 scheletri e una strega, vita 9.
+    if (!creeper && debole(bot)) creeper = fuori.find((e) => /skeleton|stray|bogged|witch|spider/.test(e.typeId));
     if (creeper) {
       r.attesa ??= Date.now();
       if (Date.now() - r.attesa < 180000) return "aspetta";
@@ -755,7 +758,7 @@ export function esciDalRiparo(bot) {
   const g = uscita ?? suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
   if (!g || g.liquido) return false;
   bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0;
-  evento(uscita ? "Il creeper non se ne va: esco dalla tana con un cunicolo, 12 blocchi più in là" : "È giorno: esco dal riparo");
+  evento(uscita ? `${creeper.typeId === "minecraft:creeper" ? "Il creeper" : "Un mostro (" + creeper.typeId.replace("minecraft:", "") + ")"} non se ne va: esco dalla tana con un cunicolo, 12 blocchi più in là` : "È giorno: esco dal riparo");
   return true;
 }
 
