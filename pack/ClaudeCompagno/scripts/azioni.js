@@ -247,7 +247,9 @@ function attesaScavo(id, bot) {
 
 // suDiMe: il bot può chiudersi il tetto sopra la testa (tana). Appena teletrasportato in fondo alla buca la sua posizione
 // risulta ancora quella di prima fino al tick dopo, e il blocco al posto dei piedi veniva rifiutato ("giocatore").
-export function piazza(bot, p, id, suDiMe = false) {
+// tieni=false: tappi di servizio (tetto e pareti della tana, tappi della galleria) non si proteggono. Dal 2.8.96: erano 2400
+// blocchi protetti, quasi tutti tetti di tane, e bloccavano miniera e riparazioni ("blocchi protetti").
+export function piazza(bot, p, id, suDiMe = false, tieni = true) {
   id = ns(id);
   const b = bot.dimension.getBlock(p);
   if (!b) return "scarico";
@@ -260,7 +262,7 @@ export function piazza(bot, p, id, suDiMe = false) {
   try { b.setType(id); } catch (e) { errore(`piazza ${id}`, e); return "invalido"; }
   togli(bot, id, 1);
   bot.lookAtBlock(p);
-  proteggi(bot.dimension, p);
+  if (tieni) proteggi(bot.dimension, p);
   conta(sessione.piazzati, id);
   return "ok";
 }
@@ -1729,7 +1731,7 @@ const ESECUTORI = {
       const k = dim.getBlock(q);
       if (!k || !(k.isAir || SOSTITUIBILI.test(k.typeId))) continue;
       const tappo = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
-      if (!tappo || piazza(bot, q, tappo) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "tana aperta su una grotta: non riesco a chiuderla");
+      if (!tappo || piazza(bot, q, tappo, false, false) !== "ok") return (mem.tanaKo = Date.now()), finito(false, "tana aperta su una grotta: non riesco a chiuderla");
     }
     // tetto: le 2 celle sopra la testa (a filo del terreno con la tana profonda 4; con 2 solo quella al livello dei piedi di prima)
     for (const dy of [2 - fondo, 3 - fondo].filter((d) => d <= 0)) {
@@ -1739,8 +1741,8 @@ const ESECUTORI = {
       if (testa && !testa.isAir && !testa.isLiquid && testa.isSolid) continue;
       const alt = RIEMPITIVI.find((a) => contaOggetti(bot, a) > 0);
       if (!alt) return (mem.tanaKo = Date.now()), finito(false, "niente blocchi per chiudere la tana");
-      let esito = piazza(bot, q, alt, true);
-      if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt, true);
+      let esito = piazza(bot, q, alt, true, false);
+      if (esito === "occupato" && scava(bot, q) === "ok") esito = piazza(bot, q, alt, true, false);
       if (esito !== "ok" && esito !== "gia") return (mem.tanaKo = Date.now()), finito(false, `non riesco a chiudere la tana (${esito})`);
     }
     mem.rifugio = { x: b.x, y: b.y - fondo, z: b.z, ok: true, ...(c.emergenza ? { fino: Date.now() + 90000 } : {}) };
@@ -2071,7 +2073,7 @@ function scavoGuidato(bot, c, forma) {
     const b = bot.dimension.getBlock(somma(cel, v));
     if (b && /lava|water/.test(b.typeId) && !celle.some((x) => x.x === b.location.x && x.y === b.location.y && x.z === b.location.z)) {
       const blocco = tappo();
-      if (blocco && piazza(bot, somma(cel, v), blocco) === "ok") continue;
+      if (blocco && piazza(bot, somma(cel, v), blocco, false, false) === "ok") continue;
       return finito(false, `${b.typeId.includes("lava") ? "lava" : "acqua"} a ${b.location.x},${b.location.y},${b.location.z}: mi fermo per sicurezza`);
     }
   }
@@ -2080,7 +2082,7 @@ function scavoGuidato(bot, c, forma) {
   const bs = bot.dimension.getBlock(sotto);
   if (bs && (bs.isAir || bs.isLiquid) && !celle.some((x) => x.x === sotto.x && x.y === sotto.y && x.z === sotto.z)) {
     const blocco = tappo();
-    if (!blocco || piazza(bot, sotto, blocco) !== "ok") return finito(false, `sotto il passo ${s.i} c'è una grotta e non ho blocchi per fare il pavimento`);
+    if (!blocco || piazza(bot, sotto, blocco, false, false) !== "ok") return finito(false, `sotto il passo ${s.i} c'è una grotta e non ho blocchi per fare il pavimento`);
   }
   const r = vaiVerso(bot, centro(somma(base, { x: -d.x, y: forma === "scala" ? 1 : 0, z: -d.z })), 4.5);
   // percorso bloccato dentro la scala (succedeva al passo 18): salta nella sezione appena scavata invece di fallire
