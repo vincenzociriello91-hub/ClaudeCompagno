@@ -367,7 +367,9 @@ export function gestisciFame(bot, inLotta) {
     sessione.mangiato++;
     return false;
   }
-  const bisogno = inLotta ? vita <= 8 && fame < 20 : fame <= 14 || (vita < 14 && fame < 20);
+  // 2.8.81: sotto 18 di fame la vita non si rigenera: l'11/11 con fame 16-17 per ore ogni colpo è rimasto (vita da 20 a 1).
+  // Con la vita non piena mangia appena la fame scende sotto 18, non più solo a fame 14 o vita sotto 14.
+  const bisogno = inLotta ? vita <= 8 && fame < 20 : fame <= 14 || (vita < 20 && fame < 18) || (vita < 14 && fame < 20);
   if (!bisogno) return false;
   let migliore = null;
   for (const id of Object.keys(CIBO)) if (contaOggetti(bot, id) > 0 && (!migliore || CIBO[id] > CIBO[migliore])) migliore = id;
@@ -707,7 +709,9 @@ export function esciDalRiparo(bot) {
   if (!r || inEmergenza(bot)) return false;
   // mostri ancora intorno all'uscita (all'ombra degli alberi non bruciano): si aspetta dentro, al massimo fino a metà mattina.
   // Il 10/11 15:59 è uscito all'alba tra i mostri: 7 secondi dopo aveva 6/20 di vita, 24 secondi dopo era morto.
-  if (r.ok && dist(bot.location, r) <= 4 && (world.getTimeOfDay?.() ?? 6000) < 4000) {
+  // 2.8.81: con vita 10 o meno aspetta per tutto il giorno (11/11 08:43: uscito con vita 7 tra strega e zombie, poi vita 1)
+  const fragile = (bot.getComponent?.("minecraft:health")?.currentValue ?? 20) <= 10;
+  if (r.ok && dist(bot.location, r) <= 4 && (fragile || (world.getTimeOfDay?.() ?? 6000) < 4000)) {
     const fuori = bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 12, families: ["monster"] }) ?? [];
     if (fuori.some((e) => !NEUTRALI.test(e.typeId))) return "aspetta";
   }

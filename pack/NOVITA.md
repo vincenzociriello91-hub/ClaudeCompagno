@@ -1,12 +1,11 @@
 # Novità di Claude Compagno
 
-## 2.8.80 — attuale (11/11/2026)
-- **Creeper a pochi passi: subito sotto terra**: stamattina il bot è morto per un creeper mentre "scappava" con la vita quasi piena: su terreno accidentato non si allontanava abbastanza in fretta. Ora, senza armatura di ferro, se il creeper è entro 8 blocchi il bot non scappa: si chiude subito in una tana (la scava in meno di un secondo) e ci resta un minuto e mezzo. Più lontano continua ad allontanarsi come prima; se lì la tana non si può scavare (acqua, roccia) scappa.
+## 2.8.81 — attuale (11/11/2026)
+- **Mangia per guarire**: in Minecraft la vita risale da sola solo con la fame quasi piena (18 su 20). Il bot mangiava solo a fame 14, così stamattina con fame 16-17 ogni colpo preso è rimasto: la vita è scesa da 20 a 1 in un'ora e mezza. Ora, se la vita non è piena, mangia appena la fame scende sotto 18.
+- **Con poca vita resta al riparo**: con 10 cuori su 20 o meno non esce dalla tana finché ci sono mostri vicino all'uscita, a qualsiasi ora (stamattina è uscito con vita 7 tra una strega e uno zombie). Senza mostri esce, perché deve procurarsi da mangiare.
 
-## 2.8.79 — precedente (10/11/2026)
-- **Basta fughe infinite dal creeper**: stasera il bot è rimasto 28 minuti a "scappare" da un creeper con la vita piena, senza spostarsi davvero e senza fare altro; la notte l'ha passata all'aperto. Ora la fuga dura al massimo 10 secondi: se il creeper è ancora vicino, il bot si chiude in una tana lì dov'è e quel creeper lo riguarda solo se arriva a 4 blocchi.
-- **La tana viene sempre scavata**: mentre il bot combatteva o scappava, nessun compito andava avanti, nemmeno la tana della notte. Ora con la tana da scavare non combatte e non scappa: scava e si chiude.
-- **"Al riparo" vuol dire dentro**: se di notte il riparo è fatto ma il bot è fuori (era rimasto sul tetto della tana), rientra; se la tana è lontana o non c'è più, ne scava un'altra.
+## 2.8.80 — precedente (11/11/2026)
+- **Creeper a pochi passi: subito sotto terra**: stamattina il bot è morto per un creeper mentre "scappava" con la vita quasi piena: su terreno accidentato non si allontanava abbastanza in fretta. Ora, senza armatura di ferro, se il creeper è entro 8 blocchi il bot non scappa: si chiude subito in una tana (la scava in meno di un secondo) e ci resta un minuto e mezzo. Più lontano continua ad allontanarsi come prima; se lì la tana non si può scavare (acqua, roccia) scappa.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.

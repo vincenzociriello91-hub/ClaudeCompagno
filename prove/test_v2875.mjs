@@ -22,7 +22,8 @@ assert.equal(difendi(bot), false);
 assert.equal(mem.compito?.tipo, "tana", "sotto tiro a metà vita non si è riparato");
 assert.equal(mem.compito.emergenza, true);
 // uscita all'alba: con un mostro sopra il riparo si aspetta, senza si esce; a mattina inoltrata si esce comunque
-mem.compito = null; mem.rifugio = { x: 10, y: 60, z: 10, ok: true }; bot.location = { x: 10.5, y: 60, z: 10.5 };
+// 2.8.81: vita piena (con vita ≤ 10 aspetta tutto il giorno: test_v2881)
+mem.compito = null; vita = 20; mem.rifugio = { x: 10, y: 60, z: 10, ok: true }; bot.location = { x: 10.5, y: 60, z: 10.5 };
 dim.getBlock = (p) => ({ typeId: p.y <= 63 ? "minecraft:dirt" : "minecraft:air", isAir: p.y > 63, isLiquid: false, location: p });
 dim.heightRange = { min: -64, max: 320 }; dim.getTopmostBlock = (q) => ({ location: { x: q.x, y: 63, z: q.z } });
 world.getTimeOfDay = () => 600; mostri = [{ isValid: true, id: "z2", typeId: "minecraft:zombie", location: { x: 13.5, y: 64, z: 10.5 } }];

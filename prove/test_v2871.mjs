@@ -40,7 +40,10 @@ assert.ok(mem.rifugio?.ok && mem.rifugio.fino > Date.now(), "tana d'emergenza se
 assert.equal(inEmergenza(bot), true);
 assert.equal(esciDalRiparo(bot), false, "è uscito di giorno con i mostri ancora intorno"); assert.ok(mem.rifugio, "riparo dimenticato");
 mem.rifugio.fino = Date.now() - 1;
-assert.equal(inEmergenza(bot), false); assert.equal(esciDalRiparo(bot), true, "scaduta l'emergenza deve uscire");
+assert.equal(inEmergenza(bot), false);
+// 2.8.81: scaduta l'emergenza, con vita 9 e lo zombie ancora lì aspetta; con la vita risalita esce
+assert.equal(esciDalRiparo(bot), "aspetta", "con vita 9 e uno zombie fuori è uscito");
+vita = 15; assert.equal(esciDalRiparo(bot), true, "scaduta l'emergenza deve uscire"); vita = 9;
 // la routine cibo cuoce la carne che c'è: senza carne fallisce pulito, con il montone lo riconosce
 mem.compito = null; mostri = []; vita = 20;
 assegna({ tipo: "fondi", oggetto: "carne", quantita: 12 }, "piano"); eseguiCompito(bot);
