@@ -1517,12 +1517,14 @@ const ESECUTORI = {
       // campo senza niente da raccogliere né da piantare: la prossima visita slitta di 10 minuti (10/11 17:00: 6 visite
       // inutili di fila, "raccolti 0, piantati 0", mezza giornata di gioco persa)
       mem.ultimaFattoria = Date.now() + (!s.raccolti && !s.piantati ? 600000 : 0);
-      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${s.concimati ? `, concimati ${s.concimati}` : ""}${grano >= 3 ? `, fatto il pane` : ""}`);
+      // con una visita a vuoto si scrive cosa c'era nelle celle (acerbi senza farina, irraggiungibili, terreno non coltivabile)
+      const perche = !s.raccolti && !s.piantati ? ` (acerbi ${s.acerbi ?? 0}, irraggiungibili ${s.bloccate ?? 0}, semi ${semi.reduce((n, [it]) => n + contaOggetti(bot, it), 0)}, ossa ${contaOggetti(bot, "minecraft:bone")}; celle: ${Object.entries(s.altro ?? {}).map(([k, v]) => `${k} x${v}`).join(", ") || "-"})` : "";
+      return finito(true, `fattoria: raccolti ${s.raccolti}, piantati ${s.piantati}${s.concimati ? `, concimati ${s.concimati}` : ""}${grano >= 3 ? `, fatto il pane` : ""}${perche}`);
     }
     const p = s.celle[s.i];
     const su = { x: p.x, y: p.y + 1, z: p.z };
     const r = vaiVerso(bot, centro(su), 4);
-    if (r === "bloccato") { s.i++; return; }
+    if (r === "bloccato") { s.bloccate = (s.bloccate ?? 0) + 1; s.i++; return; }
     if (r !== true) return;
     const terra = bot.dimension.getBlock(p);
     let sopra = bot.dimension.getBlock(su);
@@ -1533,7 +1535,7 @@ const ESECUTORI = {
         // 2.8.86: farina d'ossa (dalle ossa degli scheletri, che teneva in tasca senza usarle) fa crescere subito il raccolto:
         // l'11/11 la fattoria dava "raccolti 0" quasi a ogni visita perché il grano non era ancora maturo
         if (!contaOggetti(bot, "minecraft:bone_meal") && contaOggetti(bot, "minecraft:bone")) { try { fabbrica(bot, "minecraft:bone_meal", 1); } catch {} }
-        if (!contaOggetti(bot, "minecraft:bone_meal")) { s.i++; return; }
+        if (!contaOggetti(bot, "minecraft:bone_meal")) { s.acerbi = (s.acerbi ?? 0) + 1; s.i++; return; }
         try { sopra.setPermutation(sopra.permutation.withState("growth", Math.min(7, cresciuto + 2 + Math.floor(Math.random() * 4)))); } catch { s.i++; return; }
         togli(bot, "minecraft:bone_meal", 1); s.concimati = (s.concimati ?? 0) + 1;
         return; // stesso posto al giro dopo: se è maturo lo raccoglie, se no altra farina
@@ -1543,6 +1545,9 @@ const ESECUTORI = {
     }
     if (terra && /^minecraft:(grass_block|dirt|grass_path|coarse_dirt)$/.test(terra.typeId) && sopra?.isAir && !protetto(bot, terra)) terra.setType("minecraft:farmland");
     const seme = semi.find(([it]) => contaOggetti(bot, it) > 0);
+    // 2.8.89: cosa c'era in ogni cella, per capire le visite "raccolti 0, piantati 0" (11/11: nessun dato per capirlo)
+    const sotto = bot.dimension.getBlock(p)?.typeId?.replace("minecraft:", "") ?? "?", sopraOra = bot.dimension.getBlock(su);
+    if (!(sotto === "farmland" && sopraOra?.isAir)) (s.altro ??= {})[`${sotto}/${sopraOra?.typeId?.replace("minecraft:", "") ?? "?"}`] = ((s.altro ?? {})[`${sotto}/${sopraOra?.typeId?.replace("minecraft:", "") ?? "?"}`] ?? 0) + 1;
     if (seme && bot.dimension.getBlock(p)?.typeId === "minecraft:farmland" && bot.dimension.getBlock(su)?.isAir) {
       bot.dimension.getBlock(su).setType(seme[1]);
       togli(bot, seme[0], 1);
