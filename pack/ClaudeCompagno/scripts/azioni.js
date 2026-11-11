@@ -593,12 +593,17 @@ export function difendi(bot) {
     // 10 secondi di fuga e il creeper è ancora entro 16 blocchi: la fuga non serve (lui non si muoveva, o il creeper era
     // irraggiungibile sotto terra). Il 10/11 18:35-19:03: 28 minuti di "Scappo dal creeper" a vita 20/20, nessun lavoro,
     // notte passata fuori. Debole si chiude in una tana lì dov'è; quel creeper lo riguarda solo a 4 blocchi.
-    if (tick() - lotta.progresso > 200) {
+    // 2.8.80: debole con il creeper entro 8 blocchi non c'è tempo di scappare (11/11 06:26: "Scappo dal creeper: vita 17/20"
+    // e pochi secondi dopo è esploso; la tana si scava in un attimo e sotto 2 blocchi pieni l'esplosione non arriva).
+    // Se la tana qui è appena fallita (acqua, roccia) resta la fuga.
+    const stanco = tick() - lotta.progresso > 200;
+    const tana = fragile && (stanco || dist(e, l) < 8) && Date.now() - (mem.emergenzaT ?? 0) > 20000 && Date.now() - (mem.tanaKo ?? 0) > 60000;
+    if (stanco || tana) {
       creeperFermi.set(b.id, tick() + 6000);
       lotta.bersaglio = null;
-      if (fragile && Date.now() - (mem.emergenzaT ?? 0) > 20000) {
+      if (tana) {
         mem.emergenzaT = Date.now();
-        evento("Il creeper resta vicino e scappare non serve: mi chiudo in una tana");
+        evento(stanco ? "Il creeper resta vicino e scappare non serve: mi chiudo in una tana" : "Creeper a pochi passi: mi chiudo subito in una tana");
         mem.coda = [];
         assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "autonomia");
       }

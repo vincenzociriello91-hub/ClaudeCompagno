@@ -27,8 +27,8 @@ assert.equal(giro(), true, "con la corazza combatte");
 const cambia = (nuovi) => { for (const m of mostri) m.isValid = false; mostri = nuovi; system.currentTick += 1000; };
 cambia([mostro("z3", "zombie", 16.5)]); corazza = undefined;
 assert.equal(giro(), false, "senza corazza è andato a cercare uno zombie lontano");
-// creeper a 7 blocchi, vita piena, senza corazza: si allontana (non gli va addosso)
-cambia([mostro("c1", "creeper", 17.5)]); mosso = null;
+// creeper a 12 blocchi, vita piena, senza corazza: si allontana (non gli va addosso). 2.8.80: entro 8 blocchi invece tana subito
+cambia([mostro("c1", "creeper", 22.5)]); mosso = null;
 assert.equal(giro(), true); assert.ok(mosso && mosso.x < 10.5, "non si è allontanato dal creeper: " + JSON.stringify(mosso));
 // zombie addosso con metà vita: tana d'emergenza invece di combattere
 cambia([mostro("z4", "zombie", 12.5)]); vita = 9; mem.compito = { tipo: "raccogli", stato: {} }; mem.coda = [{ tipo: "crafta" }];
