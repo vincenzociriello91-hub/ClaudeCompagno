@@ -377,6 +377,10 @@ export function gestisciFame(bot, inLotta) {
   for (const id of Object.keys(CIBO)) if (contaOggetti(bot, id) > 0 && (!migliore || CIBO[id] > CIBO[migliore])) migliore = id;
   // emergenza: pollo crudo (30% di nausea) meglio che morire di fame (fame 3 con 2 polli in tasca, 0 pasti)
   if (!migliore && (fame <= 6 || vita <= 8) && contaOggetti(bot, "minecraft:chicken") > 0) migliore = "minecraft:chicken";
+  // 2.8.99: grano in tasca e niente da mangiare: fa il pane subito (11/11 22:17: wheat x6 in tasca e niente cibo; il pane
+  // si faceva solo alla fine di una visita alla fattoria, che quella volta era fallita in acqua)
+  const grano = contaOggetti(bot, "minecraft:wheat");
+  if (!migliore && !inLotta && grano >= 3 && fabbrica(bot, "minecraft:bread", Math.floor(grano / 3))[0]) migliore = "minecraft:bread";
   if (!migliore) return false;
   const slot = trovaSlot(bot, migliore);
   if (slot !== 8) inv(bot).swapItems(slot, 8, inv(bot));
