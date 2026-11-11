@@ -810,7 +810,11 @@ export const routineKo = new Map();
 // 2.8.70: i fallimenti si ricordano anche dopo reload e riavvii (la Map qui sopra si svuota a ogni aggiornamento: il 10/11,
 // con 14 aggiornamenti, il pilota ha riprovato le stesse routine fallite tutto il giorno) e l'attesa raddoppia a ogni
 // fallimento di fila: 10, 20, 40, 80 minuti, al massimo 2 ore. Un successo azzera. Il riparo della notte non si mette mai in pausa.
-export const routineInPausa = (nome) => {
+// 2.8.95: senza cibo in tasca e con fame sotto 18 (la vita non risale) caccia e fattoria non restano mai in pausa. L'11/11 la
+// routine cibo era in pausa per i fallimenti di prima: la caccia della 2.8.82 non partiva, vita 7-12 per ore, 0 pasti
+export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
+export const routineInPausa = (nome, bot) => {
+  if ((nome === "cibo" || nome === "compito:fattoria") && affamato(bot)) return false;
   const k = nome === "notte_sicura" ? null : mem.routineKo?.[nome];
   return !!k && Date.now() - k.t < Math.min(120, 10 * 2 ** (k.n - 1)) * 60000;
 };

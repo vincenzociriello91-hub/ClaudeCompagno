@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.94 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.95 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -291,6 +291,7 @@ Aggiornato alla versione 2.8.94 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Mezz'ora intrappolato: esce dalla tana, vede il creeper, rientra, per 30 minuti | di giorno il creeper non brucia e resta lì; l'uscita era sempre nello stesso punto, proprio accanto al pericolo | se un pericolo resta fermo davanti all'unica uscita, aspetta un tempo limitato e poi cambia uscita invece di riprovare la stessa |
 | Un'ora e mezza tra tana, cunicolo e fattoria per lo stesso creeper | ogni volta lo evitava, e il creeper restava vicino alla fattoria dove il bot tornava sempre | evitare va bene una volta; se lo stesso ostacolo si ripresenta e hai i mezzi per toglierlo, toglilo invece di girarci intorno all'infinito |
 | Fattoria quasi vuota: il campo era pieno di ciottoli, terra e un banco da lavoro | le tane d'emergenza e le nicchie venivano scavate proprio dentro il campo, e i blocchi messi dal bot risultavano protetti anche per il bot stesso | le misure d'emergenza non devono distruggere le risorse che ti mantengono; e una protezione pensata per gli altri non deve bloccare chi deve fare manutenzione |
+| Ore senza cibo con la vita bassa, mentre la caccia era stata appena corretta | la caccia era "in pausa" per i fallimenti vecchi e la correzione non poteva mai entrare in gioco | una pausa per i fallimenti deve cedere quando il bisogno diventa urgente, altrimenti blocca proprio le correzioni |
 
 ---
 
