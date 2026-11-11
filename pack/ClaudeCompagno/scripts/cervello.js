@@ -473,7 +473,14 @@ export async function riflessione() {
       const costo = 0.5 * ((u.input_tokens ?? 0) * p[0] + (u.output_tokens ?? 0) * p[1]) / 1e6; // Batch: metà prezzo
       mem.spesa.usd += costo; mem.spesa.chiamate++; sessione.usd += costo; sessione.chiamate++;
       const d = esito.message.content?.find((x) => x.type === "tool_use")?.input;
-      if (!d) { r.stato = "errore"; r.nota = "risposta senza strumento"; return; }
+      // 11/11: $0.20 pagati e risposta con nota e priorità vuote (probabile risposta tagliata a max_tokens): si segnala e
+      // si conserva il motivo invece di "riuscita" a vuoto; le lezioni restano quelle di prima
+      const vuota = !d || (!String(d.nota ?? "").trim() && !(d.lezioni ?? []).length && !(d.priorita ?? []).length);
+      if (vuota) {
+        r.stato = "errore"; r.nota = `risposta vuota (stop: ${esito.message.stop_reason ?? "?"}, token out ${u.output_tokens ?? "?"})`;
+        evento(`Riflessione fallita ($${costo.toFixed(3)}): ${r.nota}`);
+        return;
+      }
       const lezioni = (d.lezioni ?? []).filter((l) => typeof l === "string" && l.trim()).map((l) => l.slice(0, 200));
       if (lezioni.length >= 3) {
         const nuove = new Set(lezioni.map((l) => l.toLowerCase()));
@@ -504,7 +511,7 @@ export async function riflessione() {
       requests: [{
         custom_id: "riflessione",
         params: {
-          model: CFG.complesso, max_tokens: 8000,
+          model: CFG.complesso, max_tokens: 16000, // 8000 non bastava (11/11: risposta vuota); si paga solo l'usato
           system: `Sei l'allenatore di ${CFG.nome}, un bot che gioca a Minecraft Bedrock in sopravvivenza con il suo proprietario ${CFG.proprietario}. Ogni giorno rileggi come è andata e lo rendi più bravo: riscrivi le sue lezioni (le regole che legge prima di ogni decisione) e scegli le priorità del suo pilota automatico gratis. La sua missione, in ordine: sopravvivere, trovare una soluzione, adattarsi, evolversi, costruire, esplorare, e sempre non fermarsi; giudica la giornata su questi sette punti. Basati solo sui dati, niente lezioni inventate.`,
           tools: [RIFLESSIONE], tool_choice: { type: "auto" },
           messages: [{ role: "user", content: `${datiGiornata()}\n\nRispondi chiamando lo strumento "riflessione".` }],
