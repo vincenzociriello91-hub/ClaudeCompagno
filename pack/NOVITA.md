@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.91 — attuale (11/11/2026)
-- **Arriva alla fattoria**: grazie alla diagnosi della 2.8.89 si è visto il motivo dei "raccolti 0": il bot partiva da lontano e la strada verso il campo, in mezzo alla palude, si bloccava. Non raggiungeva nessuna delle 24 celle e perdeva 7 minuti. Ora, al primo blocco, si porta accanto al campo (come già fa con la fornace) e lavora da lì.
+## 2.8.92 — attuale (11/11/2026)
+- **Affronta il creeper che lo blocca**: oggi pomeriggio lo stesso creeper è rimasto vicino alla fattoria e per un'ora e mezza il bot ha fatto sempre lo stesso giro: esce dalla tana, va alla fattoria, vede il creeper, si chiude in tana (9 volte). Ora, se lo stesso creeper lo ha già fatto rintanare 2 volte e il bot ha almeno 16 di vita e una spada di ferro, lo affronta: colpisce e fa subito un passo indietro, così il creeper rincula e non fa in tempo a esplodere. Con poca vita continua a rintanarsi.
 
-## 2.8.90 — precedente (11/11/2026)
-- **Le ossa non si buttano più**: con lo zaino quasi pieno il bot buttava le ossa tra le cose inutili, proprio quando servivano per la farina d'ossa della fattoria. Ora le tiene (fino a 16) e butta prima ghiaia, frecce in più e cuoio.
+## 2.8.91 — precedente (11/11/2026)
+- **Arriva alla fattoria**: grazie alla diagnosi della 2.8.89 si è visto il motivo dei "raccolti 0": il bot partiva da lontano e la strada verso il campo, in mezzo alla palude, si bloccava. Non raggiungeva nessuna delle 24 celle e perdeva 7 minuti. Ora, al primo blocco, si porta accanto al campo (come già fa con la fornace) e lavora da lì.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.

@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.91 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.92 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -289,6 +289,7 @@ Aggiornato alla versione 2.8.91 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Riflessione a pagamento registrata come riuscita ma vuota | si controllava solo che ci fosse una risposta, non che contenesse qualcosa; probabile risposta tagliata per limite di lunghezza | un risultato pagato va validato nel contenuto prima di dichiararlo riuscito, e il motivo di un fallimento va conservato |
 | Fattoria visitata di continuo con "raccolti 0" mentre in tasca c'erano ossa inutilizzate | il raccolto non era ancora maturo e il bot non usava la farina d'ossa, che lo fa crescere subito | prima di aspettare un processo lento, controlla se tra le risorse che hai già c'è qualcosa che lo accelera |
 | Mezz'ora intrappolato: esce dalla tana, vede il creeper, rientra, per 30 minuti | di giorno il creeper non brucia e resta lì; l'uscita era sempre nello stesso punto, proprio accanto al pericolo | se un pericolo resta fermo davanti all'unica uscita, aspetta un tempo limitato e poi cambia uscita invece di riprovare la stessa |
+| Un'ora e mezza tra tana, cunicolo e fattoria per lo stesso creeper | ogni volta lo evitava, e il creeper restava vicino alla fattoria dove il bot tornava sempre | evitare va bene una volta; se lo stesso ostacolo si ripresenta e hai i mezzi per toglierlo, toglilo invece di girarci intorno all'infinito |
 
 ---
 

@@ -513,6 +513,12 @@ const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComp
 export const nelRiparo = (bot) => { const r = mem.rifugio; return !!r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5; };
 // creeper da cui la fuga non è servita: per 5 minuti lo si riguarda solo se arriva a 4 blocchi
 const creeperFermi = new Map();
+// 2.8.92: tane scavate per lo stesso creeper. L'11/11 14:25-16:00 un creeper è rimasto vicino alla fattoria: cunicolo, fattoria,
+// "creeper a pochi passi", tana, per un'ora e mezza (9 volte). Dopo 2 tane, con vita alta e spada di ferro, lo si affronta:
+// colpo e passo indietro (colpito, il creeper rincula e la miccia riparte)
+const taneCreeper = new Map();
+const affrontaCreeper = (bot, e) => (taneCreeper.get(e.id) ?? 0) >= 2 && (bot.getComponent("minecraft:health")?.currentValue ?? 20) >= 16
+  && contaOggetti(bot, (id) => /(iron|diamond|netherite)_sword$/.test(id)) > 0;
 // chiuso nel riparo d'emergenza: fino alla scadenza non esce e non prende lavori
 export const inEmergenza = (bot) => !!mem.rifugio?.fino && Date.now() < mem.rifugio.fino && dist(bot.location, mem.rifugio) < 6; // 6: appena sceso la posizione è ancora quella di sopra
 
@@ -548,7 +554,7 @@ export function difendi(bot) {
       if (nuovo && (bot.getComponent("minecraft:health")?.currentValue ?? 20) <= 6 && dist(nuovo.location, bot.location) > 3) nuovo = null;
       // debole: solo chi è già a 4 blocchi o lo ha colpito; i creeper li "vede" da lontano per allontanarsi in tempo
       if (nuovo && debole(bot) && dist(nuovo.location, bot.location) > 4 && nuovo.typeId !== "minecraft:creeper" && !aggressori.has(nuovo.id)) nuovo = null;
-      if (nuovo && (creeperFermi.get(nuovo.id) ?? 0) > tick() && dist(nuovo.location, bot.location) > 4) nuovo = null;
+      if (nuovo && (creeperFermi.get(nuovo.id) ?? 0) > tick() && dist(nuovo.location, bot.location) > 4 && !affrontaCreeper(bot, nuovo)) nuovo = null;
       if (nuovo && nuovo !== b) evento(`Attacco ${nuovo.typeId.replace("minecraft:", "")}`);
       lotta.bersaglio = nuovo;
       if (nuovo && nuovo !== b) lotta.progresso = tick();
@@ -578,7 +584,7 @@ export function difendi(bot) {
   const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
   const fragile = debole(bot);
   // creeper da cui si scappa (metà vita o meno, oppure debole): niente corpo a corpo
-  const fuga = b.typeId === "minecraft:creeper" && (vita <= 10 || fragile);
+  const fuga = b.typeId === "minecraft:creeper" && (vita <= 10 || fragile) && !affrontaCreeper(bot, b);
   // 10 secondi senza riuscire a colpirlo: lo lascia perdere e torna al compito. Non un creeper da cui sta scappando e che è
   // ancora entro 8 blocchi: "lasciato perdere" restava ignorato per un minuto e poteva arrivargli addosso non visto;
   // più lontano lo perde di vista solo per 10 secondi
@@ -605,6 +611,7 @@ export function difendi(bot) {
       creeperFermi.set(b.id, tick() + 6000);
       lotta.bersaglio = null;
       if (tana) {
+        taneCreeper.set(b.id, (taneCreeper.get(b.id) ?? 0) + 1);
         mem.emergenzaT = Date.now();
         evento(stanco ? "Il creeper resta vicino e scappare non serve: mi chiudo in una tana" : "Creeper a pochi passi: mi chiudo subito in una tana");
         mem.coda = [];
@@ -624,6 +631,7 @@ export function difendi(bot) {
     if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Ritirata: vita ${Math.round(vita)}/20 contro ${b.typeId.replace("minecraft:", "")}`); }
     return true;
   }
+  if (b.typeId === "minecraft:creeper" && lotta.affrontato !== b.id && affrontaCreeper(bot, b)) { lotta.affrontato = b.id; evento("Questo creeper mi ha già chiuso in tana 2 volte: lo affronto con la spada (colpo e passo indietro)"); }
   colpisci(bot, b);
   // creeper: colpisci e allontanati subito, prima che esploda
   if (b.typeId === "minecraft:creeper" && dist(b.location, bot.location) < 3.5) {
