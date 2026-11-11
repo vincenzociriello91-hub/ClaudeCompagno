@@ -723,10 +723,16 @@ export function esciDalRiparo(bot) {
     if (creeper) {
       r.attesa ??= Date.now();
       if (Date.now() - r.attesa < 180000) return "aspetta";
-      const dx = r.x + 0.5 - creeper.location.x, dz = r.z + 0.5 - creeper.location.z, d = Math.max(0.1, Math.hypot(dx, dz));
-      for (const k of [12, 9, 15]) {
-        const q = suolo(bot.dimension, Math.floor(r.x + (dx / d) * k), Math.floor(r.z + (dz / d) * k));
-        if (q && !q.liquido && !inPericolo(q)) { uscita = q; break; }
+      // 2.8.88: l'uscita più lontana da TUTTI i mostri entro 28 blocchi, non solo opposta al primo creeper (11/11 10:48: uscito
+      // a 12 blocchi e subito "creeper a pochi passi", di nuovo in tana). 8 direzioni a 12 e 16 blocchi.
+      const vicini = (bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 28, families: ["monster"] }) ?? [])
+        .filter((e) => !NEUTRALI.test(e.typeId));
+      let meglio = -1;
+      for (const k of [12, 16]) for (let a = 0; a < 8; a++) {
+        const q = suolo(bot.dimension, Math.floor(r.x + Math.cos(a * Math.PI / 4) * k), Math.floor(r.z + Math.sin(a * Math.PI / 4) * k));
+        if (!q || q.liquido || inPericolo(q)) continue;
+        const lontano = Math.min(99, ...vicini.map((e) => Math.hypot(e.location.x - q.x - 0.5, e.location.z - q.z - 0.5)));
+        if (lontano > meglio) { meglio = lontano; uscita = q; }
       }
     }
   }

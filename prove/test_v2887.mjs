@@ -13,7 +13,7 @@ world.getTimeOfDay = () => 6000; mem.pericoli = []; mem.rifugio = { x: 10, y: 60
 assert.equal(esciDalRiparo(bot), "aspetta", "a vita piena è uscito con il creeper accanto alla tana");
 mem.rifugio.attesa = Date.now() - 200000;
 assert.equal(esciDalRiparo(bot), true);
-assert.ok(bot.location.x < 0, "doveva uscire dalla parte opposta al creeper, a 12 blocchi: " + JSON.stringify(bot.location));
+assert.ok(bot.location.x < 6, "doveva uscire lontano dal creeper: " + JSON.stringify(bot.location));
 // senza creeper (solo uno zombie, a mezzogiorno, vita piena) esce sopra la tana come prima
 mostri = [{ isValid: true, id: "z", typeId: "minecraft:zombie", location: { x: 13.5, y: 64, z: 10.5 } }];
 bot.location = { x: 10.5, y: 60, z: 10.5 }; mem.rifugio = { x: 10, y: 60, z: 10, ok: true };
