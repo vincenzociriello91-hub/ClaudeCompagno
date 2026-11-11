@@ -17,6 +17,8 @@
   * { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
   body { margin:0; font:16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--sfondo); color:var(--testo); }
+  .box, li, .ev div, .tessera, .cielo { overflow-wrap:anywhere; min-width:0; }
+  main { overflow-x:clip; }
   :focus-visible { outline:2px solid var(--acc2); outline-offset:2px; border-radius:6px; }
   header { position:sticky; top:0; z-index:3; background:color-mix(in srgb, var(--sfondo) 88%, transparent); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--linea); padding:10px 16px 0; }
   .testa { max-width:760px; margin:0 auto; }
@@ -306,9 +308,9 @@ function mostraStato() {
 
 function mostraMemoria() {
   const m = dati?.memoria; if (!m) return;
-  $("lezioni").innerHTML = (m.lezioni ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  $("lezioni").innerHTML = (m.lezioni ?? []).map((l) => `<li>${esc(bello(l))}</li>`).join("") || '<li class="vuoto">nessuna</li>';
   $("universali").innerHTML = (m.universali ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">si riempie con la riflessione giornaliera</li>';
-  $("auto").innerHTML = (m.lezioniAuto ?? []).map((l) => `<li>${esc(l)}</li>`).join("") || '<li class="vuoto">nessuna</li>';
+  $("auto").innerHTML = (m.lezioniAuto ?? []).map((l) => `<li>${esc(bello(l))}</li>`).join("") || '<li class="vuoto">nessuna</li>';
   const r = m.riflessione;
   $("rifl").innerHTML = (r ? `<p><b>${esc(r.giorno)}</b> — ${esc(r.stato)}${r.nota ? ": " + esc(r.nota) : ""}</p>` : '<p class="vuoto">mai fatta</p>') + `<p>Priorità del piano gratis: ${esc((m.priorita ?? []).join(" › ") || "non ancora decise")}</p>`;
   // bravo: almeno 70% su 5 o più tentativi; debole: sotto il 30% (gli ingredienti mancanti non contano)
