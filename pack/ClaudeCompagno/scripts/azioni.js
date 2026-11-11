@@ -711,16 +711,31 @@ export function esciDalRiparo(bot) {
   // Il 10/11 15:59 è uscito all'alba tra i mostri: 7 secondi dopo aveva 6/20 di vita, 24 secondi dopo era morto.
   // 2.8.81: con vita 10 o meno aspetta per tutto il giorno (11/11 08:43: uscito con vita 7 tra strega e zombie, poi vita 1)
   const fragile = (bot.getComponent?.("minecraft:health")?.currentValue ?? 20) <= 10;
-  if (r.ok && dist(bot.location, r) <= 4 && (fragile || (world.getTimeOfDay?.() ?? 6000) < 4000)) {
-    const fuori = bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 12, families: ["monster"] }) ?? [];
-    if (fuori.some((e) => !NEUTRALI.test(e.typeId))) return "aspetta";
+  let uscita = null, creeper = null;
+  if (r.ok && dist(bot.location, r) <= 4) {
+    const fuori = (bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 12, families: ["monster"] }) ?? [])
+      .filter((e) => !NEUTRALI.test(e.typeId));
+    if (fuori.length && (fragile || (world.getTimeOfDay?.() ?? 6000) < 4000)) return "aspetta";
+    // 2.8.87: un creeper di giorno non brucia e resta accanto alla tana. L'11/11 09:40-10:22: esce, "creeper a pochi passi",
+    // di nuovo in tana, e così per mezz'ora (14 blocchi percorsi). Si aspetta 3 minuti che se ne vada; poi si esce
+    // dalla parte opposta, a 12 blocchi (un cunicolo sotto terra)
+    creeper = fuori.find((e) => e.typeId === "minecraft:creeper");
+    if (creeper) {
+      r.attesa ??= Date.now();
+      if (Date.now() - r.attesa < 180000) return "aspetta";
+      const dx = r.x + 0.5 - creeper.location.x, dz = r.z + 0.5 - creeper.location.z, d = Math.max(0.1, Math.hypot(dx, dz));
+      for (const k of [12, 9, 15]) {
+        const q = suolo(bot.dimension, Math.floor(r.x + (dx / d) * k), Math.floor(r.z + (dz / d) * k));
+        if (q && !q.liquido && !inPericolo(q)) { uscita = q; break; }
+      }
+    }
   }
   mem.rifugio = null;
   if (!r.ok || dist(bot.location, r) > 4) return false;
-  const g = suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
+  const g = uscita ?? suolo(bot.dimension, Math.floor(bot.location.x), Math.floor(bot.location.z));
   if (!g || g.liquido) return false;
   bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0;
-  evento("È giorno: esco dal riparo");
+  evento(uscita ? "Il creeper non se ne va: esco dalla tana con un cunicolo, 12 blocchi più in là" : "È giorno: esco dal riparo");
   return true;
 }
 

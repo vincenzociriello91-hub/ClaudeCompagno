@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.86 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.87 (10 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -288,6 +288,7 @@ Aggiornato alla versione 2.8.86 (10 novembre 2026), dopo circa 30 ore di gioco, 
 | Caccia riuscita 2 volte su 100 e 0 pasti per ore | per proteggere la riproduzione saltava ogni animale isolato o in coppia, cioè quasi tutti quelli vicini a casa | una regola di prudenza che vale con le scorte piene va sospesa quando manca il necessario: sopravvivere viene prima di conservare |
 | Riflessione a pagamento registrata come riuscita ma vuota | si controllava solo che ci fosse una risposta, non che contenesse qualcosa; probabile risposta tagliata per limite di lunghezza | un risultato pagato va validato nel contenuto prima di dichiararlo riuscito, e il motivo di un fallimento va conservato |
 | Fattoria visitata di continuo con "raccolti 0" mentre in tasca c'erano ossa inutilizzate | il raccolto non era ancora maturo e il bot non usava la farina d'ossa, che lo fa crescere subito | prima di aspettare un processo lento, controlla se tra le risorse che hai già c'è qualcosa che lo accelera |
+| Mezz'ora intrappolato: esce dalla tana, vede il creeper, rientra, per 30 minuti | di giorno il creeper non brucia e resta lì; l'uscita era sempre nello stesso punto, proprio accanto al pericolo | se un pericolo resta fermo davanti all'unica uscita, aspetta un tempo limitato e poi cambia uscita invece di riprovare la stessa |
 
 ---
 
