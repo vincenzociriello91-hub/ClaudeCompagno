@@ -1069,6 +1069,34 @@ export function spostaBaseSeAllagata(bot) {
   return true;
 }
 
+// 2.8.109: trasloco nel bosco. La base (casa e fattoria) era nella palude: annegamenti, streghe e scheletri all'ombra,
+// creeper alla fattoria, legna finita. spostaBaseSeAllagata la spostava di 48 blocchi al massimo e lasciava lì la fattoria.
+// Quando il bot è ad almeno 80 blocchi dalla vecchia base, in un bosco (6+ tronchi entro 16 blocchi) senza acqua mortale
+// segnata vicino, ci porta casa e fattoria (la fattoria nuova la rifà accanto alla casa). Al massimo una volta ogni 6 ore.
+export function traslocoNelBosco(bot) {
+  const casa = mem.luoghi?.casa, fa = mem.luoghi?.fattoria;
+  if (!casa || Date.now() - (mem.traslocoT ?? 0) < 6 * 3600000 || Date.now() - (mem.ultimoControlloBosco ?? 0) < 60000) return false;
+  mem.ultimoControlloBosco = Date.now();
+  const acqua = (mem.pericoli ?? []).filter((z) => ACQUA_MORTALE.test(z.motivo ?? ""));
+  if (acqua.filter((z) => [casa, fa].some((p) => p && Math.hypot(z.x - p.x, z.z - p.z) <= 48)).length < 3) return false;
+  const l = bot.location;
+  if ([casa, fa].some((p) => p && Math.hypot(p.x - l.x, p.z - l.z) < 80)) return false;
+  if (acqua.some((z) => Math.hypot(z.x - l.x, z.z - l.z) <= 32)) return false;
+  const tronchi = cercaBlocchi(bot, (b) => /_log$/.test(b.typeId) && !protetto(bot, b), 16, 8, 6).length;
+  if (tronchi < 6) return false;
+  const sp = trovaSpiazzo(bot.dimension, pav(l), 9, []);
+  if (!sp) return false;
+  mem.luoghi.casa_palude = { ...casa, nota: "vecchia casa in palude" };
+  if (fa) mem.luoghi.fattoria_palude = { ...fa, nota: "vecchia fattoria in palude" };
+  mem.luoghi.casa = { x: sp.x + 4, y: sp.y, z: sp.z + 4, nota: "casa nel bosco, lontano dalla palude" };
+  for (const n of ["fattoria", "casetta", "deposito", "bosco", "fornace", "muro_base"]) delete mem.luoghi[n];
+  mem.casaSpostataT = mem.traslocoT = Date.now(); mem.ultimaFattoria = 0;
+  const c = mem.luoghi.casa, lontano = Math.round(Math.hypot(c.x - casa.x, c.z - casa.z));
+  evento(`Trasloco: lascio la palude e porto casa e fattoria nel bosco a ${c.x},${c.y},${c.z} (${tronchi} tronchi intorno, ${lontano} blocchi dalla vecchia casa)`);
+  notifica(`🏡 Claude ha traslocato fuori dalla palude: casa nuova nel bosco a ${c.x},${c.y},${c.z}`);
+  return true;
+}
+
 const ESECUTORI = {
   vai(bot, c) {
     const meta = posDa(c, bot);

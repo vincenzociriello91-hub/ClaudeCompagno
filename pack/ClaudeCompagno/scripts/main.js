@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -650,7 +650,7 @@ function pianoGratis() {
   const minuti = (t) => (Date.now() - (t ?? 0)) / 60000;
   const vuoti = [...Array(inv(bot).size).keys()].filter((i) => !inv(bot).getItem(i)).length;
   const valida = (c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c, bot);
-  if (!notte) spostaBaseSeAllagata(bot);
+  if (!notte && !traslocoNelBosco(bot)) spostaBaseSeAllagata(bot);
   // ritmo giorno/notte: di notte lontano da casa prima si torna; vicino a casa solo lavori sicuri, poi la ronda
   if (notte && mem.luoghi.casa) {
     if (dist(bot.location, mem.luoghi.casa) > 24) return "casa";
