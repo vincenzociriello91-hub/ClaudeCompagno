@@ -460,6 +460,10 @@ fuori_casa() {
     else rm -rf "$tmp"; log "Tailscale: download fallito, pannello solo in casa"; return 1; fi
   fi
   pkill -f "$TS/tailscaled" 2>/dev/null; sleep 1  # dopo un aggiornamento (exec di avvia.sh) il vecchio è ancora acceso
+  # 2.8.106: il 12/11 alle 11:02 il vecchio demone restava appeso a metà chiusura (socket già tolto): il guardiano lo vedeva
+  # "acceso" e non ne avviava uno nuovo, la Odin restava scollegata. Dopo 5 secondi lo si chiude per forza.
+  for _ in 1 2 3 4 5; do pgrep -f "$TS/tailscaled" >/dev/null 2>&1 || break; sleep 1; done
+  pkill -9 -f "$TS/tailscaled" 2>/dev/null; rm -f "$TS/tailscaled.sock"
   # 2.8.64: guardiano. Prima si provava a collegarsi una volta e poi basta: se tailscaled moriva (10/11, dopo un riavvio
   # della Odin il pannello da fuori non rispondeva più) nessuno lo faceva ripartire. Ora ogni minuto si controlla:
   # demone spento = riavviato, senza indirizzo = "up" di nuovo. Lo stato si legge su Drive in tailscale_stato.txt.
@@ -467,6 +471,8 @@ fuori_casa() {
   local gettone="$$-$(date +%s)" detto="" ko=0
   echo "$gettone" > "$TS/guardiano"
   ( while [ "$(cat "$TS/guardiano" 2>/dev/null)" = "$gettone" ]; do
+      # acceso ma senza socket (appeso a metà chiusura): si chiude per forza e si riavvia
+      [ -S "$TS/tailscaled.sock" ] || pkill -9 -f "$TS/tailscaled" 2>/dev/null
       if ! pgrep -f "$TS/tailscaled" >/dev/null 2>&1; then
         "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
           > "$LOGDIR/tailscaled.log" 2>&1 &
@@ -478,7 +484,7 @@ fuori_casa() {
         ko=$((ko + 1))
         if [ "$ko" -ge 3 ]; then
           log "Tailscale non si collega da 3 tentativi: riavvio il demone"
-          pkill -f "$TS/tailscaled" 2>/dev/null; sleep 2; rm -f "$TS/tailscaled.sock"
+          pkill -f "$TS/tailscaled" 2>/dev/null; sleep 2; pkill -9 -f "$TS/tailscaled" 2>/dev/null; rm -f "$TS/tailscaled.sock"
           "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
             > "$LOGDIR/tailscaled.log" 2>&1 &
           sleep 5; ko=0
