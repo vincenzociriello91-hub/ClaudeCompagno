@@ -1704,6 +1704,10 @@ const ESECUTORI = {
       if (!testa || testa.isLiquid) return false;
       // anche ai lati della buca: l'acqua accanto entra appena si scava (annegato nella tana a 107,61,422 il 09/11)
       const bagnato = (q) => { const k = dim.getBlock(q); return !!k && (k.isLiquid || /water|lava/.test(k.typeId)); };
+      // 2.8.100: niente sabbia o ghiaia nella colonna (cadono nella buca): il 12/11 6 tane di fila nella sabbia della palude
+      // (134-140,57-59,338), "stavo soffocando in un blocco" ogni volta, e il piccone di ferro si è rotto a forza di riscavare
+      const cade = (dy) => /^minecraft:(sand|red_sand|gravel|suspicious_sand|suspicious_gravel)$/.test(dim.getBlock({ x: b.x, y: b.y + dy, z: b.z })?.typeId ?? "");
+      if ([2, 1, 0, -1, -2, -3, -4].some(cade)) return false;
       return [0, -1, -2, -3, -4].every((dy) => !bagnato({ x: b.x, y: b.y + dy, z: b.z })
         && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([ax, az]) => !bagnato({ x: b.x + ax, y: b.y + dy, z: b.z + az })));
     };
