@@ -388,14 +388,43 @@ notifica() { curl -s -m 10 -H "Title: Claude Compagno" -d "$1" "https://ntfy.sh/
     if [ "$msg" != "$ultimo" ] || [ $((ora - quando)) -gt 60 ]; then notifica "$msg"; ultimo=$msg; quando=$ora; fi
   done ) &
 NOTIFICHE=$!
+# 2.8.103 (dopo notifica(), che il sottoprocesso deve già conoscere): ordini dal pannello (protetti dal PIN). Il pannello scrive una parola in .pannello_ordine, qui si esegue.
+backup_mondo() {
+  local dest="$REP/backup_mondo" f
+  mkdir -p "$dest"
+  # "save hold" ferma le scritture del mondo finché non è stato copiato (copia coerente a server acceso)
+  echo "save hold" > "$FIFO"
+  for _ in $(seq 1 12); do sleep 5; echo "save query" > "$FIFO"; sleep 1; tail -n 40 "$LOG" | grep -aq "Data saved" && break; done
+  f="$dest/ClaudeMondo_$(date +%Y%m%d_%H%M%S).tar.gz"
+  if tar -czf "$f" -C "$SRV" worlds 2>/dev/null; then
+    log "Copia del mondo salvata su Drive: $(basename "$f") ($(du -m "$f" | cut -f1) MB)"; notifica "💾 Copia del mondo salvata su Drive: $(basename "$f")"
+  else rm -f "$f"; log "Copia del mondo non riuscita"; notifica "⚠️ Copia del mondo non riuscita"; fi
+  echo "save resume" > "$FIFO"
+  # su Drive restano solo le ultime 2 copie
+  ls -1t "$dest"/ClaudeMondo_*.tar.gz 2>/dev/null | tail -n +3 | while read -r v; do rm -f "$v"; done
+}
+( while sleep 5; do
+    [ -f "$BASE/.pannello_ordine" ] || continue
+    a=$(head -c 40 "$BASE/.pannello_ordine" | tr -cd 'a-z_'); rm -f "$BASE/.pannello_ordine"
+    case "$a" in
+      bot_casa|bot_tana|bot_pausa|bot_riprendi|bot_vieni) echo "scriptevent claude:pannello ${a#bot_}" > "$FIFO"; log "Pannello: ordine al bot \"${a#bot_}\"" ;;
+      aggiorna) touch "$BASE/.aggiorna_ora"; log "Pannello: controllo subito gli aggiornamenti" ;;
+      backup) log "Pannello: copia del mondo su Drive"; backup_mondo ;;
+      tailscale) log "Pannello: ricollego Tailscale"; pkill -f "$TS/tailscaled" ;;  # il guardiano lo riaccende entro un minuto
+    esac
+  done ) &
+ORDINI=$!
 
 # Ogni 10 minuti guarda se su GitHub c'è una versione nuova: le urgenti le installa subito, le normali al massimo
 # una volta ogni 30 minuti (deciso da Vincenzo). Sempre solo quando nessun giocatore è online.
 ( giro=0
-  while sleep 600; do
+  while true; do
+    # 10 minuti, ma "Aggiorna il bot adesso" dal pannello (.aggiorna_ora) interrompe l'attesa e salta il limite dei 30 minuti
+    for _ in $(seq 1 60); do [ -f "$BASE/.aggiorna_ora" ] && break; sleep 10; done
+    forza=0; [ -f "$BASE/.aggiorna_ora" ] && { rm -f "$BASE/.aggiorna_ora"; forza=1; }
     giro=$((giro + 1))
-    nuova_disponibile || continue
-    if [ $((giro % 3)) -ne 0 ] && ! urgente; then continue; fi
+    nuova_disponibile || { [ "$forza" = 1 ] && log "Pannello: nessuna versione nuova del bot"; continue; }
+    if [ "$forza" = 0 ] && [ $((giro % 3)) -ne 0 ] && ! urgente; then continue; fi
     while [ "$(giocatori_online)" -gt 0 ]; do sleep 300; done
     if aggiorna_bot; then
       v=$(cat "$BASE/.versione")
@@ -566,7 +595,7 @@ while true; do
   log "Riavvio tra 10 secondi..."
   sleep 10
 done
-kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
+kill "$ESPORTATORE" "$OPERATORE" "$ORDINI" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
 pkill -f "$BASE/pannello.py" 2>/dev/null  # il ciclo del pannello è fermato, il python dentro va fermato a parte
 rm -f "$TS/guardiano"  # ferma il guardiano di Tailscale prima di spegnere il demone
 pkill -f "$TS/tailscaled" 2>/dev/null

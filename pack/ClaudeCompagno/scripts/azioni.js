@@ -45,6 +45,28 @@ const ns = (id) => (String(id).includes(":") ? String(id) : `minecraft:${id}`).t
 export const DIREZIONI = { nord: { x: 0, y: 0, z: -1 }, sud: { x: 0, y: 0, z: 1 }, est: { x: 1, y: 0, z: 0 }, ovest: { x: -1, y: 0, z: 0 } };
 
 export const giocatoriVeri = () => world.getAllPlayers().filter((p) => !(p instanceof SimulatedPlayer));
+
+// 2.8.103: ordini dal pannello web (protetti dal PIN), arrivano dalla console come "scriptevent claude:pannello <cosa>".
+// Valgono come ordini del proprietario: "pausa" lo ferma dov'è, "riprendi" lo rimette autonomo.
+export function ordinePannello(bot, cosa, proprietario) {
+  const ordina = () => { mem.ordine = { da: proprietario, t: Date.now() }; mem.coda = []; };
+  if (cosa === "casa") {
+    const c = mem.luoghi?.casa;
+    if (!c) { evento("Pannello: torna a casa, ma non ho una casa segnata"); return false; }
+    ordina(); mem.modalita = "autonomo"; assegna({ tipo: "vai", x: c.x, y: c.y, z: c.z }, "pannello");
+    evento("Pannello: torno a casa"); return true;
+  }
+  if (cosa === "tana") { ordina(); assegna({ tipo: "tana", routine: "notte_sicura", emergenza: true }, "pannello"); evento("Pannello: mi chiudo in una tana"); return true; }
+  if (cosa === "pausa") { ordina(); mem.compito = null; mem.modalita = "fermo"; try { bot.stopMoving(); } catch {} evento("Pannello: in pausa, resto fermo qui"); return true; }
+  if (cosa === "riprendi") { ordina(); mem.modalita = "autonomo"; mem.bersaglio = ""; evento("Pannello: riprendo a fare di testa mia"); return true; }
+  if (cosa === "vieni") {
+    const p = giocatoriVeri().find((g) => g.name.toLowerCase() === String(proprietario).toLowerCase());
+    if (!p) { evento(`Pannello: vieni da me, ma ${proprietario} non è nel mondo`); return false; }
+    ordina(); mem.modalita = "autonomo"; assegna({ tipo: "vai", x: p.location.x, y: p.location.y, z: p.location.z }, "pannello");
+    evento(`Pannello: vado da ${proprietario}`); return true;
+  }
+  return false;
+}
 // Dopo un reload il "vecchio" Claude resta nel mondo senza script e quello nuovo nasce come "Claude(2)", "Claude(3)"...
 // Si toglieva solo chi si chiamava esattamente "Claude", quindi gli altri si accumulavano a ogni aggiornamento (10/11: fino a
 // "Claude(6)"). Questi fantasmi attirano i mostri, bloccano i blocchi dove stanno ("non riesco a chiudere la tana

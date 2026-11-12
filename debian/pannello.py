@@ -2,14 +2,19 @@
 """Pannello web di Claude Compagno: mostra in diretta tutto quello che fa il bot.
 
 Legge il log del server (righe [Claude][...] scritte dal bot) e i rapporti in Odin2_report.
-Solo lettura: non comanda il bot e non tocca il mondo. Lo avvia avvia.sh:
+Comandi a distanza solo con il PIN (scelto la prima volta dal telefono, salvato sulla Odin in impostazioni/pannello_pin,
+mai nel repository). Lo avvia avvia.sh:
     python3 pannello.py --log /root/claudemc/log/server_X.log --rep /sdcard/Download/Odin2_report --porta 8080
 Prova senza server:  python3 pannello.py --test
 """
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -324,6 +329,52 @@ def manda_comando(rep, azione):
     return True
 
 
+# 2.8.103: ordini eseguiti da avvia.sh (bot, aggiornamento, copia del mondo, Tailscale) e riavvio del pannello stesso
+ORDINI = ("bot_casa", "bot_tana", "bot_pausa", "bot_riprendi", "bot_vieni", "aggiorna", "backup", "tailscale", "riavvia_pannello")
+SBAGLIATI = []  # orari dei PIN sbagliati: dopo 5 in 10 minuti i comandi si bloccano (un PIN di 4 cifre si indovina provando)
+
+
+def file_pin(base):
+    return os.path.join(base, "impostazioni", "pannello_pin")
+
+
+def imposta_pin(base, pin):
+    """Solo la prima volta (nessun PIN salvato): 4-8 cifre, salvato come sale:sha256, mai in chiaro."""
+    if _leggi(file_pin(base)) or not re.fullmatch(r"\d{4,8}", pin or ""):
+        return False
+    sale = secrets.token_hex(8)
+    os.makedirs(os.path.dirname(file_pin(base)), exist_ok=True)
+    with open(file_pin(base), "w") as f:
+        f.write(sale + ":" + hashlib.sha256((sale + pin).encode()).hexdigest())
+    os.chmod(file_pin(base), 0o600)
+    return True
+
+
+def controlla_pin(base, pin):
+    """True giusto, False sbagliato, None bloccato (5 sbagliati negli ultimi 10 minuti)."""
+    ora = time.time()
+    SBAGLIATI[:] = [t for t in SBAGLIATI if ora - t < 600]
+    if len(SBAGLIATI) >= 5:
+        return None
+    sale, _, h = (_leggi(file_pin(base)) or "").partition(":")
+    if h and hmac.compare_digest(hashlib.sha256((sale + (pin or "")).encode()).hexdigest(), h):
+        return True
+    SBAGLIATI.append(ora)
+    return False
+
+
+def manda_ordine(base, azione):
+    """Una parola in .pannello_ordine: la esegue avvia.sh entro 5 secondi."""
+    if azione not in ORDINI:
+        return False
+    if azione == "riavvia_pannello":
+        threading.Timer(1, os._exit, [0]).start()  # avvia.sh lo fa ripartire dopo 30 secondi
+        return True
+    with open(os.path.join(base, ".pannello_ordine"), "w") as f:
+        f.write(azione)
+    return True
+
+
 def odin_completo(rep, percorso_log):
     o = stato_odin(rep)
     o["esito_comando"] = _leggi(os.path.join(os.path.dirname(rep.rstrip("/")), ".odin_esito")) or ""
@@ -368,6 +419,8 @@ class Gestore(BaseHTTPRequestHandler):
                 if testo:
                     return self._invia(200, testo, "text/plain; charset=utf-8")
             return self._invia(404, "novità non disponibili", "text/plain; charset=utf-8")
+        if u.path == "/api/pin":
+            return self._invia(200, json.dumps({"impostato": bool(_leggi(file_pin(self.base())))}), "application/json")
         if u.path == "/api/rapporti":
             return self._invia(200, json.dumps(elenco_rapporti(self.rep), ensure_ascii=False), "application/json")
         if u.path == "/api/rapporto":
@@ -382,13 +435,28 @@ class Gestore(BaseHTTPRequestHandler):
                 return self._invia(404, "rapporto non trovato", "text/plain; charset=utf-8")
         self._invia(404, "non trovato", "text/plain; charset=utf-8")
 
+    def base(self):
+        return os.path.dirname(os.path.dirname(self.log_path)) if self.log_path else QUI
+
     def do_POST(self):
         u = urlparse(self.path)
+        testo = "text/plain; charset=utf-8"
+        if u.path == "/api/pin":
+            if imposta_pin(self.base(), self.headers.get("X-Pin-Nuovo", "")):
+                return self._invia(200, "ok", testo)
+            return self._invia(400, "PIN già impostato o non valido (4-8 cifre)", testo)
         if u.path == "/api/comando":
+            if not _leggi(file_pin(self.base())):
+                return self._invia(428, "prima scegli il PIN", testo)
+            esito = controlla_pin(self.base(), self.headers.get("X-Pin", ""))
+            if esito is None:
+                return self._invia(429, "troppi PIN sbagliati: riprova tra 10 minuti", testo)
+            if not esito:
+                return self._invia(403, "PIN sbagliato", testo)
             azione = parse_qs(u.query).get("a", [""])[0]
-            if manda_comando(self.rep, azione):
-                return self._invia(200, "ok", "text/plain; charset=utf-8")
-            return self._invia(400, "comando non permesso", "text/plain; charset=utf-8")
+            if manda_comando(self.rep, azione) or manda_ordine(self.base(), azione):
+                return self._invia(200, "ok", testo)
+            return self._invia(400, "comando non permesso", testo)
         self._invia(404, "non trovato", "text/plain; charset=utf-8")
 
     def log_message(self, *args):  # niente righe nel terminale a ogni richiesta
@@ -457,6 +525,16 @@ def prova():
         oc = odin_completo(r2, lg)
         assert oc["tps_media"] == 16.6 and "salute" in oc and isinstance(oc["storico"], list)
         campiona(r2, lg); assert STORICO and STORICO[-1][2] == 19.9
+        # PIN: solo la prima volta, mai in chiaro, 5 sbagliati = blocco
+        assert not imposta_pin(d, "12a4") and imposta_pin(d, "1234") and not imposta_pin(d, "9999")
+        assert "1234" not in _leggi(file_pin(d))
+        assert controlla_pin(d, "1234") is True and controlla_pin(d, "0000") is False
+        for _ in range(4):
+            controlla_pin(d, "0000")
+        assert controlla_pin(d, "1234") is None, "dopo 5 PIN sbagliati doveva bloccare"
+        SBAGLIATI.clear()
+        assert manda_ordine(d, "bot_casa") and _leggi(os.path.join(d, ".pannello_ordine")) == "bot_casa"
+        assert not manda_ordine(d, "rm -rf /")
         vuoto = stato_odin(os.path.join(d, "manca"), os.path.join(d, "manca"), os.path.join(d, "manca"))
         assert all(v in (None, {}, False) for k, v in vuoto.items() if k != "core"), vuoto
     print("prova pannello ok")

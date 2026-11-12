@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -269,6 +269,12 @@ world.afterEvents.chatSend.subscribe(({ sender, message }) => {
   sessione.chatRicevute++;
   if (sender.name.toLowerCase() === CFG.proprietario.toLowerCase()) mem.ordine = { da: sender.name, t: Date.now() };
   if (!comandoRapido(sender, message)) chatPendente = { da: sender.name, testo: message.slice(0, 300) };
+});
+
+// 2.8.103: ordini dal pannello web (avvia.sh li passa alla console come "scriptevent claude:pannello <cosa>")
+system.afterEvents.scriptEventReceive?.subscribe(({ id, message }) => {
+  if (id !== "claude:pannello" || !vivo()) return;
+  try { ordinePannello(bot, String(message ?? "").trim(), CFG.proprietario); } catch (e) { errore("ordine dal pannello", e); }
 });
 
 world.afterEvents.entityHurt.subscribe(({ hurtEntity, damage, damageSource }) => {

@@ -184,6 +184,13 @@
     <h2>Temperatura CPU e fluidità del server (ultime 12 ore)</h2><div class="box" id="grafici"><p class="vuoto">Il grafico si riempie un punto al minuto.</p></div>
     <h2>Temperature per zona</h2><div class="box"><ul class="lista" id="zone"></ul></div>
     <h2>Consumo del server</h2><pre id="consumo" class="vuoto">In attesa dei dati…</pre>
+    <h2>Ordini al bot e al server</h2>
+    <div class="box"><div class="filtri" id="ordini">
+      <button data-c="bot_casa">Torna a casa</button><button data-c="bot_tana">Chiuditi in tana</button><button data-c="bot_vieni">Vieni da me</button>
+      <button data-c="bot_pausa">Pausa</button><button data-c="bot_riprendi">Riprendi</button>
+      <button data-c="aggiorna">Aggiorna il bot adesso</button><button data-c="backup">Copia del mondo su Drive</button>
+      <button data-c="tailscale">Ricollega Tailscale</button><button data-c="riavvia_pannello">Riavvia il pannello</button></div>
+      <div class="leggenda">Protetti dal PIN: la prima volta il telefono lo chiede e poi lo ricorda.</div></div>
     <h2>Comandi a distanza</h2>
     <div class="box"><div class="filtri" id="comandi">
       <button data-c="sync_drive">Fai ripartire Drive</button><button data-c="rapporto">Rapporto completo</button><button data-c="libera_ram">Libera RAM</button>
@@ -460,13 +467,32 @@ async function aggiornaOdin() {
     $("consumo").textContent = o.consumo_server || "Ancora nessuna misura del modulo Odin2PortalTweaks.";
   } catch { $("odinbox").innerHTML = '<p class="vuoto">Odin non raggiungibile</p>'; }
 }
-$("comandi").onclick = async (e) => {
-  const c = e.target.dataset.c; if (!c) return;
-  const avviso = { riavvia_odin: "Riavviare la Odin? Il server resta fermo un paio di minuti.", ferma_server: "Fermare il server? Il bot smette di giocare finché non lo riavvii." }[c];
+// PIN dei comandi: chiesto una volta, ricordato su questo telefono (se il browser non lo permette, lo richiede ogni volta)
+const pinSalvato = () => { try { return localStorage.getItem("pin") || ""; } catch { return ""; } };
+const ricordaPin = (p) => { try { p ? localStorage.setItem("pin", p) : localStorage.removeItem("pin"); } catch {} };
+async function comanda(c) {
+  const avviso = { riavvia_odin: "Riavviare la Odin? Il server resta fermo un paio di minuti.", ferma_server: "Fermare il server? Il bot smette di giocare finché non lo riavvii.",
+    riavvia_pannello: "Riavviare il pannello? La pagina torna tra circa 30 secondi.", tailscale: "Ricollegare Tailscale? Da fuori casa la pagina sparisce per un minuto." }[c];
   if (avviso && !confirm(avviso)) return;
-  try { const r = await fetch("/api/comando?a=" + c, { method: "POST" }); $("esito").textContent = r.ok ? "Comando inviato…" : "Comando non permesso"; }
-  catch { $("esito").textContent = "Pannello non raggiungibile"; }
-};
+  try {
+    let pin = pinSalvato();
+    if (!pin) {
+      const imp = await (await fetch("/api/pin")).json();
+      pin = (prompt(imp.impostato ? "PIN dei comandi" : "Scegli il PIN dei comandi (da 4 a 8 cifre)") || "").trim();
+      if (!pin) return;
+      if (!imp.impostato) {
+        const n = await fetch("/api/pin", { method: "POST", headers: { "X-Pin-Nuovo": pin } });
+        if (!n.ok) { $("esito").textContent = "PIN non valido: da 4 a 8 cifre"; return; }
+      }
+      ricordaPin(pin);
+    }
+    const r = await fetch("/api/comando?a=" + c, { method: "POST", headers: { "X-Pin": pin } });
+    if (r.status === 403) ricordaPin("");
+    $("esito").textContent = r.ok ? "Comando inviato…" : r.status === 403 ? "PIN sbagliato: riprova" : r.status === 429 ? "Troppi PIN sbagliati: riprova tra 10 minuti" : "Comando non permesso";
+  } catch { $("esito").textContent = "Pannello non raggiungibile"; }
+}
+$("comandi").onclick = (e) => { const c = e.target.dataset.c; if (c) comanda(c); };
+$("ordini").onclick = (e) => { const c = e.target.dataset.c; if (c) comanda(c); };
 aggiorna(); setInterval(aggiorna, 2000);
 aggiornaOdin(); setInterval(aggiornaOdin, 10000);
 </script>
