@@ -317,7 +317,9 @@ def campiona(rep, percorso_log):
     del STORICO[:-1440]
 
 
-COMANDI = ("sync_drive", "avvia_server", "ferma_server", "riavvia_server", "rapporto", "libera_ram", "riavvia_odin")
+COMANDI = ("sync_drive", "avvia_server", "ferma_server", "riavvia_server", "rapporto", "libera_ram", "riavvia_odin",
+           # 2.8.104: dal modulo nuovo (chat del modulo, 12/11)
+           "carica_80", "carica_100", "modalita_fresca", "modalita_normale", "spegni_schermo", "sveglia_autosync")
 
 
 def manda_comando(rep, azione):
@@ -506,6 +508,7 @@ def prova():
         rc = os.path.join(d, "Download/Odin2_report"); os.makedirs(rc, exist_ok=True)
         assert manda_comando(rc, "sync_drive") and _leggi(os.path.join(d, "Download/.odin_comando")) == "sync_drive"
         assert not manda_comando(rc, "rm -rf /")
+        assert manda_comando(rc, "carica_80") and _leggi(os.path.join(d, "Download/.odin_comando")) == "carica_80"
         # sysfs nascosto (come su Termux): valori dal file del modulo
         r2 = os.path.join(d, "Download/Odin2_report"); os.makedirs(r2, exist_ok=True)
         open(os.path.join(d, "Download/.odin_stato"), "w").write(f"batteria=77\nstato=Charging\ntemp_batteria=312\ncorrente_ua=-500000\ntensione_uv=4000000\ntemp_cpu=61\nuptime=36000\nora={int(time.time())}\n")
