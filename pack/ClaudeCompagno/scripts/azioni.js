@@ -619,6 +619,10 @@ export function difendi(bot) {
       lotta.bersaglio = null;
       if (tana) {
         taneCreeper.push({ x: b.location.x, z: b.location.z, t: Date.now() }); if (taneCreeper.length > 20) taneCreeper.shift();
+        // 2.8.101: creeper accanto alla fattoria: la fattoria aspetta 25 minuti (12/11 07:31-08:35: cunicolo, fattoria, "creeper a
+        // pochi passi", tana, ogni 17 minuti per un'ora). Il piano la riprende solo quando ultimaFattoria è vecchia di 15 min.
+        const fa = mem.luoghi?.fattoria;
+        if (fa && Math.hypot(fa.x - l.x, fa.z - l.z) <= 20) mem.ultimaFattoria = Date.now() + 600000;
         mem.emergenzaT = Date.now();
         evento(stanco ? "Il creeper resta vicino e scappare non serve: mi chiudo in una tana" : "Creeper a pochi passi: mi chiudo subito in una tana");
         mem.coda = [];

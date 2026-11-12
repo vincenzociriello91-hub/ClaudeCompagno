@@ -1,12 +1,11 @@
 # Novità di Claude Compagno
 
-## 2.8.100 — attuale (12/11/2026)
+## 2.8.101 — attuale (12/11/2026)
+- **Basta giri a vuoto alla fattoria**: stamattina, per un'ora, ogni 17 minuti il bot faceva sempre lo stesso giro: usciva dalla tana, andava alla fattoria, trovava un creeper e si rintanava. Ora, se un creeper lo chiude in tana vicino alla fattoria, per 25 minuti fa altro (miniera, armatura, caccia) e torna alla fattoria più tardi.
+
+## 2.8.100 — precedente (12/11/2026)
 - **Niente più tane nella sabbia**: stanotte (nel gioco) il bot ha scavato 6 tane di fila nella sabbia della palude. La sabbia gli cadeva addosso, rischiava di soffocare ogni volta, e il piccone di ferro si è rotto a forza di riscavare. Ora, se sopra o sotto il punto scelto c'è sabbia o ghiaia, la tana la scava da un'altra parte.
 - **Verificato in gioco (2.8.99)**: ha fatto 5 pani dal grano e ha mangiato 10 volte. Vita e fame piene, 0 morti.
-
-## 2.8.99 — precedente (11/11/2026)
-- **Il grano diventa pane quando serve**: il bot aveva 6 spighe di grano in tasca e niente da mangiare. Il pane lo faceva solo alla fine di una visita alla fattoria, e quella volta la visita era fallita. Ora, se ha fame e non ha altro cibo, fa subito il pane con il grano che ha e lo mangia.
-- **Verificato in gioco (2.8.98)**: con uno scheletro fuori dalla tana è uscito con un cunicolo lontano. Poi ha cacciato 3 mucche, ha mangiato 2 volte ed è a 20 cuori.
 
 ## In programma
 - Armatura di ferro: il banco da lavoro c'è, ora servono legna e fornace per armatura e attrezzi.
