@@ -464,7 +464,7 @@ fuori_casa() {
   # della Odin il pannello da fuori non rispondeva più) nessuno lo faceva ripartire. Ora ogni minuto si controlla:
   # demone spento = riavviato, senza indirizzo = "up" di nuovo. Lo stato si legge su Drive in tailscale_stato.txt.
   # Il gettone ferma il guardiano vecchio dopo un riavvio di avvia.sh (exec) e alla chiusura del server.
-  local gettone="$$-$(date +%s)" detto=""
+  local gettone="$$-$(date +%s)" detto="" ko=0
   echo "$gettone" > "$TS/guardiano"
   ( while [ "$(cat "$TS/guardiano" 2>/dev/null)" = "$gettone" ]; do
       if ! pgrep -f "$TS/tailscaled" >/dev/null 2>&1; then
@@ -473,8 +473,18 @@ fuori_casa() {
         sleep 5
       fi
       if [ -z "$(ip_tailscale)" ]; then
+        # 2.8.105: 3 giri di fila senza indirizzo = demone bloccato: si riavvia da capo (12/11 11:02: dopo il riavvio del
+        # server la Odin restava "Not connected" e il guardiano ripeteva "up" senza risultato)
+        ko=$((ko + 1))
+        if [ "$ko" -ge 3 ]; then
+          log "Tailscale non si collega da 3 tentativi: riavvio il demone"
+          pkill -f "$TS/tailscaled" 2>/dev/null; sleep 2; rm -f "$TS/tailscaled.sock"
+          "$TS/tailscaled" --tun=userspace-networking --state="$IMP/tailscale.state" --socket="$TS/tailscaled.sock" --port=0 \
+            > "$LOGDIR/tailscaled.log" 2>&1 &
+          sleep 5; ko=0
+        fi
         # già collegata: basta "up"; altrimenti "up" stampa il link di accesso, che va in Drive (cartella privata)
-        timeout 600 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
+        timeout 120 "$TS/tailscale" --socket="$TS/tailscaled.sock" up --hostname=odin-server --accept-dns=false 2>&1 \
           | while read -r r; do
               case "$r" in *https://login.tailscale.com/*)
                 u=$(echo "$r" | grep -o 'https://login.tailscale.com/[^ ]*')
@@ -483,6 +493,7 @@ fuori_casa() {
               esac
             done
         detto=""
+      else ko=0
       fi
       i=$(ip_tailscale)
       if [ -n "$i" ] && [ "$detto" != "$i" ]; then
@@ -496,7 +507,9 @@ fuori_casa() {
       { echo "Tailscale sulla Odin, $(date '+%d/%m %H:%M:%S') | indirizzo: ${i:-NESSUNO} | demone: $(pgrep -f "$TS/tailscaled" >/dev/null 2>&1 && echo acceso || echo SPENTO)"
         timeout 20 "$TS/tailscale" --socket="$TS/tailscaled.sock" status 2>&1 | head -n 8
         echo "--- registro:"; tail -n 12 "$LOGDIR/tailscaled.log"; } 2>/dev/null \
-        | grep -viE 'authkey|secret|token|privkey|nodekey|login\.tailscale' | cut -c1-240 > "$REP/tailscale_stato.txt"
+        | grep -viE 'authkey|secret|token|privkey|nodekey|login\.tailscale' | cut -c1-240 > "$TS/stato.tmp"
+      # scritto prima a parte e poi copiato: Drive caricava il file vuoto mentre "tailscale status" era ancora in corso
+      cp -f "$TS/stato.tmp" "$REP/tailscale_stato.txt" 2>/dev/null
       sleep 60
     done ) &
 }
