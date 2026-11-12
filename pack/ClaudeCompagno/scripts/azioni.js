@@ -1158,9 +1158,15 @@ const ESECUTORI = {
           return;
         }
         s.giri = (s.giri ?? 0) + 1;
-        if (s.giri > 4) return finito(s.fatti > 0, `trovati solo ${s.fatti} blocchi di ${c.blocco}`);
-        const a = Math.random() * Math.PI * 2;
-        s.esplora = { x: Math.floor(bot.location.x + Math.cos(a) * 32), y: Math.floor(bot.location.y), z: Math.floor(bot.location.z + Math.sin(a) * 32) };
+        // 2.8.107: la legna intorno a casa (palude) è finita: il 12/11 attrezzi_pietra 0/12 e piccone di ferro fermo per 1 bastone.
+        // Per la legna si va sempre più lontano (32, 56, 80, 104, 128, 152 blocchi) e dalla parte opposta a casa (±45°).
+        const legna = cat === "legna", casa = mem.luoghi?.casa;
+        if (s.giri > (legna ? 6 : 4)) return finito(s.fatti > 0, `trovati solo ${s.fatti} blocchi di ${c.blocco}`);
+        const via = legna && casa && dist(casa, bot.location) > 2 ? Math.atan2(bot.location.z - casa.z, bot.location.x - casa.x) : null;
+        const a = via === null ? Math.random() * Math.PI * 2 : via + (Math.random() - 0.5) * (Math.PI / 2);
+        const lontano = legna ? 32 + 24 * (s.giri - 1) : 32;
+        s.esplora = { x: Math.floor(bot.location.x + Math.cos(a) * lontano), y: Math.floor(bot.location.y), z: Math.floor(bot.location.z + Math.sin(a) * lontano) };
+        if (legna && s.giri >= 2) evento(`Niente legna qui intorno: vado più lontano, ${lontano} blocchi${via === null ? "" : " dalla parte opposta a casa"}`);
         return;
       }
     }
