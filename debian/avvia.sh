@@ -363,7 +363,17 @@ BATTITO=$!
 GUARDIANO=$!
 
 # Pannello web: dal telefono http://<indirizzo-odin>:8080 mostra in diretta tutto quello che fa il bot (solo lettura).
-python3 -I "$BASE/pannello.py" --log "$LOG" --rep "$REP" --porta 8080 >> "$LOGDIR/pannello.log" 2>&1 &
+# 2.8.102: se il pannello si ferma si riavvia da solo (12/11 09:42: da fuori "connection was refused" sulla porta 8080 con
+# il server acceso: nessuno lo faceva ripartire). Le ultime righe del suo registro vanno su Drive per capire perché.
+pkill -f "$BASE/pannello.py" 2>/dev/null  # dopo un exec di avvia.sh il pannello vecchio teneva occupata la porta
+( while true; do
+    python3 -I "$BASE/pannello.py" --log "$LOG" --rep "$REP" --porta 8080 >> "$LOGDIR/pannello.log" 2>&1
+    c=$?
+    log "Pannello fermato (codice $c): lo riavvio tra 30 secondi"
+    { echo "Pannello fermato $(date '+%d/%m %H:%M:%S') con codice $c. Ultime righe del suo registro:"; tail -n 30 "$LOGDIR/pannello.log"; } 2>/dev/null \
+      | grep -viE 'authkey|secret|token|chiave|key' | cut -c1-240 > "$REP/pannello_errore.txt"
+    sleep 30
+  done ) &
 PANNELLO=$!
 
 # Notifiche push gratuite con ntfy.sh: argomento casuale (chi non lo conosce non le legge), creato una volta sola.
@@ -557,6 +567,7 @@ while true; do
   sleep 10
 done
 kill "$ESPORTATORE" "$OPERATORE" "$BATTITO" "$GUARDIANO" "$PANNELLO" "$NOTIFICHE" "$AGGIORNATORE" $PLAYIT 2>/dev/null
+pkill -f "$BASE/pannello.py" 2>/dev/null  # il ciclo del pannello è fermato, il python dentro va fermato a parte
 rm -f "$TS/guardiano"  # ferma il guardiano di Tailscale prima di spegnere il demone
 pkill -f "$TS/tailscaled" 2>/dev/null
 pkill -x playit 2>/dev/null
