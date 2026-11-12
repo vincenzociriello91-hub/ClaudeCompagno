@@ -1104,6 +1104,14 @@ const ESECUTORI = {
         // percorso bloccato: raggiunge il punto saltando sul terreno sicuro lì (prima restava fermo e falliva)
         const g = accanto(bot.dimension, s.esplora);
         if (g) { bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0; }
+        // 2.8.108: meta lontana (zona non ancora caricata, acqua in mezzo): "accanto" non trova niente e la meta veniva
+        // scartata senza muoversi (12/11 13:17: 6 giri da 56 a 152 blocchi in 50 secondi, sempre fermo sulla riva).
+        // Si fa un salto di 16 blocchi verso la meta su terreno asciutto e si continua da lì.
+        else if (dist(bot.location, s.esplora) > 20) {
+          const l = bot.location, k = 16 / dist(l, s.esplora);
+          const h = accanto(bot.dimension, { x: l.x + (s.esplora.x - l.x) * k, y: l.y, z: l.z + (s.esplora.z - l.z) * k });
+          if (h) { bot.teleport(centro(h)); nav.meta = null; nav.bloccato = 0; return; }
+        }
       }
       if (r === true || r === "bloccato") s.esplora = null;
       return;
