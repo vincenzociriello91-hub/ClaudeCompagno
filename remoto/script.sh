@@ -24,7 +24,9 @@ if [ -d $B ]; then
 else echo "cartella Termux:Boot assente"; fi
 echo "--- indirizzi"
 ip -br addr | grep -E "wlan0|tailscale|tun"
-TS=$(ip -4 -br addr 2>/dev/null | awk '{for(i=3;i<=NF;i++) if ($i ~ /^100\./) {split($i,a,"/"); print a[1]; exit}}')
+# Tailscale gira dentro Debian (proot, rete in userspace): niente interfaccia 100.x su Android.
+# L'indirizzo lo scrive tailscale_stato.txt; le connessioni in arrivo vanno alle porte locali (sshd su 8022).
+TS=$(grep -o 'indirizzo: 100\.[0-9.]*' /sdcard/Download/Odin2_report/tailscale_stato.txt 2>/dev/null | head -n 1 | cut -d' ' -f2)
 pm path com.tailscale.ipn >/dev/null 2>&1 && echo "Tailscale installato" || echo "Tailscale NON installato"
 W=$(ip -4 -br addr show wlan0 2>/dev/null | awk '{split($3,a,"/"); print a[1]}')
 WHO=$(tx "whoami" | tail -n 1)
@@ -36,4 +38,9 @@ R=/sdcard/Download/Odin2_report
   echo "da casa: ssh -p 8022 $WHO@$W"
   echo "dentro, per i comandi da root: su"
 } > /data/adb/odin2tweaks/ssh.tmp && mv -f /data/adb/odin2tweaks/ssh.tmp $R/ssh_accesso.txt
+echo "--- modulo: $(grep '^version=' /data/adb/modules/odin2tweaks/module.prop)"
+echo "--- doppio Wi-Fi"; cmd wifi list-requests </dev/null 2>&1 | head -n 3
+dumpsys wifi 2>/dev/null | grep -E "mMultiInternetConnectionState|role=ROLE_CLIENT_SECONDARY|secondary_iface" | head -n 6
+ip -br addr | grep wlan
+tail -n 15 /data/adb/odin2tweaks/log.txt | grep -i "wi-fi"
 echo "accesso scritto in Odin2_report/ssh_accesso.txt (Tailscale: ${TS:-nessun indirizzo 100.x})"
