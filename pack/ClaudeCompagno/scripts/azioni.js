@@ -1501,7 +1501,13 @@ const ESECUTORI = {
     const POSTO = { helmet: "Head", chestplate: "Chest", leggings: "Legs", boots: "Feet" }, COSTO = { helmet: 5, chestplate: 8, leggings: 7, boots: 4 };
     const pezzo = (p) => (p.tipo === "crafta" ? /_(helmet|chestplate|leggings|boots)$/.exec(p.oggetto ?? "")?.[1] : null);
     const fatto = (p) => !!pezzo(p) && (bot.getComponent("minecraft:equippable")?.getEquipment?.(POSTO[pezzo(p)])?.typeId === ns(p.oggetto) || contaOggetti(bot, ns(p.oggetto)) > 0);
-    let lista = (c.nome === "attrezzi_ferro" && contaOggetti(bot, "minecraft:iron_ingot") >= 3 ? passi.filter((p) => p.tipo === "crafta") : passi).filter((p) => !gia(p) && !fatto(p));
+    // 2.8.111 (13/11): contava solo i lingotti. Con 6 ferro grezzo + 1 lingotto in tasca andava a scavare 10 minerali (piccone
+    // di pietra rotto, creeper, notte) e il ferro restava grezzo da ieri: niente spada di ferro, quindi niente lotta coi creeper
+    // e ciclo tana-cunicolo. Ora con lingotti + grezzo >= 3 fonde quello che ha e crafta subito.
+    const ingotti = contaOggetti(bot, "minecraft:iron_ingot"), grezzo = contaOggetti(bot, "minecraft:raw_iron");
+    let lista = (c.nome === "attrezzi_ferro" && ingotti + grezzo >= 3
+      ? passi.filter((p) => p.tipo === "crafta" || (p.tipo === "fondi" && grezzo > 0)).map((p) => (p.tipo === "fondi" ? { ...p, quantita: grezzo } : p))
+      : passi).filter((p) => !gia(p) && !fatto(p));
     if (c.nome === "armatura_rame") {
       // si fonde solo il rame che manca per i pezzi rimasti
       const serve = lista.reduce((n, p) => n + (COSTO[pezzo(p)] ?? 0), 0) - contaOggetti(bot, "minecraft:copper_ingot");
