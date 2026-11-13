@@ -1,17 +1,13 @@
-# Script di Claude per la Odin (eseguito come root dal modulo v4.28, comando firmato esegui:<impronta>).
-# 13/11/2026 10:35: da SSH "tee: /sdcard/...: Permission denied". sshd era stato acceso con i soli gruppi
-# 3003/3004: manca quello della memoria condivisa. Si riaccende con gli stessi gruppi del processo dell'app Termux.
-# Si ferma solo il processo che ascolta (dal file pid): le sessioni già aperte restano.
-T=/data/data/com.termux; U=$(stat -c %u $T 2>/dev/null); P=$T/files/usr; H=$T/files/home
-TP=$(pidof com.termux | cut -d' ' -f1)
-G=$(awk '/^Groups:/{for(i=2;i<=NF;i++) printf "-G %s ", $i}' /proc/$TP/status 2>/dev/null)
-echo "app Termux $TP, gruppi: $G"
-[ -n "$G" ] || G="-G 3003 -G 3004 -G 9997"
-L=$(cat $P/var/run/sshd.pid 2>/dev/null); echo "sshd in ascolto: ${L:-?}"
-[ -n "$L" ] && kill $L; sleep 1
-su -g $U $G $U -c "export HOME=$H PREFIX=$P PATH=$P/bin:/system/bin TMPDIR=$P/tmp LD_PRELOAD=$P/lib/libtermux-exec.so; sshd -E $H/sshd.log" </dev/null 2>&1; sleep 2
-L=$(cat $P/var/run/sshd.pid 2>/dev/null)
-echo "sshd nuovo: $L gruppi $(awk '/^Groups:/' /proc/$L/status 2>/dev/null)"
-echo "porta 8022: $(echo | timeout 5 nc -w 3 127.0.0.1 8022 2>&1 | head -c 25)"
-echo "sessioni ancora aperte: $(pgrep -x sshd | tr '\n' ' ')"
-su -g $U $G $U -c "echo prova > /sdcard/Download/Odin2_report/.prova_ssh && echo scrittura in sdcard: OK && rm /sdcard/Download/Odin2_report/.prova_ssh" </dev/null 2>&1
+# Script di Claude per la Odin (eseguito come root dal modulo, comando firmato esegui:<impronta>).
+# 13/11/2026: controllo del ponte veloce dopo l'installazione della v4.29.
+CFG=/data/adb/odin2tweaks; RUN=/dev/odin2tweaks
+echo "modulo: $(grep '^version=' /data/adb/modules/odin2tweaks/module.prop)"
+echo "acceso da: $(awk '{printf "%.0f min", $1/60}' /proc/uptime)"
+p=$(cat $RUN/ponte.pid 2>/dev/null); echo "processo del ponte: ${p:-nessuno} $( [ -n "$p" ] && [ -d /proc/$p ] && echo vivo)"
+echo "ultima risposta del worker: $(cat $RUN/ponte_ultimo 2>/dev/null)"
+ls $RUN/ponte_fermo $CFG/ponte_no 2>/dev/null
+echo "--- registro"; grep -i "ponte\|wi-fi" $CFG/log.txt | tail -n 8
+echo "--- prova diretta (gettone)"
+k=$(cat $CFG/remoto.key); T=$(printf 'ponte|%s' "$k" | sha256sum | cut -c1-64)
+curl -sS -m 10 -o /dev/null -w "worker: %{http_code}\n" https://odin-ponte.vincenzociriello91.workers.dev/ 2>&1
+echo "--- doppio Wi-Fi"; ip -br addr | grep wlan
