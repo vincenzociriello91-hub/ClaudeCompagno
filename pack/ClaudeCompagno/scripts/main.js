@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -678,7 +678,7 @@ function pianoGratis() {
   const incompleta = ["Head", "Chest", "Legs", "Feet"].some((p) => !eqA?.getEquipment(p));
   if (incompleta && !/(iron|diamond|netherite)_chestplate$/.test(corazza) && (ha("minecraft:raw_copper") + ha("minecraft:copper_ingot") >= 8
     || ((mem.risorse?.copper_ore ?? []).length > 0 && ha((id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id))))) candidati.push("armatura_rame");
-  if (ha((id) => id in CIBO) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria && minuti(mem.ultimaFattoria) > 5 ? ["compito:fattoria"] : []));
+  if (scortaCibo(bot) < 6) candidati.push("cibo", ...(mem.luoghi.fattoria && minuti(mem.ultimaFattoria) > 5 ? ["compito:fattoria"] : []));
   if (ha("minecraft:torch") < 8) candidati.push("torce", "carbonella");
   if (notte && !mem.luoghi.casa) candidati.push("notte_sicura");
   const pickFerro = ha((id) => /(iron|diamond|netherite)_pickaxe$/.test(id));

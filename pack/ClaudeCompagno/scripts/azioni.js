@@ -851,6 +851,10 @@ export const routineKo = new Map();
 // fallimento di fila: 10, 20, 40, 80 minuti, al massimo 2 ore. Un successo azzera. Il riparo della notte non si mette mai in pausa.
 // 2.8.95: senza cibo in tasca e con fame sotto 18 (la vita non risale) caccia e fattoria non restano mai in pausa. L'11/11 la
 // routine cibo era in pausa per i fallimenti di prima: la caccia della 2.8.82 non partiva, vita 7-12 per ore, 0 pasti
+// 2.8.112 (13/11): scorta di cibo per il piano. Il pollo crudo non è in CIBO (non lo mangia se non è disperato), ma la
+// routine cibo lo cuoce: con 6 polli + 3 altri in tasca contava 3 < 6 e sceglieva "cibo" ogni giorno (caccia alle mucche
+// fino a notte), così attrezzi_ferro non partiva mai e il ferro grezzo restava in tasca.
+export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {
   if ((nome === "cibo" || nome === "compito:fattoria") && affamato(bot)) return false;
