@@ -854,6 +854,16 @@ export const routineKo = new Map();
 // 2.8.112 (13/11): scorta di cibo per il piano. Il pollo crudo non è in CIBO (non lo mangia se non è disperato), ma la
 // routine cibo lo cuoce: con 6 polli + 3 altri in tasca contava 3 < 6 e sceglieva "cibo" ogni giorno (caccia alle mucche
 // fino a notte), così attrezzi_ferro non partiva mai e il ferro grezzo restava in tasca.
+// Dopo un salvataggio da una caduta in grotta: true se il compito può continuare, false se va interrotto.
+// raccogli/caccia: quella meta porta in una grotta, si scarta e si cerca la prossima (prima falliva tutto il compito).
+// 2.8.114 (13/11): fondi verso la fornace fissa cadeva in una grotta sulla strada (86,74,261) e la routine armatura_ferro
+// veniva interrotta con 7 lingotti + 4 grezzo in tasca. Ora si porta accanto alla fornace, come quando non ci arriva.
+export function riprovaDopoCaduta(c) {
+  if (!c?.stato || (c.stato.cadute = (c.stato.cadute ?? 0) + 1) >= 3) return false;
+  if (/raccogli|caccia/.test(c.tipo)) { Object.assign(c.stato, { esplora: null, verso: null, galleria: null, lista: [] }); return true; }
+  if (c.tipo === "fondi" && c.stato.fornace) { c.stato.partenza = -1e9; return true; }
+  return false;
+}
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {

@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -534,10 +534,7 @@ ogniTick(4, () => {
     evento(`Salvataggio: ${motivo}`);
     segnaPericolo(l, 8, cade ? "grotta (caduta)" : "acqua (annegamento)");
     const c = mem.compito;
-    if (c && /raccogli|caccia/.test(c.tipo) && (c.stato.cadute = (c.stato.cadute ?? 0) + 1) < 3) {
-      // quella meta porta in una grotta: la si scarta e si cerca la prossima (prima falliva tutto il compito)
-      Object.assign(c.stato, { esplora: null, verso: null, galleria: null, lista: [] });
-    } else if (c) interrompi(`${motivo} a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}; scava altrove`);
+    if (c && !riprovaDopoCaduta(c)) interrompi(`${motivo} a ${Math.round(l.x)},${Math.round(l.y)},${Math.round(l.z)}; scava altrove`);
     return;
   }
   const inLotta = difendi(bot);
