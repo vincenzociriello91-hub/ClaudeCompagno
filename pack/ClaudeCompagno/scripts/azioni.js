@@ -420,7 +420,9 @@ const LIMITI = [[/^minecraft:(dirt|diorite|granite|andesite|tuff|cobbled_deepsla
   [/^minecraft:(bow|crossbow|fishing_rod)$/, 1], [/^minecraft:(gravel|bone|arrow)$/, 16]];
 // con meno di 4 posti liberi butta anche questi, dal meno utile, finché non ne ha 4
 // 2.8.90: niente più ossa: sono farina d'ossa per la fattoria (11/11 12:06 buttate le 3 ossa appena prima di servire)
-const CIANFRUSAGLIE = ["nautilus_shell", "lead", "sugar", "brown_mushroom", "red_mushroom", "gunpowder", "feather", "flint", "arrow", "gravel", "leather"].map((n) => `minecraft:${n}`);
+// 2.8.110 (13/11): inventario pieno da ore (36/36) di roba mai usata: cacciati 3 cow e 3 pig ma "non ho carne da cuocere",
+// la carne restava a terra. Prima di tutto si buttano questi, poi il resto.
+const CIANFRUSAGLIE = ["egg", "glass_bottle", "glowstone_dust", "black_wool", "light_gray_wool", "lapis_lazuli", "redstone", "nautilus_shell", "lead", "sugar", "brown_mushroom", "red_mushroom", "gunpowder", "feather", "flint", "arrow", "gravel", "leather"].map((n) => `minecraft:${n}`);
 export function riordinaInventario(bot) {
   const c = inv(bot);
   const tenuti = {};
