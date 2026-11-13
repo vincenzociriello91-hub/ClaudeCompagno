@@ -6,9 +6,19 @@ U=$(stat -c %u $T 2>/dev/null)
 P=$T/files/usr; H=$T/files/home
 echo "utente Termux: ${U:-non trovato}"
 [ -n "$U" ] || exit 1
-tx() { su $U -c "export HOME=$H PREFIX=$P PATH=$P/bin:/system/bin TMPDIR=$P/tmp LD_PRELOAD=$P/lib/libtermux-exec.so LANG=en_US.UTF-8; $1" </dev/null 2>&1; }
+ENV="export HOME=$H PREFIX=$P PATH=$P/bin:/system/bin TMPDIR=$P/tmp LD_PRELOAD=$P/lib/libtermux-exec.so LANG=en_US.UTF-8"
+# 13/11 08:59: con "su UTENTE" pkg non raggiungeva nessun server. Si prova quale modo ha la rete (gruppi inet/net_raw).
+SUOPT=""
+echo "--- rete come utente Termux"
+for o in "" "-G 3003 -G 3004" "-g $U -G 3003 -G 3004 -G 9997"; do
+  r=$(su $o $U -c "$ENV; curl -sS -m 15 -o /dev/null -w '%{http_code}' https://packages-cf.termux.dev/apt/termux-main/dists/stable/Release" </dev/null 2>&1 | tail -n 1)
+  echo "opzioni [$o]: $r"
+  case $r in 200) SUOPT=$o; break;; esac
+done
+echo "DNS: $(getprop net.dns1) | resolv: $(cat $P/etc/resolv.conf 2>/dev/null | tr '\n' ' ')"
+tx() { su $SUOPT $U -c "$ENV; $1" </dev/null 2>&1; }
 echo "--- openssh"
-if [ -x $P/bin/sshd ]; then echo "già installato"; else tx "yes | pkg install -y openssh" | tail -n 5; fi
+if [ -x $P/bin/sshd ]; then echo "già installato"; else tx "yes | pkg install -y openssh" | tail -n 8; fi
 [ -x $P/bin/sshd ] || { echo "sshd non installato: mi fermo"; exit 1; }
 echo "--- password"
 PW=$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n' | cut -c1-16)
