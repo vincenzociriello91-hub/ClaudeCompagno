@@ -1517,6 +1517,18 @@ const ESECUTORI = {
       const serve = lista.reduce((n, p) => n + (COSTO[pezzo(p)] ?? 0), 0) - contaOggetti(bot, "minecraft:copper_ingot");
       lista = lista.filter((p) => p.tipo !== "fondi" || serve > 0).map((p) => (p.tipo === "fondi" ? { ...p, quantita: serve } : p));
     }
+    if (c.nome === "armatura_ferro") {
+      // 2.8.113 (13/11): chiedeva 24 minerali per tutti e 4 i pezzi in una volta e non arrivava mai in fondo (0 su 23).
+      // Ora un pezzo per volta, prima la corazza (8 lingotti), contando lingotti e grezzo in tasca; il ferro che manca lo
+      // cerca con la miniera a rami (97% di riuscita) invece di raccogliere minerale in superficie.
+      const primo = lista.find((p) => pezzo(p));
+      if (primo) {
+        const costo = COSTO[pezzo(primo)], ingotti = contaOggetti(bot, "minecraft:iron_ingot"), grezzo = contaOggetti(bot, "minecraft:raw_iron");
+        const manca = costo - ingotti - grezzo;
+        lista = [...(manca > 0 ? [{ tipo: "miniera_rami", minerale: "ferro" }] : []),
+          ...(ingotti < costo ? [{ tipo: "fondi", oggetto: "raw_iron", quantita: costo - ingotti }] : []), primo];
+      }
+    }
     mem.coda.unshift(...lista.map((p) => ({ ...p, routine: c.nome })));
     finito(true, `routine ${c.nome} avviata: ${lista.length} passi`);
   },
