@@ -1954,6 +1954,9 @@ const ESECUTORI = {
       const r = vaiVerso(bot, centro(g), 4);
       if (r === "bloccato") { bot.teleport(centro(g)); nav.meta = null; nav.bloccato = 0; return; }
       if (r !== true) return;
+      // 2.8.115 (14/11): suolo() salta foglie, tronchi, cespugli e fiori e dà la cella sopra la terra, ma lì il blocco resta:
+      // nel bosco (foglie a terra, cespugli) la cassa risultava sempre "occupato" (0 riuscite su 69). Lo toglie e poi piazza.
+      if (piazza(bot, g, "minecraft:chest") === "occupato" && !/chest|barrel/.test(bot.dimension.getBlock(g)?.typeId ?? "")) scava(bot, g);
       const esito = piazza(bot, g, "minecraft:chest");
       if (esito !== "ok" && esito !== "gia") return finito(false, `non riesco a piazzare la cassa (${esito})`);
       mem.casse[manca] = { x: g.x, y: g.y, z: g.z };
