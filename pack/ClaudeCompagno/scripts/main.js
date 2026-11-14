@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -328,6 +328,9 @@ world.afterEvents.entityDie.subscribe(({ deadEntity, damageSource }) => {
     const raffica = mem.mortiRecenti.length >= 2;
     const recuperabile = !/lava|void|fire/.test(causa) && !giaMortoQui && !raffica;
     mem.morteRecente = { ...dove, t: Date.now() };
+    mem.nottiFila = 0;
+    (mem.morti ??= []).push({ t: adesso(), causa, ...dove, compito: descriviCompito(mem.compito) });
+    if (mem.morti.length > 30) mem.morti.splice(0, mem.morti.length - 30);
     segnaPericolo(dove, 12, causa);
     mem.luoghi.ultima_morte = { ...dove, nota: "oggetti persi" };
     mem.compito = null;
@@ -744,6 +747,7 @@ ogniTick(100, () => {
     compito: breve(mem.compito), coda: mem.coda.slice(0, 8).map(breve),
     modalita: mem.modalita, bersaglio: mem.bersaglio, giocatori: g, ora: world.getTimeOfDay(), tps: +prestazioni.tps.toFixed(1),
     spesa: +mem.spesa.usd.toFixed(4), chiamate: mem.spesa.chiamate, budget: CFG.budget, maturita: maturita(),
+    maestro: (() => { try { aggiornaNotti(world.getTimeOfDay()); return maestro(bot); } catch (e) { errore("maestro", e); return null; } })(),
     vista: (() => { try { return vista(bot); } catch (e) { errore("vista", e); return null; } })(),
   });
 });

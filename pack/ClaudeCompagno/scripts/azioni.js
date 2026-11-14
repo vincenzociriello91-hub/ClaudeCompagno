@@ -871,6 +871,38 @@ export function riprovaDopoCaduta(c) {
 // casetta, restava all'aperto al punto "casa" ("ronda"): 3 morti per frecce di scheletro in un pomeriggio, spada e
 // piccone di ferro persi. Fuori di notte solo quando c'è un giocatore vero da difendere.
 export const riparoNotturno = (bot) => !giocatoriVeri().length;
+// ---------- verso maestro (14/11) ----------
+// I 3 criteri che Vincenzo vede nel pannello: notti di fila senza morire, basi solide, errori che non si ripetono.
+export function registraKo(tipo, msg) {
+  const l = (mem.koLog ??= []);
+  l.push({ t: Date.now(), c: `${tipo}: ${String(msg).replace(/\s*(a|in|verso)?\s*-?\d+(\s*,\s*-?\d+)+/g, "").replace(/-?\d+/g, "#").slice(0, 70)}` });
+  if (l.length > 60) l.splice(0, l.length - 60);
+}
+// all'alba dopo una notte passata vivo: una notte in più (la morte azzera il conto)
+export function aggiornaNotti(ora) {
+  const notte = ora >= 13000 && ora < 23000;
+  if (mem.eraNotte && !notte) mem.nottiFila = (mem.nottiFila ?? 0) + 1;
+  mem.eraNotte = notte;
+}
+export function maestro(bot) {
+  const notti = mem.nottiFila ?? 0;
+  const pNotti = Math.min(100, notti * 10);
+  const ferro = (re) => contaOggetti(bot, (id) => re.test(id)) > 0;
+  const petto = bot.getComponent?.("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "";
+  const basi = {
+    cibo: scortaCibo(bot) >= 5,
+    riparo: (mem.esperienza?.tana?.ok ?? 0) > 0,
+    attrezzi: ferro(/(iron|diamond|netherite)_pickaxe$/) && ferro(/(iron|diamond|netherite)_sword$/),
+    corazza: /(iron|diamond|netherite)_chestplate$/.test(petto) || ferro(/(iron|diamond|netherite)_chestplate$/),
+  };
+  const pBasi = 25 * Object.values(basi).filter(Boolean).length;
+  const conta = {};
+  for (const k of (mem.koLog ?? []).filter((k) => Date.now() - k.t < 7200000)) conta[k.c] = (conta[k.c] ?? 0) + 1;
+  const ripetuti = Object.entries(conta).filter(([, n]) => n >= 2).sort((x, y) => y[1] - x[1]).map(([c, n]) => `${c} (${n} volte)`);
+  const pErrori = ripetuti.length === 0 ? 100 : ripetuti.length === 1 ? 50 : 0;
+  return { totale: Math.round((pNotti + pBasi + pErrori) / 3), notti, pNotti, basi, pBasi, ripetuti, pErrori,
+    ultimaMorte: mem.morti?.at(-1) ?? null };
+}
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {
@@ -919,7 +951,7 @@ function finito(ok, msg) {
   const esp = (mem.esperienza[c.tipo] ??= { ok: 0, ko: 0 });
   // "servono tronchi", "non ho...": non è un'abilità fallita ma un ingrediente mancante, si conta a parte
   const mancanza = !ok && /^(serv|manc|non ho|niente da)/i.test(String(msg));
-  if (ok) esp.ok++; else if (mancanza) { esp.mancanze = (esp.mancanze ?? 0) + 1; esp.ultimaMancanza = msg; } else { esp.ko++; esp.ultimoErrore = msg; }
+  if (ok) esp.ok++; else if (mancanza) { esp.mancanze = (esp.mancanze ?? 0) + 1; esp.ultimaMancanza = msg; } else { esp.ko++; esp.ultimoErrore = msg; registraKo(c.tipo, msg); }
   if (ok && c.luogoFinale?.nome) { mem.luoghi[c.luogoFinale.nome] = c.luogoFinale.p; evento(`Nuovo luogo: ${c.luogoFinale.nome} a ${c.luogoFinale.p.x},${c.luogoFinale.p.y},${c.luogoFinale.p.z}`); }
   evento(testo);
   // il successo si segnala al cervello solo a piano finito: il prossimo passo è già in coda

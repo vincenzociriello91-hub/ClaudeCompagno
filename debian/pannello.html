@@ -100,8 +100,8 @@
   .slot i { width:26px; height:26px; border-radius:4px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); display:grid; place-items:center; font:700 11px var(--pixel); font-style:normal; }
   .cielo[data-fase="giorno"] .slot i, .cielo[data-fase="alba"] .slot i { background:rgba(255,255,255,.45); border-color:rgba(0,0,0,.15); }
   .slot i.pieno { background:rgba(255,255,255,.85); color:#1c2420; }
-  .tessere { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
-  @media (max-width:520px) { .tessere { grid-template-columns:1fr 1fr; } .tessere .t3 { grid-column:1 / -1; } }
+  .tessere { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px; }
+  @media (max-width:700px) { .tessere { grid-template-columns:1fr 1fr; } }
   .tessera { background:var(--carta); border:1px solid var(--linea); border-radius:var(--r); padding:12px; display:flex; flex-direction:column; gap:4px; min-width:0; }
   .tessera b { font-size:13px; color:var(--tenue); font-weight:400; }
   .tessera .grande { font:700 30px/1 var(--pixel); font-variant-numeric:tabular-nums; }
@@ -130,6 +130,7 @@
       <div class="hud"><div class="fila" id="cuori" aria-label="Vita"></div><div class="fila" id="cosce" aria-label="Fame"></div><div class="slot" id="slot" aria-label="Armatura"></div></div>
     </div>
     <div class="tessere">
+      <div class="tessera"><b>Verso maestro</b><span class="grande" id="tMae">—</span><div class="barra"><div id="tMaeB" style="width:0"></div></div><small id="tMaeS">notti, basi, errori</small></div>
       <div class="tessera"><b>Maturità</b><span class="grande" id="tMat">—</span><div class="barra"><div id="tMatB" style="width:0"></div></div><small id="tMatS">su 100</small></div>
       <div class="tessera"><b>Salute della Odin</b><span class="grande" id="tOdin">—</span><small id="tOdinS">in attesa</small></div>
       <div class="tessera t3"><b>Oggi</b><span class="grande" id="tSpesa">—</span><small id="tSpesaS">spesa per l'IA</small></div>
@@ -145,6 +146,7 @@
   </section>
   <section id="stato">
     <div class="griglia" id="caselle"></div>
+    <h2>Verso maestro</h2><div class="box" id="maestro"></div>
     <h2>Livello di maturazione</h2><div class="box" id="maturita"></div>
     <h2>Compito e piano</h2><div class="box" id="piano"></div>
     <h2>Armatura</h2><div class="box" id="armatura"></div>
@@ -284,6 +286,9 @@ function mostraPanoramica() {
     $("slot").innerHTML = pezzi.map(([k, l]) => { const a = arm.find((x) => x.endsWith(k)); return `<i class="${a ? "pieno" : ""}" title="${esc(a ?? "manca: " + k)}">${l}</i>`; }).join("");
   }
   const mt = s?.maturita;
+  const ma = s?.maestro;
+  $("tMae").textContent = ma ? ma.totale + "%" : "—"; $("tMaeB").style.width = (ma ? ma.totale : 0) + "%";
+  $("tMaeS").textContent = ma ? `notti ${ma.notti}/10 · basi ${ma.pBasi}% · errori ${ma.pErrori}%` : "notti, basi, errori";
   $("tMat").textContent = mt ? mt.totale : "—"; $("tMatB").style.width = (mt ? mt.totale : 0) + "%";
   $("tMatS").textContent = mt ? `sopravvivenza ${mt.sopravvivenza}/25 · attrezzi ${mt.equipaggiamento}/30` : "su 100";
   const morti = (dati?.eventi ?? []).filter((e) => /^Sono morto/.test(e.testo)).length;
@@ -308,6 +313,13 @@ function mostraStato() {
   $("maturita").innerHTML = mt ? [["Equipaggiamento", mt.equipaggiamento, 30], ["Sopravvivenza", mt.sopravvivenza, 25], ["Abilità", mt.abilita, 20], ["Base", mt.base, 15], ["Sapere", mt.sapere, 10]]
     .map(([n, v, max]) => `<div style="display:flex;gap:8px;align-items:center;margin:3px 0"><span style="width:132px;flex:none;font-size:14px">${n}</span><div style="flex:1;height:8px;background:var(--linea);border-radius:4px"><div style="width:${Math.round(100 * v / max)}%;height:8px;background:var(--acc);border-radius:4px"></div></div><span style="width:46px;text-align:right">${v}/${max}</span></div>`).join("")
     + ((dati.memoria?.maturita ?? []).length ? `<p style="margin:8px 0 0">Andamento: ${dati.memoria.maturita.slice(-14).map((d) => `${esc(d.g.slice(5))} <b>${d.v}</b>`).join(" · ")}</p>` : "") : '<span class="vuoto">bot fuori dal mondo</span>';
+  const ms = s.maestro, si = (b) => (b ? "✅" : "❌");
+  $("maestro").innerHTML = ms ? `<p style="margin:0 0 6px;font-size:22px"><b>${ms.totale}%</b></p>`
+    + `<table style="width:100%;border-collapse:collapse"><tr><td>Notti di fila senza morire</td><td style="text-align:right"><b>${ms.pNotti}%</b> (${ms.notti}/10)</td></tr>`
+    + `<tr><td>Basi solide: ${si(ms.basi.cibo)} cibo ${si(ms.basi.riparo)} riparo ${si(ms.basi.attrezzi)} attrezzi di ferro ${si(ms.basi.corazza)} corazza di ferro</td><td style="text-align:right"><b>${ms.pBasi}%</b></td></tr>`
+    + `<tr><td>Non ripete gli errori${ms.ripetuti.length ? ": " + esc(ms.ripetuti.slice(0, 3).join("; ")) : ""}</td><td style="text-align:right"><b>${ms.pErrori}%</b></td></tr></table>`
+    + (ms.ultimaMorte ? `<p style="margin:6px 0 0">Ultima morte: ${esc(ms.ultimaMorte.t)} · ${esc(ms.ultimaMorte.causa)} a ${ms.ultimaMorte.x}, ${ms.ultimaMorte.y}, ${ms.ultimaMorte.z} · stava facendo: ${esc(ms.ultimaMorte.compito ?? "?")}</p>` : "")
+    : '<span class="vuoto">ancora nessun dato</span>';
   $("piano").innerHTML = s.presente ? `<b>${esc(s.compito)}</b>${s.coda?.length ? "<ol>" + s.coda.map((c) => `<li>${esc(c)}</li>`).join("") + "</ol>" : '<p class="vuoto">piano vuoto</p>'}` : "";
   $("armatura").textContent = s.armatura?.length ? s.armatura.map((x) => x.replace("minecraft:", "")).join(", ") : "nessuna";
   $("inv").innerHTML = (s.inv ?? []).map((x) => `<li>${esc(x.replace("minecraft:", "").replace(/:(\d+)$/, " × $1"))}</li>`).join("") || '<li class="vuoto">vuoto</li>';
