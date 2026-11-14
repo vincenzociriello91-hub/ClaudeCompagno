@@ -867,6 +867,10 @@ export function riprovaDopoCaduta(c) {
   if (c.tipo === "fondi" && c.stato.fornace) { c.stato.partenza = -1e9; return true; }
   return false;
 }
+// Di notte, da solo, si ripara (tana o rifugio) dove si trova. 2.8.117 (14/11): con la corazza di ferro, o vicino alla
+// casetta, restava all'aperto al punto "casa" ("ronda"): 3 morti per frecce di scheletro in un pomeriggio, spada e
+// piccone di ferro persi. Fuori di notte solo quando c'è un giocatore vero da difendere.
+export const riparoNotturno = (bot) => !giocatoriVeri().length;
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {

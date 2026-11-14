@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -24,11 +24,7 @@ function notteFuori() {
   // fino a 500 dopo l'alba i mostri sono ancora in giro: usciva alle 23000 con poca vita e moriva (10/11: vita 1/20, mandato a cacciare)
   // "aspetta" = mostri ancora intorno all'uscita: resta nel riparo e non prende lavori
   if (ora >= 500 && ora < 12500) return esciDalRiparo(bot) === "aspetta";
-  if (!mem.luoghi.casa || (dist(bot.location, mem.luoghi.casa) <= 24 && mem.luoghi.casetta)) return false;
-  const eq = bot.getComponent("minecraft:equippable");
-  // solo un'armatura vera (corazza di ferro o meglio) permette di restare fuori: con quella di rame appena indossata
-  // è rimasto all'aperto ed è morto 2 volte in 5 minuti (10/11, scheletro e creeper)
-  if (/(iron|diamond|netherite)_chestplate$/.test(eq?.getEquipment("Chest")?.typeId ?? "")) return false;
+  if (!mem.luoghi.casa || !riparoNotturno(bot)) return false;
   // mentre costruisce il rifugio o scava la tana non si ricomincia altrove (spinto dai mostri, ricominciava 6 volte a notte)
   const lavori = mem.compito?.routine === "notte_sicura" || mem.compito?.tipo === "tana";
   // riparo fatto ma lui è fuori (10/11 18:34: ucciso da un ragno mentre chiudeva la tana, è rimasto sul tetto tutta la notte
@@ -44,7 +40,7 @@ function notteFuori() {
     // (il rifugio riusciva 7 volte su 55: il 09/11 4 morti per scheletri mentre lo costruiva senza ciottoli)
     const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
     const rifugio = mem.tanaKo && Date.now() - mem.tanaKo < 120000 && blocchi >= 34;
-    evento(`Notte senza armatura di ferro e senza casetta: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    evento(`Notte, nessun giocatore da difendere: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
     assegna(rifugio ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;
