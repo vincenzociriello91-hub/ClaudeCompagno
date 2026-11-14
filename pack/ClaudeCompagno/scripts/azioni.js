@@ -903,6 +903,15 @@ export function maestro(bot) {
   return { totale: Math.round((pNotti + pBasi + pErrori) / 3), notti, pNotti, basi, pBasi, ripetuti, pErrori,
     ultimaMorte: mem.morti?.at(-1) ?? null };
 }
+// 14/11 18:37 UTC: appena chiuso nella tana (145,60,292) ha preso danno da soffocamento, il salvataggio lo ha portato
+// all'aperto (142,64,294) e un creeper lo ha ucciso. Nella tana si libera lo spazio del corpo e si resta dentro.
+export function liberaInTana(bot) {
+  const r = mem.rifugio, l = bot.location;
+  if (!r?.ok || Math.floor(l.x) !== r.x || Math.floor(l.z) !== r.z || Math.abs(Math.floor(l.y) - r.y) > 1) return false;
+  for (const dy of [0, 1]) scava(bot, { x: r.x, y: r.y + dy, z: r.z });
+  bot.teleport({ x: r.x + 0.5, y: r.y, z: r.z + 0.5 });
+  return true;
+}
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {

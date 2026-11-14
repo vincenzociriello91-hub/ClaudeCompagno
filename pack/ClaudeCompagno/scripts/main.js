@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -304,7 +304,8 @@ world.afterEvents.entityHurt.subscribe(({ hurtEntity, damage, damageSource }) =>
         if (mem.compito) interrompi("soffocavo di continuo in quel punto: cambio strada");
         soffocamenti = [];
         evento("Salvataggio: soffocavo di continuo, mi sposto in un punto sicuro");
-      } else if (g) { bot.teleport({ x: g.x + 0.5, y: g.y, z: g.z + 0.5 }); evento("Salvataggio: stavo soffocando in un blocco"); }
+      } else if (liberaInTana(bot)) evento("Salvataggio: soffocavo nella tana, libero lo spazio e resto dentro");
+      else if (g) { bot.teleport({ x: g.x + 0.5, y: g.y, z: g.z + 0.5 }); evento("Salvataggio: stavo soffocando in un blocco"); }
     }
   }
 });
