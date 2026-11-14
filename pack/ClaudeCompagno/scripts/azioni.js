@@ -615,7 +615,10 @@ export function difendi(bot) {
   const vita = bot.getComponent("minecraft:health")?.currentValue ?? 20;
   const fragile = debole(bot);
   // creeper da cui si scappa (metà vita o meno, oppure debole): niente corpo a corpo
-  const fuga = b.typeId === "minecraft:creeper" && (vita <= 10 || fragile) && !affrontaCreeper(bot, b);
+  // 2.8.116 (14/11): con la corazza di ferro debole() è falso e il bot andava a colpire i creeper corpo a corpo: 2 morti in
+  // un'ora (esplosione a 79,87,231; zombie mentre scappava a vita 9). Fino all'11/11 la tana lo aveva tenuto vivo per giorni.
+  // Con i creeper vale sempre la prudenza di prima; il corpo a corpo solo con affrontaCreeper (colpo e passo indietro).
+  const fuga = b.typeId === "minecraft:creeper" && !affrontaCreeper(bot, b);
   // 10 secondi senza riuscire a colpirlo: lo lascia perdere e torna al compito. Non un creeper da cui sta scappando e che è
   // ancora entro 8 blocchi: "lasciato perdere" restava ignorato per un minuto e poteva arrivargli addosso non visto;
   // più lontano lo perde di vista solo per 10 secondi
@@ -637,7 +640,7 @@ export function difendi(bot) {
     // e pochi secondi dopo è esploso; la tana si scava in un attimo e sotto 2 blocchi pieni l'esplosione non arriva).
     // Se la tana qui è appena fallita (acqua, roccia) resta la fuga.
     const stanco = tick() - lotta.progresso > 200;
-    const tana = fragile && (stanco || dist(e, l) < 8) && Date.now() - (mem.emergenzaT ?? 0) > 20000 && Date.now() - (mem.tanaKo ?? 0) > 60000;
+    const tana = (stanco || dist(e, l) < 8) && Date.now() - (mem.emergenzaT ?? 0) > 20000 && Date.now() - (mem.tanaKo ?? 0) > 60000;
     if (stanco || tana) {
       creeperFermi.set(b.id, tick() + 6000);
       lotta.bersaglio = null;

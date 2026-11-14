@@ -22,8 +22,5 @@ assert.ok(sessione.operazioni.some((o) => /Creeper a pochi passi/.test(o)));
 azzera(); mem.tanaKo = Date.now(); creeper.id = "c2"; system.currentTick += 1000;
 assert.equal(difendi(bot), true, "tana impossibile: doveva scappare");
 assert.equal(mem.compito.tipo, "raccogli"); assert.ok(mosso >= 1);
-// 3) con la corazza di ferro e vita 17 combatte: niente tana
-azzera(); corazza = { typeId: "minecraft:iron_chestplate" }; system.currentTick += 70;
-assert.equal(difendi(bot), true);
-assert.equal(mem.compito.tipo, "raccogli", "con la corazza di ferro non deve chiudersi in tana");
+// 3) dalla 2.8.116 anche con la corazza di ferro un creeper a 5 blocchi si evita con la tana (vedi test_v28116)
 console.log("test v2.8.80 ok");
