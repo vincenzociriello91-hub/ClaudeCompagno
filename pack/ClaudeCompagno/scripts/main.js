@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk, piccone,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -702,7 +702,7 @@ function pianoGratis() {
   // zona povera per quella routine (3 fallimenti e nessun successo qui): la salta finché non cambia zona
   const zona = zonaDi(bot.location);
   const povera = (n) => { const z = mem.statRoutine?.[n]?.zone?.[zona]; return z && z.ko >= 3 && z.ok === 0; };
-  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c, bot) && (!c.startsWith("miniera:") || sottoterraOk(bot)) && (!povera(c) || ((c === "cibo" || c === "compito:fattoria") && affamato(bot))));
+  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c, bot) && (!c.startsWith("miniera:") || sottoterraOk(bot)) && (!(c.startsWith("miniera:") || c === "attrezzi_ferro") || piccone(bot)) && (!povera(c) || ((c === "cibo" || c === "compito:fattoria") && affamato(bot))));
 }
 
 // Salvataggio ogni 30 secondi, armatura ogni 10, rapporto ogni 15 minuti.

@@ -915,6 +915,9 @@ export function liberaInTana(bot) {
 // 14/11 21:36 UTC: è sceso in miniera con vita 13 e fame 16 (sotto 18 la vita non risale): zombie nei cunicoli, morto;
 // rinato, è tornato giù a recuperare gli oggetti ed è morto di nuovo (ragno). In miniera solo con vita alta.
 export const sottoterraOk = (bot) => (bot.getComponent("minecraft:health")?.currentValue ?? 20) >= 16;
+// 15/11: senza piccone (quello di pietra si era rotto) il piano sceglieva miniera:ferro e attrezzi_ferro: "serve un piccone
+// migliore per short_grass / iron_ore", tempo perso sottoterra. Prima serve un piccone di pietra o meglio.
+export const piccone = (bot) => contaOggetti(bot, (id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id)) > 0;
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {
