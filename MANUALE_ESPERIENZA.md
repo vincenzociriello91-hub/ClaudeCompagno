@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.119 (14 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.120 (15 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -293,6 +293,7 @@ Aggiornato alla versione 2.8.119 (14 novembre 2026), dopo circa 30 ore di gioco,
 | Fattoria quasi vuota: il campo era pieno di ciottoli, terra e un banco da lavoro | le tane d'emergenza e le nicchie venivano scavate proprio dentro il campo, e i blocchi messi dal bot risultavano protetti anche per il bot stesso | le misure d'emergenza non devono distruggere le risorse che ti mantengono; e una protezione pensata per gli altri non deve bloccare chi deve fare manutenzione |
 | Ore senza cibo con la vita bassa, mentre la caccia era stata appena corretta | la caccia era "in pausa" per i fallimenti vecchi e la correzione non poteva mai entrare in gioco | una pausa per i fallimenti deve cedere quando il bisogno diventa urgente, altrimenti blocca proprio le correzioni |
 | Morto per un creeper pochi secondi dopo essersi chiuso nella tana (14/11) | un soffocamento dentro la tana faceva scattare il salvataggio che lo portava in superficie, di notte | un salvataggio non deve portarti fuori dal rifugio: risolvi il problema dove sei (libera lo spazio) e resta al riparo |
+| 2 morti in 2 minuti in miniera (14/11 sera) | è sceso con vita 13 e la fame sotto 18 (la vita non risaliva), poi è tornato giù subito a recuperare gli oggetti | nei posti pericolosi si entra solo in forze: prima ci si cura, poi si scende |
 
 ---
 

@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.119 — attuale (14/11/2026)
-- **Nella tana resta dentro anche se soffoca**: stasera alle 19:37 si era appena chiuso nella tana quando ha cominciato a soffocare dentro un blocco. Il salvataggio automatico lo ha tirato fuori in superficie, di notte, e un creeper lo ha ucciso. Ora, se succede nella tana, libera lo spazio intorno a sé e resta al riparo.
+## 2.8.120 — attuale (15/11/2026)
+- **In miniera solo in forze**: ieri sera alle 22:36 è sceso in miniera con la vita a 13 e la fame non abbastanza piena per farla risalire. Gli zombie nei cunicoli lo hanno ucciso; è tornato giù a riprendersi gli oggetti ed è morto di nuovo per un ragno. Ora scende in miniera solo con la vita a 16 o più; prima mangia e si cura.
 
-## 2.8.118 — precedente (14/11/2026)
-- **"Verso maestro" nel pannello**: la percentuale che ti scrivo in chat ora la calcola il bot da solo e la vedi nella prima pagina del pannello, accanto alla maturità. Nella scheda Stato c'è il dettaglio dei 3 criteri: notti di fila senza morire, basi solide (cibo, riparo, attrezzi di ferro, corazza di ferro) ed errori ripetuti nelle ultime 2 ore, più l'ultima morte con causa, posto e cosa stava facendo. Il gioco del bot non cambia.
+## 2.8.119 — precedente (14/11/2026)
+- **Nella tana resta dentro anche se soffoca**: stasera alle 19:37 si era appena chiuso nella tana quando ha cominciato a soffocare dentro un blocco. Il salvataggio automatico lo ha tirato fuori in superficie, di notte, e un creeper lo ha ucciso. Ora, se succede nella tana, libera lo spazio intorno a sé e resta al riparo.
 
 ## In programma
 - Il bot ragiona con i principi nuovi (sopravvivere prima di tutto, tana di notte anche con il ferro).
