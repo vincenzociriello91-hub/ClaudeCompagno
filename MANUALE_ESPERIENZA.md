@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.123 (16 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.124 (16 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -296,6 +296,7 @@ Aggiornato alla versione 2.8.123 (16 novembre 2026), dopo circa 30 ore di gioco,
 | 2 morti in 2 minuti in miniera (14/11 sera) | è sceso con vita 13 e la fame sotto 18 (la vita non risaliva), poi è tornato giù subito a recuperare gli oggetti | nei posti pericolosi si entra solo in forze: prima ci si cura, poi si scende |
 | Miniera e ferro tentati senza piccone (15/11) | il piccone di pietra si era rotto e il piano sceglieva lo stesso miniera e attrezzi di ferro | prima l'attrezzo che serve, poi il lavoro: senza piccone si rifà il piccone |
 | Scala per il ferro abbandonata a metà ogni volta (15-16/11) | il piccone si rompeva e il compito falliva, anche se aveva il materiale per rifarlo | quando un attrezzo si rompe a metà lavoro, rifallo subito e continua: si rinuncia solo se manca davvero il materiale |
+| 16 bastoni spesi in 64 torce mentre non aveva il piccone (16/11) | il piano sceglieva le torce come lavoro di riempimento senza guardare cosa mancava | il materiale scarso va prima a ciò che sblocca il resto (il piccone), poi alle comodità |
 
 ---
 
