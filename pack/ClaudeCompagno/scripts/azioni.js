@@ -760,6 +760,9 @@ export function vuotoSotto(dim, l) {
 
 // Di giorno, se è ancora chiuso nel riparo della notte (tana o rifugio), esce in superficie. Restando dentro ogni meta
 // risultava "bloccata" dopo 15 secondi: il 10/11 ha passato la mattina nel rifugio, caccia fallita su 19 posti senza muoversi.
+// la vita risale solo con fame 18 o più: serve averla già o avere qualcosa da mangiare (anche 3 di grano per il pane)
+export const puoGuarire = (bot) => (bot.getComponent?.("minecraft:player.hunger")?.currentValue ?? 20) >= 18
+  || Object.keys(CIBO).some((id) => contaOggetti(bot, id) > 0) || contaOggetti(bot, "minecraft:wheat") >= 3;
 export function esciDalRiparo(bot) {
   const r = mem.rifugio;
   if (!r || inEmergenza(bot)) return false;
@@ -773,7 +776,11 @@ export function esciDalRiparo(bot) {
   if (r.ok && dist(bot.location, r) <= 4) {
     const fuori = (bot.dimension.getEntities?.({ location: { x: r.x + 0.5, y: r.y + 4, z: r.z + 0.5 }, maxDistance: 20, families: ["monster"] }) ?? [])
       .filter((e) => !NEUTRALI.test(e.typeId));
-    if (fuori.length && (fragile || (world.getTimeOfDay?.() ?? 6000) < 4000)) return "aspetta";
+    // 2.8.126: aspettare con poca vita serve solo se la vita risale. Il 16/11 dalle 11:34 UTC è rimasto quasi 2 ore nella tana
+    // a -23,63,341 con vita 6, fame 17 e niente da mangiare (sotto 18 la vita non risale), perché accanto c'era sempre un
+    // drowned nell'acqua. Se non può guarire, si fa come col creeper: 3 minuti di attesa e poi l'uscita lontana dai mostri.
+    const guarisce = puoGuarire(bot);
+    if (fuori.length && ((fragile && guarisce) || (world.getTimeOfDay?.() ?? 6000) < 4000)) return "aspetta";
     // 2.8.87: un creeper di giorno non brucia e resta accanto alla tana. L'11/11 09:40-10:22: esce, "creeper a pochi passi",
     // di nuovo in tana, e così per mezz'ora (14 blocchi percorsi). Si aspetta 3 minuti che se ne vada; poi si esce
     // dalla parte opposta, a 12 blocchi (un cunicolo sotto terra)
@@ -781,6 +788,7 @@ export function esciDalRiparo(bot) {
     // 2.8.98: senza corazza di ferro anche scheletri e streghe (all'ombra della palude non bruciano) si aspettano e poi si
     // evitano con il cunicolo. L'11/11 21:05, a metà mattina con vita 20: uscito sopra la tana, 2 scheletri e una strega, vita 9.
     if (!creeper && debole(bot)) creeper = fuori.find((e) => /skeleton|stray|bogged|witch|spider/.test(e.typeId));
+    if (!creeper && fragile && !guarisce) creeper = fuori[0];
     if (creeper) {
       r.attesa ??= Date.now();
       if (Date.now() - r.attesa < 180000) return "aspetta";
