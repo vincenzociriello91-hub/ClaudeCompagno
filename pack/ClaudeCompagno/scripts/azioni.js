@@ -1288,7 +1288,7 @@ const ESECUTORI = {
     if (r !== true) return;
     const id = b.typeId;
     const esito = scava(bot, t);
-    if (esito === "attrezzo") return finito(false, `serve un piccone migliore per ${id.replace("minecraft:", "")}`);
+    if (esito === "attrezzo") return riprovaConPiccone(bot) ? undefined : finito(false, `serve un piccone migliore per ${id.replace("minecraft:", "")}`);
     if (esito === "ok") { s.fatti++; s.pausa = attesaScavo(id, bot); if (/_log$/.test(id)) ripianta(bot, t, id); }
     s.lista.shift();
   },
@@ -2163,6 +2163,15 @@ export function verificaRicette() {
   return { ricette: Object.keys(RICETTE).length, fusioni: Object.keys(FUSIONI).length, tolte };
 }
 
+// 15/11 21:30 UTC: il piccone di pietra si è rotto a metà della scala per il ferro, il compito è fallito ("serve un piccone
+// migliore per stone", 17 passi saltati) e solo dopo "Mi sono rifatto: stone_pickaxe". Ora prima si rifà il piccone e si
+// continua; si fallisce solo se non è migliorato (niente materiale), quindi niente giri infiniti.
+export function riprovaConPiccone(bot, rifai = procuraSpada) {
+  const prima = miglioreAttrezzo(bot, "pickaxe").livello;
+  rifai(bot);
+  return miglioreAttrezzo(bot, "pickaxe").livello > prima;
+}
+
 // Riflesso gratuito: spada, piccone o ascia mancanti (o rotti) li rifà col materiale migliore che ha.
 export function procuraSpada(bot) {
   for (const tipo of ["sword", "pickaxe", "axe"]) {
@@ -2266,7 +2275,7 @@ function scavoGuidato(bot, c, forma) {
     const id = blk.typeId;
     const esito = scava(bot, cel);
     if (esito === "protetto") return finito(false, `blocco protetto a ${cel.x},${cel.y},${cel.z}: non lo rompo`);
-    if (esito === "attrezzo") return finito(false, `serve un piccone migliore per ${id.replace("minecraft:", "")}`);
+    if (esito === "attrezzo") return riprovaConPiccone(bot) ? undefined : finito(false, `serve un piccone migliore per ${id.replace("minecraft:", "")}`);
     if (esito === "ok") { s.pausa = attesaScavo(id, bot); return; } // un blocco per volta
   }
   // minerali sulle pareti della sezione appena aperta
