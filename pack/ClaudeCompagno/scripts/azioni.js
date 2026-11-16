@@ -540,6 +540,12 @@ function scegliBersaglio(bot) {
 // come per la notte, solo ferro o meglio fa uscire dallo stato "debole"
 const debole = (bot) => !/(iron|diamond|netherite)_chestplate$/.test(bot.getComponent?.("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && !giocatoriVeri().length;
 // dentro il riparo chiuso: stessa cella e stessa quota (a 16 blocchi, o sul tetto, non è "al riparo")
+// le celle intorno al corpo (piedi e testa sui 4 lati), il soffitto e il pavimento
+export const celleBozzolo = (p) => [
+  ...[0, 1].flatMap((dy) => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([ax, az]) => ({ x: p.x + ax, y: p.y + dy, z: p.z + az }))),
+  { x: p.x, y: p.y + 2, z: p.z }, { x: p.x, y: p.y - 1, z: p.z }];
+// sottoterra: sotto y 50 (il mare è a 63) la tana e il rifugio fallivano tra le grotte
+export const sottoterra = (bot) => bot.location.y < 50;
 export const nelRiparo = (bot) => { const r = mem.rifugio; return !!r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5; };
 // creeper da cui la fuga non è servita: per 5 minuti lo si riguarda solo se arriva a 4 blocchi
 const creeperFermi = new Map();
@@ -1863,6 +1869,23 @@ const ESECUTORI = {
   // tana: scende di 4 blocchi dove si trova e richiude con 2 blocchi pieni sopra la testa.
   // 2.8.66: profonda solo 2 la testa restava a 0,2 blocchi dal suolo, e in Bedrock gli zombie colpiscono attraverso i blocchi
   // (10/11 10:10: ucciso da uno zombie dentro la tana chiusa, dopo 8 minuti fermo). Senza piccone su roccia resta a 2-3.
+  // 2.8.128: sottoterra (miniera a y 17, 16/11 15:22-15:48 UTC) la tana falliva ("acqua o grotte tutto intorno", 8 volte) e il
+  // rifugio da 34 blocchi pure ("blocchi irraggiungibili", 8 volte): ogni notte allo scoperto in una grotta. Il bozzolo chiude
+  // le 4 pareti a piedi e testa, il soffitto e il pavimento con i blocchi che ha in tasca, dove si trova.
+  bozzolo(bot, c) {
+    const l = bot.location, p = { x: Math.floor(l.x), y: Math.floor(l.y), z: Math.floor(l.z) };
+    const celle = celleBozzolo(p);
+    for (const q of celle) {
+      const blocco = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
+      if (!blocco) return finito(false, "niente blocchi per chiudermi nel bozzolo");
+      const e = piazza(bot, q, blocco, false, false);
+      if (e !== "ok" && e !== "gia" && e !== "occupato") return finito(false, `non riesco a chiudere il bozzolo (${e})`);
+    }
+    mem.rifugio = { ...p, ok: true, ...(c.emergenza ? { fino: Date.now() + 90000 } : {}) };
+    nav.meta = null;
+    finito(true, `chiuso in un bozzolo di pietra a ${p.x},${p.y},${p.z}: resto qui fino all'alba`);
+  },
+
   tana(bot, c) {
     const s = c.stato;
     const dim = bot.dimension;

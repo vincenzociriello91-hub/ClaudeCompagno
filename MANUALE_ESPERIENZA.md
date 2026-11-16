@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.127 (16 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.128 (16 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -300,6 +300,7 @@ Aggiornato alla versione 2.8.127 (16 novembre 2026), dopo circa 30 ore di gioco,
 | Tornato 3 volte nello stesso posto vuoto a cercare legna (16/11) | ogni interruzione (creeper, tana) faceva ripartire il compito da zero e dimenticava i posti già provati | ciò che hai già provato va ricordato oltre il singolo tentativo: dopo un'interruzione si riprende da dove eri, non da capo |
 | Quasi 2 ore fermo nella tana con vita 6 (16/11) | aspettava di guarire, ma senza cibo e con la fame sotto 18 la vita non poteva risalire, e un mostro nell'acqua lì accanto non se ne andava mai | aspettare ha senso solo se il tempo risolve il problema: se non migliora da solo, cambia strada |
 | Morto per uno zombie viaggiando verso il ferro con vita 5 (16/11) | uscito dalla tana ferito, il piano ha scelto un lavoro lontano invece del cibo | da feriti prima ci si cura (cibo), poi si riprendono i lavori lontani |
+| 8 notti di fila allo scoperto in miniera (16/11) | sottoterra la tana falliva per le grotte e il rifugio da costruire non trovava appoggi | se il riparo solito non si può fare dove sei, usa quello che hai in tasca: chiuditi con la pietra intorno |
 
 ---
 

@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.127 — attuale (16/11/2026)
-- **Ferito, pensa prima al cibo**: dopo la correzione della tana è uscito con la vita a 5 per cercare da mangiare, ma il piano lo ha mandato verso un giacimento di ferro lontano e uno zombie lo ha ucciso per strada (14:50). Ora con la vita a 10 o meno sceglie solo caccia e fattoria, e non parte per esplorazioni lontane.
+## 2.8.128 — attuale (16/11/2026)
+- **Riparo anche in miniera**: oggi pomeriggio era sottoterra a cercare ferro e di notte non riusciva a ripararsi: la tana falliva per le grotte intorno (8 volte) e il rifugio da costruire pure (8 volte). Ora, sottoterra, se la tana non si può fare si chiude con la pietra intorno (pareti, soffitto e pavimento) e resta lì fino all'alba.
 
-## 2.8.126 — precedente (16/11/2026)
-- **Non resta più chiuso nella tana per ore**: oggi dalle 12:34 è rimasto quasi 2 ore fermo nella tana con la vita a 6. Aspettava di guarire, ma senza niente da mangiare la vita non poteva risalire, e un mostro nell'acqua lì vicino non se ne andava mai. Ora, se non può guarire, aspetta 3 minuti e poi esce dalla parte più lontana dai mostri per andare a cercare cibo.
+## 2.8.127 — precedente (16/11/2026)
+- **Ferito, pensa prima al cibo**: dopo la correzione della tana è uscito con la vita a 5 per cercare da mangiare, ma il piano lo ha mandato verso un giacimento di ferro lontano e uno zombie lo ha ucciso per strada (14:50). Ora con la vita a 10 o meno sceglie solo caccia e fattoria, e non parte per esplorazioni lontane.
 
 ## In programma
 - Pannello: avvisi in cima quando qualcosa non va (rapporti fermi, server lento, versione vecchia).

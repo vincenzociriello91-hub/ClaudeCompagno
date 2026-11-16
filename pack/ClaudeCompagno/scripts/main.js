@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk, piccone, torceOk, soloCibo, pianoPerVitaBassa,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk, piccone, torceOk, soloCibo, pianoPerVitaBassa, sottoterra,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -39,9 +39,12 @@ function notteFuori() {
     // prima la tana (1 blocco, 1 minuto, 9 posti provati); il rifugio costruito solo se la tana è già fallita qui
     // (il rifugio riusciva 7 volte su 55: il 09/11 4 morti per scheletri mentre lo costruiva senza ciottoli)
     const blocchi = BLOCCHI_PIENI.reduce((n, id) => n + contaOggetti(bot, id), 0);
-    const rifugio = mem.tanaKo && Date.now() - mem.tanaKo < 120000 && blocchi >= 34;
-    evento(`Notte, nessun giocatore da difendere: ${rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
-    assegna(rifugio ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
+    const tanaFallita = mem.tanaKo && Date.now() - mem.tanaKo < 120000;
+    // 2.8.128: sottoterra, tana fallita: bozzolo di pietra dove si trova (il rifugio da 34 blocchi falliva sempre tra le grotte)
+    const bozzolo = tanaFallita && sottoterra(bot) && blocchi >= 10;
+    const rifugio = !bozzolo && tanaFallita && blocchi >= 34;
+    evento(`Notte, nessun giocatore da difendere: ${bozzolo ? "mi chiudo in un bozzolo di pietra" : rifugio ? "mi chiudo in un rifugio" : "scavo una tana"} qui fino all'alba`);
+    assegna(bozzolo ? { tipo: "bozzolo", routine: "notte_sicura" } : rifugio ? { tipo: "routine", nome: "notte_sicura" } : { tipo: "tana", routine: "notte_sicura" }, "piano");
   }
   return true;
 }
