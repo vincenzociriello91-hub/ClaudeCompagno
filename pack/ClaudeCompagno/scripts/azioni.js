@@ -938,6 +938,10 @@ export const piccone = (bot) => contaOggetti(bot, (id) => /(stone|copper|iron|di
 // 16/11 07:30 UTC: senza piccone ha trovato la legna, fatto 16 bastoni e li ha spesi tutti in 64 torce (ne aveva già 27):
 // il piccone non si poteva più rifare. Le torce solo con un piccone in tasca e finché ne ha meno di 32.
 export const torceOk = (bot) => piccone(bot) && contaOggetti(bot, "minecraft:torch") < 32;
+// 16/11 13:50 UTC: uscito dalla tana con vita 5-7 (2.8.126) il piano ha scelto attrezzi_ferro e lo ha mandato a giacimenti
+// lontani: ucciso da uno zombie villager a metà strada. Con vita 10 o meno si fa solo ciò che porta cibo.
+export const soloCibo = (bot) => (bot.getComponent?.("minecraft:health")?.currentValue ?? 20) <= 10;
+export const pianoPerVitaBassa = (c) => c === "cibo" || c === "compito:fattoria";
 export const scortaCibo = (bot) => contaOggetti(bot, (id) => id in CIBO || id === "minecraft:chicken");
 export const affamato = (bot) => !!bot && contaOggetti(bot, (id) => id in CIBO) === 0 && (bot.getComponent("minecraft:player.hunger")?.currentValue ?? 20) < 18;
 export const routineInPausa = (nome, bot) => {

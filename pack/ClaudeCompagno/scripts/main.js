@@ -5,7 +5,7 @@ import { mem, sessione, carica, salva, evento, errore, scriviBlocco, notifica, s
 import { CFG, caricaConfig, pensa, progetta, budgetOk, riordinaLezioni, riflessione, stato as cervello } from "./cervello.js";
 import {
   notifiche, avvisa, difendi, gestisciFame, eseguiCompito, indossaArmatura, registraAggressione, giocatoriVeri, vuotoSotto, esciDalRiparo,
-  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk, piccone, torceOk,
+  istantaneaInventario, ripristinaInventario, riassuntoInventario, assegna, descriviCompito, seguiGiocatore, giocatore, procuraSpada, contaOggetti, interrompi, dist, routineKo, routineInPausa, inEmergenza, rientraNelRiparo, nelRiparo, affamato, togliFantasmi, zonaDi, annotaRisorse, lezioneAuto, riordinaInventario, spostaBaseSeAllagata, suolo, ariaSopra, segnaPericolo, prestazioni, inv, piazza, verificaRicette, inPericolo, guarda, inquadra, vista, ordinePannello, traslocoNelBosco, scortaCibo, riprovaDopoCaduta, riparoNotturno, maestro, aggiornaNotti, liberaInTana, sottoterraOk, piccone, torceOk, soloCibo, pianoPerVitaBassa,
 } from "./azioni.js";
 import { ROUTINE, salvaSchema } from "./schemi.js";
 import { CIBO } from "./ricette.js";
@@ -618,7 +618,8 @@ ogniTick(20, () => {
       if (r?.startsWith("crafta:")) { evento(`Piano gratis: ${r}`); assegna({ tipo: "crafta", oggetto: r.slice(7), routine: r }, "piano"); return; }
       if (r) { evento(`Piano gratis: routine ${r}`); assegna({ tipo: "routine", nome: r }, "piano"); return; }
       // tutte fallite di recente: la zona è povera, esplora in una direzione a caso per trovare animali e roccia
-      if (!online) { const dir = ["nord", "sud", "est", "ovest"][Math.floor(Math.random() * 4)]; assegna({ tipo: "esplora", direzione: dir, lunghezza: 80 }, "piano"); return; }
+      // con vita bassa niente esplorazioni di 80 blocchi: si riprova il cibo quando la sua pausa scade (2.8.127)
+      if (!online && !soloCibo(bot)) { const dir = ["nord", "sud", "est", "ovest"][Math.floor(Math.random() * 4)]; assegna({ tipo: "esplora", direzione: dir, lunghezza: 80 }, "piano"); return; }
     }
     if (!online) return; // senza giocatori nessuna chiamata per pianificare
     // mai fermo: senza lavoro pianifica dopo 10 s; se il cervello non trova niente, riprova più piano (fino a 1 min)
@@ -702,7 +703,7 @@ function pianoGratis() {
   // zona povera per quella routine (3 fallimenti e nessun successo qui): la salta finché non cambia zona
   const zona = zonaDi(bot.location);
   const povera = (n) => { const z = mem.statRoutine?.[n]?.zone?.[zona]; return z && z.ko >= 3 && z.ok === 0; };
-  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c, bot) && (!c.startsWith("miniera:") || sottoterraOk(bot)) && (!(c.startsWith("miniera:") || c === "attrezzi_ferro") || piccone(bot)) && (c !== "torce" || torceOk(bot)) && (!povera(c) || ((c === "cibo" || c === "compito:fattoria") && affamato(bot))));
+  return candidati.find((c) => (ROUTINE[c] || /^(miniera|compito|crafta):/.test(c)) && !(system.currentTick - (routineKo.get(c) ?? -1e9) < 12000) && !routineInPausa(c, bot) && (!c.startsWith("miniera:") || sottoterraOk(bot)) && (!(c.startsWith("miniera:") || c === "attrezzi_ferro") || piccone(bot)) && (c !== "torce" || torceOk(bot)) && (!soloCibo(bot) || pianoPerVitaBassa(c)) && (!povera(c) || ((c === "cibo" || c === "compito:fattoria") && affamato(bot))));
 }
 
 // Salvataggio ogni 30 secondi, armatura ogni 10, rapporto ogni 15 minuti.
