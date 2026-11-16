@@ -720,6 +720,15 @@ function annotaRisorsa(cat, p) {
 export function dimenticaRisorsa(cat, p) {
   if (mem.risorse?.[cat]) mem.risorse[cat] = mem.risorse[cat].filter((q) => dist(q, p) > 16);
 }
+// 16/11 09:11-09:51 UTC: kit_legno è tornato 3 volte a -47,66,169 e 2 volte a 68,78,247: ogni volta un creeper lo
+// interrompeva, il compito ricominciava da capo e gli "esclusi" (salvati nel compito) si perdevano. Un posto della mappa
+// già scelto negli ultimi 20 minuti non si riprova: si passa al successivo.
+export function tentatiDiRecente(cat) {
+  const t = Date.now();
+  mem.tentatiMappa = (mem.tentatiMappa ?? []).filter((x) => t - x.t < 1200000);
+  return mem.tentatiMappa.filter((x) => x.cat === cat).map((x) => x.p);
+}
+export const segnaTentato = (cat, p) => (mem.tentatiMappa ??= []).push({ cat, p: { x: p.x, y: p.y, z: p.z }, t: Date.now() });
 export function risorsaVicina(bot, cat, escluse = []) {
   return (mem.risorse?.[cat] ?? []).filter((q) => !escluse.some((e) => dist(e, q) < 16) && !inPericolo(q))
     .sort((a, b) => dist(a, bot.location) - dist(b, bot.location))[0];
@@ -1260,9 +1269,9 @@ const ESECUTORI = {
         // prima prova i posti dove l'aveva visto (mappa delle risorse); un posto visitato a vuoto si dimentica
         const cat = categoriaRisorsa(c.blocco);
         if (s.daMappa) { dimenticaRisorsa(cat, s.daMappa); (s.escluse ??= []).push(s.daMappa); s.daMappa = null; }
-        const nota = risorsaVicina(bot, cat, s.escluse ?? []);
+        const nota = risorsaVicina(bot, cat, [...(s.escluse ?? []), ...tentatiDiRecente(cat)]);
         if (nota && dist(nota, bot.location) > 6) {
-          s.esplora = nota; s.daMappa = nota;
+          s.esplora = nota; s.daMappa = nota; segnaTentato(cat, nota);
           evento(`Vado a ${c.blocco} che avevo visto a ${nota.x},${nota.y},${nota.z}`);
           return;
         }
