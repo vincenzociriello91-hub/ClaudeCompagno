@@ -495,6 +495,7 @@ export function vista(bot) {
 }
 
 // ---------- difesa ----------
+export const sogliaRitirata = (mostri) => (mostri >= 2 ? 10 : 6);
 const NEUTRALI = /enderman|zombie_pigman|zombified_piglin|piglin$|piglin_brute|wolf|bee$|llama|iron_golem|polar_bear|dolphin|goat|panda/;
 const EVITA = /warden|ender_dragon|wither$|elder_guardian/;
 export const aggressori = new Map(); // entityId -> { vittima, t }
@@ -670,7 +671,10 @@ export function difendi(bot) {
     if (tick() - (lotta.avvisoRitirata ?? -1e9) > 600) { lotta.avvisoRitirata = tick(); evento(`Scappo dal creeper: vita ${Math.round(vita)}/20`); }
     return true;
   }
-  if (vita <= 6 && dist(b.location, bot.location) < 6) {
+  // 2.8.130: contro più mostri insieme si arretra prima. Il 17/11 07:52 UTC (giorno, corazza di ferro) 3 zombie: vita da 9 a 3
+  // in un secondo, "Ritirata: vita 4/20" e morto. Con la corazza di ferro il riparo d'emergenza (debole) non scatta più.
+  const intorno = vita > 10 ? 0 : (bot.dimension.getEntities?.({ location: bot.location, maxDistance: 6, families: ["monster"] }) ?? []).filter((m) => !NEUTRALI.test(m.typeId)).length;
+  if (vita <= sogliaRitirata(intorno) && dist(b.location, bot.location) < 6) {
     const l = bot.location, e = b.location, d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z));
     try { bot.isSneaking = false; bot.moveToLocation({ x: l.x + ((l.x - e.x) / d) * 8, y: l.y, z: l.z + ((l.z - e.z) / d) * 8 }); } catch {}
     lotta.ritirata = tick() + 40;
