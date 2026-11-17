@@ -507,6 +507,9 @@ export function vista(bot) {
 }
 
 // ---------- difesa ----------
+export const ARCIERI = /skeleton|stray|bogged|witch|pillager/;
+// punto a 20 blocchi dall'arciere, dalla parte opposta (gli scheletri tirano fino a 16)
+export const fuoriTiro = (l, e) => { const d = Math.max(0.1, Math.hypot(l.x - e.x, l.z - e.z)); return { x: e.x + ((l.x - e.x) / d) * 20, y: l.y, z: e.z + ((l.z - e.z) / d) * 20 }; };
 export const sogliaRitirata = (mostri) => (mostri >= 2 ? 10 : 6);
 const NEUTRALI = /enderman|zombie_pigman|zombified_piglin|piglin$|piglin_brute|wolf|bee$|llama|iron_golem|polar_bear|dolphin|goat|panda/;
 const EVITA = /warden|ender_dragon|wither$|elder_guardian/;
@@ -645,8 +648,16 @@ export function difendi(bot) {
   // più lontano lo perde di vista solo per 10 secondi
   if (tick() - lotta.progresso > 200 && !fuga) {
     ignorati.set(b.id, tick() + 1200);
-    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: non riesco a raggiungerlo`);
     lotta.bersaglio = null;
+    // 2.8.133: un arciere che non si raggiunge continua a tirare. Il 17/11 alle 09:51 e alle 12:12 UTC "Lascio perdere
+    // skeleton" e pochi secondi dopo morto per le frecce, tornando al compito sotto tiro. Ora ci si allontana fuori tiro.
+    if (ARCIERI.test(b.typeId) && dist(b.location, bot.location) < 16) {
+      try { bot.isSneaking = false; bot.moveToLocation(fuoriTiro(bot.location, b.location)); } catch {}
+      lotta.ritirata = tick() + 100;
+      evento(`${b.typeId.replace("minecraft:", "")} irraggiungibile che tira: mi allontano fuori tiro`);
+      return true;
+    }
+    evento(`Lascio perdere ${b.typeId.replace("minecraft:", "")}: non riesco a raggiungerlo`);
     return false;
   }
   // creeper con metà vita o meno: scappa lontano (2 morti per esplosione a vita 5 il 09/11:
