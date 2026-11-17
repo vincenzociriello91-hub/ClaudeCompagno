@@ -204,6 +204,18 @@ export function livelloRichiesto(blocco) {
   return 0;
 }
 
+// 2.8.131: il piccone più modesto che basta. Il 17/11 il piccone di ferro fatto alle 07:48 UTC si è rotto alle 08:33 scavando
+// pietra (scale e gallerie): la spada di ferro e i minerali che lo richiedono restavano senza. Il ferro solo dove serve.
+export function picconeGiusto(bot, richiesto) {
+  const c = inv(bot);
+  let scelto = -1, lv = 99;
+  for (let i = 0; i < c.size; i++) {
+    const it = c.getItem(i);
+    const l = it?.typeId.endsWith("_pickaxe") ? livelloOggetto(it.typeId) : 0;
+    if (l >= Math.max(1, richiesto) && l < lv) { scelto = i; lv = l; }
+  }
+  return scelto >= 0 ? { slot: scelto, livello: lv } : miglioreAttrezzo(bot, "pickaxe");
+}
 function miglioreAttrezzo(bot, tipo) {
   const c = inv(bot);
   let best = -1, lv = 0;
@@ -246,7 +258,7 @@ export function scava(bot, p, forza = false) {
   if (INDISTRUTTIBILI.test(b.typeId) || (!forza && protetto(bot, b))) return "protetto";
   const id = b.typeId;
   const tipo = tipoAttrezzo(id);
-  const att = tipo === "mano" ? { slot: -1, livello: 0 } : miglioreAttrezzo(bot, tipo);
+  const att = tipo === "mano" ? { slot: -1, livello: 0 } : tipo === "pickaxe" ? picconeGiusto(bot, livelloRichiesto(id)) : miglioreAttrezzo(bot, tipo);
   if (att.livello < livelloRichiesto(id)) return "attrezzo";
   seleziona(bot, att.slot);
   bot.lookAtBlock(p);
