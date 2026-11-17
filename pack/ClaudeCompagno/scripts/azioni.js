@@ -415,7 +415,9 @@ export function gestisciFame(bot, inLotta) {
 // ---------- inventario in ordine ----------
 // Butta la roba inutile e i doppioni (aveva 106 leaf_litter, 12 banchi, 4 picconi di pietra insieme a quello di ferro).
 const ROBACCIA = /leaf_litter|rotten_flesh|spider_eye|poisonous_potato|pufferfish|dead_bush|^minecraft:(short_grass|tall_grass|fern|large_fern)$/;
-const LIMITI = [[/^minecraft:(dirt|diorite|granite|andesite|tuff|cobbled_deepslate|netherrack|calcite)$/, 64], [/^minecraft:(crafting_table|furnace)$/, 1], [/_seeds$/, 32], [/_sapling$/, 16],
+// 2.8.129: anche i ciottoli. Il 16/11 ne aveva ~550 (9 pile) con l'inventario pieno: 15 mucche uccise e nessuna bistecca
+// raccolta in tutto il giorno (rimaste a terra), cibo sempre sotto 5. 2 pile bastano per tana, bozzolo e rifugio.
+const LIMITI = [[/^minecraft:cobblestone$/, 128], [/^minecraft:(dirt|diorite|granite|andesite|tuff|cobbled_deepslate|netherrack|calcite)$/, 64], [/^minecraft:(crafting_table|furnace)$/, 1], [/_seeds$/, 32], [/_sapling$/, 16],
   // cose che il bot non usa: 7 archi (uno per casella) e ghiaia, ossa, frecce riempivano l'inventario (10/11: 0 posti liberi)
   [/^minecraft:(bow|crossbow|fishing_rod)$/, 1], [/^minecraft:(gravel|bone|arrow)$/, 16]];
 // con meno di 4 posti liberi butta anche questi, dal meno utile, finché non ne ha 4
