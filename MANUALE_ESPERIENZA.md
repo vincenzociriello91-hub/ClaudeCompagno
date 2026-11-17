@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.131 (17 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.132 (17 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -304,6 +304,7 @@ Aggiornato alla versione 2.8.131 (17 novembre 2026), dopo circa 30 ore di gioco,
 | 15 mucche cacciate e nessuna bistecca in un giorno (16/11) | inventario pieno di ciottoli (9 pile): il cibo restava a terra | tieni solo la scorta che serve di ciò che abbonda: lo spazio libero vale più del materiale in eccesso |
 | Morto contro 3 zombie insieme con la corazza di ferro (17/11) | arretrava solo a vita 4-6, ma 3 mostri tolgono 6 di vita in un secondo | contro un gruppo ci si ritira prima, quando hai ancora margine: la soglia giusta dipende da quanti sono |
 | Piccone di ferro rotto in 45 minuti (17/11) | lo usava per scavare la pietra delle scale e delle gallerie | l'attrezzo prezioso si usa solo dove serve: per il resto basta quello più modesto |
+| Spada di ferro mai fatta pur avendo il ferro per farla (17/11) | la routine voleva prima tutto il ferro per piccone, spada e ascia e ripartiva per giacimenti lontani | fai subito quello che puoi con ciò che hai: un pezzo pronto oggi vale più del set completo domani |
 
 ---
 

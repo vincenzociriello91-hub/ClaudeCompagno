@@ -14,8 +14,8 @@ assegna({ tipo: "routine", nome: "attrezzi_ferro" }, "piano");
 eseguiCompito(bot);
 assert.deepEqual(mem.coda.map((p) => p.tipo), ["fondi", "crafta", "crafta", "crafta"], JSON.stringify(mem.coda));
 assert.equal(mem.coda[0].oggetto, "raw_iron"); assert.equal(mem.coda[0].quantita, 6);
-// con solo 2 pezzi di ferro in tutto resta la routine completa (prima si scava)
-slot[1] = { typeId: "minecraft:raw_iron", amount: 1 }; mem.coda = []; mem.compito = null;
+// con solo 2 pezzi di ferro: dalla 2.8.132 fa subito la spada (vedi test_v28132); con la spada già fatta prima si scava
+slot[1] = { typeId: "minecraft:raw_iron", amount: 1 }; slot[2] = { typeId: "minecraft:iron_sword", amount: 1 }; mem.coda = []; mem.compito = null;
 assegna({ tipo: "routine", nome: "attrezzi_ferro" }, "piano"); eseguiCompito(bot);
 assert.equal(mem.coda[0].tipo, "raccogli");
 console.log("test v2.8.111 ok");

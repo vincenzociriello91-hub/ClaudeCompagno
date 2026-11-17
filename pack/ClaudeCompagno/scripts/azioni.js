@@ -1621,8 +1621,12 @@ const ESECUTORI = {
     // di pietra rotto, creeper, notte) e il ferro restava grezzo da ieri: niente spada di ferro, quindi niente lotta coi creeper
     // e ciclo tana-cunicolo. Ora con lingotti + grezzo >= 3 fonde quello che ha e crafta subito.
     const ingotti = contaOggetti(bot, "minecraft:iron_ingot"), grezzo = contaOggetti(bot, "minecraft:raw_iron");
-    let lista = (c.nome === "attrezzi_ferro" && ingotti + grezzo >= 3
-      ? passi.filter((p) => p.tipo === "crafta" || (p.tipo === "fondi" && grezzo > 0)).map((p) => (p.tipo === "fondi" ? { ...p, quantita: grezzo } : p))
+    // 2.8.132: con 2 (1 lingotto + 1 grezzo il 17/11 dalle 08:33 UTC) bastano per la spada: la fa subito invece di ripartire
+    // per 10 minerali lontani (morto per uno scheletro durante il viaggio alle 09:51).
+    const spadaFerro = contaOggetti(bot, (id) => /(iron|diamond|netherite)_sword$/.test(id)) > 0;
+    const solaSpada = ingotti + grezzo === 2 && !spadaFerro;
+    let lista = (c.nome === "attrezzi_ferro" && (ingotti + grezzo >= 3 || solaSpada)
+      ? passi.filter((p) => (p.tipo === "crafta" && (!solaSpada || p.oggetto === "iron_sword")) || (p.tipo === "fondi" && grezzo > 0)).map((p) => (p.tipo === "fondi" ? { ...p, quantita: grezzo } : p))
       : passi).filter((p) => !gia(p) && !fatto(p));
     if (c.nome === "armatura_rame") {
       // si fonde solo il rame che manca per i pezzi rimasti
