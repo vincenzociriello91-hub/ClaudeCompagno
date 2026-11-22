@@ -10,7 +10,7 @@ const bot = { isValid: true, location: { x: 0.5, y: 64, z: 0.5 }, dimension: { i
 system.currentTick = 10; mem.coda = []; mem.esperienza = {}; mem.luoghi = {}; mem.compito = null;
 assegna({ tipo: "routine", nome: "attrezzi_ferro" }, "piano");
 eseguiCompito(bot);
-assert.deepEqual(mem.coda.map((p) => p.tipo), ["crafta", "crafta", "crafta"], JSON.stringify(mem.coda));
+assert.deepEqual(mem.coda.map((p) => p.tipo), ["crafta", "crafta"], JSON.stringify(mem.coda)); // 2.8.134: ascia dopo la corazza
 assert.equal(mem.coda[0].oggetto, "iron_pickaxe");
 // senza lingotti resta la routine completa
 slot[0] = undefined; mem.coda = []; mem.compito = null;

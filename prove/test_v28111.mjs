@@ -12,7 +12,7 @@ const bot = { isValid: true, location: { x: 0.5, y: 64, z: 0.5 }, dimension: { i
 system.currentTick = 10; mem.coda = []; mem.esperienza = {}; mem.luoghi = {}; mem.compito = null;
 assegna({ tipo: "routine", nome: "attrezzi_ferro" }, "piano");
 eseguiCompito(bot);
-assert.deepEqual(mem.coda.map((p) => p.tipo), ["fondi", "crafta", "crafta", "crafta"], JSON.stringify(mem.coda));
+assert.deepEqual(mem.coda.map((p) => p.tipo), ["fondi", "crafta", "crafta"], JSON.stringify(mem.coda)); // 2.8.134: ascia dopo la corazza
 assert.equal(mem.coda[0].oggetto, "raw_iron"); assert.equal(mem.coda[0].quantita, 6);
 // con solo 2 pezzi di ferro: dalla 2.8.132 fa subito la spada (vedi test_v28132); con la spada già fatta prima si scava
 slot[1] = { typeId: "minecraft:raw_iron", amount: 1 }; slot[2] = { typeId: "minecraft:iron_sword", amount: 1 }; mem.coda = []; mem.compito = null;

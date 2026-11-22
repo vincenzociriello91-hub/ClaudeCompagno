@@ -29,7 +29,7 @@ assert.equal(contaOggetti(bot, "minecraft:wooden_pickaxe"), 1, "non ha craftato 
 mem.coda = [];
 assegna({ tipo: "routine", nome: "attrezzi_ferro" }, "piano");
 eseguiCompito(bot);
-assert.equal(mem.coda.length, 5);
+assert.equal(mem.coda.length, 4); // dalla 2.8.134 l'ascia di ferro aspetta la corazza di ferro
 assegna(mem.coda.shift(), "piano");
 for (let i = 0; i < 3000 && mem.compito; i++) eseguiCompito(bot);
 assert.equal(mem.compito, null);

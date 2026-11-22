@@ -966,6 +966,13 @@ export function liberaInTana(bot) {
 }
 // 14/11 21:36 UTC: è sceso in miniera con vita 13 e fame 16 (sotto 18 la vita non risale): zombie nei cunicoli, morto;
 // rinato, è tornato giù a recuperare gli oggetti ed è morto di nuovo (ragno). In miniera solo con vita alta.
+export function attrezzoInutile(bot, p) {
+  const m = p.tipo === "crafta" && /^(?:minecraft:)?iron_(pickaxe|sword|axe)$/.exec(p.oggetto ?? "");
+  if (!m) return false;
+  if (contaOggetti(bot, (id) => new RegExp(`(iron|diamond|netherite)_${m[1]}$`).test(id)) > 0) return true;
+  const corazza = /(iron|diamond|netherite)_chestplate$/;
+  return m[1] === "axe" && !corazza.test(bot.getComponent?.("minecraft:equippable")?.getEquipment?.("Chest")?.typeId ?? "") && contaOggetti(bot, (id) => corazza.test(id)) === 0;
+}
 export const sottoterraOk = (bot) => (bot.getComponent("minecraft:health")?.currentValue ?? 20) >= 16;
 // 15/11: senza piccone (quello di pietra si era rotto) il piano sceglieva miniera:ferro e attrezzi_ferro: "serve un piccone
 // migliore per short_grass / iron_ore", tempo perso sottoterra. Prima serve un piccone di pietra o meglio.
@@ -1627,7 +1634,10 @@ const ESECUTORI = {
     // più scelta e elmo e stivali non arrivavano mai; rifarla intera avrebbe sprecato 15 lingotti in doppioni)
     const POSTO = { helmet: "Head", chestplate: "Chest", leggings: "Legs", boots: "Feet" }, COSTO = { helmet: 5, chestplate: 8, leggings: 7, boots: 4 };
     const pezzo = (p) => (p.tipo === "crafta" ? /_(helmet|chestplate|leggings|boots)$/.exec(p.oggetto ?? "")?.[1] : null);
-    const fatto = (p) => !!pezzo(p) && (bot.getComponent("minecraft:equippable")?.getEquipment?.(POSTO[pezzo(p)])?.typeId === ns(p.oggetto) || contaOggetti(bot, ns(p.oggetto)) > 0);
+    // 2.8.134: anche gli attrezzi di ferro già in tasca non si rifanno, e l'ascia di ferro aspetta la corazza. Il 22/11 con
+    // 8 ferro grezzo (bastava per la corazza) ha fatto una seconda spada di ferro e l'ascia: la corazza è rimasta senza ferro.
+    const fatto = (p) => (!!pezzo(p) && (bot.getComponent("minecraft:equippable")?.getEquipment?.(POSTO[pezzo(p)])?.typeId === ns(p.oggetto) || contaOggetti(bot, ns(p.oggetto)) > 0))
+      || attrezzoInutile(bot, p);
     // 2.8.111 (13/11): contava solo i lingotti. Con 6 ferro grezzo + 1 lingotto in tasca andava a scavare 10 minerali (piccone
     // di pietra rotto, creeper, notte) e il ferro restava grezzo da ieri: niente spada di ferro, quindi niente lotta coi creeper
     // e ciclo tana-cunicolo. Ora con lingotti + grezzo >= 3 fonde quello che ha e crafta subito.
