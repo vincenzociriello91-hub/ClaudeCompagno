@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.134 (22 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.135 (23 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -307,6 +307,7 @@ Aggiornato alla versione 2.8.134 (22 novembre 2026), dopo circa 30 ore di gioco,
 | Spada di ferro mai fatta pur avendo il ferro per farla (17/11) | la routine voleva prima tutto il ferro per piccone, spada e ascia e ripartiva per giacimenti lontani | fai subito quello che puoi con ciò che hai: un pezzo pronto oggi vale più del set completo domani |
 | 2 morti per frecce di scheletro dopo averlo lasciato perdere (17/11) | non riuscendo a raggiungerlo tornava al lavoro restando sotto tiro | se non puoi raggiungere chi ti colpisce da lontano, non restare nel suo raggio: allontanati o copriti |
 | Ferro speso in una seconda spada e nell'ascia invece che nella corazza (22/11) | la routine degli attrezzi rifaceva anche quelli già in tasca e metteva l'ascia prima della corazza | le risorse rare vanno prima a ciò che ti tiene vivo; mai rifare ciò che hai già |
+| Senza piccone ha provato 3 volte a scavare il ferro per la corazza (23/11) | il controllo "prima serve un piccone" valeva per le miniere ma non per la routine dell'armatura | prima di un lavoro controlla di avere l'attrezzo che serve, qualunque sia il nome del lavoro |
 
 ---
 

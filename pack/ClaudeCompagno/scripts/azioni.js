@@ -977,6 +977,10 @@ export const sottoterraOk = (bot) => (bot.getComponent("minecraft:health")?.curr
 // 15/11: senza piccone (quello di pietra si era rotto) il piano sceglieva miniera:ferro e attrezzi_ferro: "serve un piccone
 // migliore per short_grass / iron_ore", tempo perso sottoterra. Prima serve un piccone di pietra o meglio.
 export const piccone = (bot) => contaOggetti(bot, (id) => /(stone|copper|iron|diamond|netherite)_pickaxe$/.test(id)) > 0;
+// 23/11: rotto l'iron_pickaxe alle 02:33 UTC, il piano ha scelto armatura_ferro 3 volte senza piccone (miniera_scala:
+// "serve un piccone migliore per stone"). armatura_ferro scava solo se grezzo + lingotti non bastano per la corazza (8).
+export const richiedePiccone = (bot, c) => c.startsWith("miniera:") || c === "attrezzi_ferro"
+  || (c === "armatura_ferro" && contaOggetti(bot, "minecraft:raw_iron") + contaOggetti(bot, "minecraft:iron_ingot") < 8);
 // 16/11 07:30 UTC: senza piccone ha trovato la legna, fatto 16 bastoni e li ha spesi tutti in 64 torce (ne aveva già 27):
 // il piccone non si poteva più rifare. Le torce solo con un piccone in tasca e finché ne ha meno di 32.
 export const torceOk = (bot) => piccone(bot) && contaOggetti(bot, "minecraft:torch") < 32;
