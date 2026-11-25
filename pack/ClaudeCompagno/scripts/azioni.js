@@ -225,6 +225,14 @@ function miglioreAttrezzo(bot, tipo) {
   }
   return { slot: best, livello: lv };
 }
+// 25/11 01:01 UTC: sistema_deposito ha messo in cassa lo stone_pickaxe (teneva solo il migliore per tipo) e la pietra l'ha
+// scavata l'iron_pickaxe, rotto alle 04:42. Nei depositi restano in tasca il migliore per tipo e tutti i picconi.
+export function attrezziInTasca(bot) {
+  const s = new Set(["axe", "sword", "shovel"].map((t) => miglioreAttrezzo(bot, t).slot));
+  const c = inv(bot);
+  for (let i = 0; i < c.size; i++) if (c.getItem(i)?.typeId.endsWith("_pickaxe")) s.add(i);
+  return s;
+}
 
 function usura(bot, slot) {
   const c = inv(bot);
@@ -1578,7 +1586,7 @@ const ESECUTORI = {
     const cassa = bot.dimension.getBlock(s.cassa)?.getComponent("minecraft:inventory")?.container;
     if (!cassa) return finito(false, "il blocco non è una cassa");
     const tieni = new Set((c.tieni ?? []).map(ns));
-    const migliori = new Set(["pickaxe", "axe", "sword", "shovel"].map((t) => miglioreAttrezzo(bot, t).slot));
+    const migliori = attrezziInTasca(bot);
     const tenuti = {};
     const ci = inv(bot);
     let spostati = 0;
@@ -2125,7 +2133,7 @@ const ESECUTORI = {
     const cassa = bot.dimension.getBlock(pos)?.getComponent("minecraft:inventory")?.container;
     if (!cassa) { delete mem.casse[cat]; s.fase = "casse"; return; }
     const ci = inv(bot);
-    const migliori = new Set(["pickaxe", "axe", "sword", "shovel"].map((t) => miglioreAttrezzo(bot, t).slot));
+    const migliori = attrezziInTasca(bot);
     const tenuti = {};
     for (let i = 0; i < ci.size; i++) {
       const it = ci.getItem(i);

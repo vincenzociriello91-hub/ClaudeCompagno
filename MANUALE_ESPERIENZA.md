@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.136 (25 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.137 (25 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -309,6 +309,7 @@ Aggiornato alla versione 2.8.136 (25 novembre 2026), dopo circa 30 ore di gioco,
 | Ferro speso in una seconda spada e nell'ascia invece che nella corazza (22/11) | la routine degli attrezzi rifaceva anche quelli già in tasca e metteva l'ascia prima della corazza | le risorse rare vanno prima a ciò che ti tiene vivo; mai rifare ciò che hai già |
 | Senza piccone ha provato 3 volte a scavare il ferro per la corazza (23/11) | il controllo "prima serve un piccone" valeva per le miniere ma non per la routine dell'armatura | prima di un lavoro controlla di avere l'attrezzo che serve, qualunque sia il nome del lavoro |
 | Rifugio di pietra fallito 42 volte di fila nello stesso punto (24/11) | un lato confinava con una zona del mondo non caricata e lo contava come errore | se un pezzo non si può fare e non serve, saltalo invece di ricominciare all'infinito |
+| Piccone di ferro rotto scavando pietra dopo aver messo in cassa quello di pietra (25/11) | riordinando il deposito teneva in tasca solo l'attrezzo migliore di ogni tipo | tieni con te anche l'attrezzo modesto che risparmia quello prezioso |
 
 ---
 
