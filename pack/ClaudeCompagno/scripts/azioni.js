@@ -564,6 +564,9 @@ export const celleBozzolo = (p) => [
   { x: p.x, y: p.y + 2, z: p.z }, { x: p.x, y: p.y - 1, z: p.z }];
 // sottoterra: sotto y 50 (il mare è a 63) la tana e il rifugio fallivano tra le grotte
 export const sottoterra = (bot) => bot.location.y < 50;
+// 24/11 23:25-00:15 UTC: a 64,17,204 il bozzolo falliva 42 volte "(scarico)": cella in un chunk non caricato (x 63). Lì i
+// mostri non si muovono: la cella si salta invece di restare scoperti tutta la notte.
+export const bozzoloOk = (e) => e === "ok" || e === "gia" || e === "occupato" || e === "scarico";
 export const nelRiparo = (bot) => { const r = mem.rifugio; return !!r?.ok && Math.abs(bot.location.x - r.x - 0.5) < 1 && Math.abs(bot.location.z - r.z - 0.5) < 1 && Math.abs(bot.location.y - r.y) < 1.5; };
 // creeper da cui la fuga non è servita: per 5 minuti lo si riguarda solo se arriva a 4 blocchi
 const creeperFermi = new Map();
@@ -1926,7 +1929,7 @@ const ESECUTORI = {
       const blocco = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
       if (!blocco) return finito(false, "niente blocchi per chiudermi nel bozzolo");
       const e = piazza(bot, q, blocco, false, false);
-      if (e !== "ok" && e !== "gia" && e !== "occupato") return finito(false, `non riesco a chiudere il bozzolo (${e})`);
+      if (!bozzoloOk(e)) return finito(false, `non riesco a chiudere il bozzolo (${e})`);
     }
     mem.rifugio = { ...p, ok: true, ...(c.emergenza ? { fino: Date.now() + 90000 } : {}) };
     nav.meta = null;

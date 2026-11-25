@@ -1,10 +1,10 @@
 # Novità di Claude Compagno
 
-## 2.8.135 — attuale (23/11/2026)
-- **Niente miniera senza piccone**: stanotte alle 3:33 si è rotto il piccone di ferro. Senza nessun piccone il bot ha provato 3 volte a scendere a scavare il ferro per la corazza, inutilmente. Ora la routine della corazza parte solo con un piccone in tasca, a meno che il ferro ce l'abbia già.
+## 2.8.136 — attuale (25/11/2026)
+- **Il rifugio di pietra in miniera si chiude anche al confine del mondo caricato**: stanotte, in miniera, ha provato 42 volte di fila a chiudersi nel rifugio di pietra, sempre fallendo, perché un lato toccava una zona del mondo non ancora caricata. Ora quel lato si salta (lì i mostri non si muovono) e il rifugio si chiude.
 
-## 2.8.134 — precedente (22/11/2026)
-- **Il ferro va alla corazza**: stasera aveva 8 pezzi di ferro, giusti per la corazza di ferro, ma li ha usati per una seconda spada di ferro (ne aveva già una) e per un'ascia. Ora non rifà mai gli attrezzi di ferro che ha già, e l'ascia di ferro la fa solo dopo la corazza.
+## 2.8.135 — precedente (23/11/2026)
+- **Niente miniera senza piccone**: stanotte alle 3:33 si è rotto il piccone di ferro. Senza nessun piccone il bot ha provato 3 volte a scendere a scavare il ferro per la corazza, inutilmente. Ora la routine della corazza parte solo con un piccone in tasca, a meno che il ferro ce l'abbia già.
 
 ## In programma
 - Pannello: avvisi in cima quando qualcosa non va (rapporti fermi, server lento, versione vecchia).
