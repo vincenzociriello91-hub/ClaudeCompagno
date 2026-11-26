@@ -572,6 +572,10 @@ export const celleBozzolo = (p) => [
   { x: p.x, y: p.y + 2, z: p.z }, { x: p.x, y: p.y - 1, z: p.z }];
 // sottoterra: sotto y 50 (il mare è a 63) la tana e il rifugio fallivano tra le grotte
 export const sottoterra = (bot) => bot.location.y < 50;
+// 26/11 17:00-18:51 UTC: a 149,17,229 la tana falliva ogni 30 s e il bozzolo non partiva (4 ciottoli, ne chiedeva 10). In
+// galleria le celle di pietra non costano blocchi: 4 bastano per le due aperture. Se finiscono, il bozzolo fallisce come la tana.
+export const ripariNotte = (tanaFallita, sotto, blocchi) =>
+  tanaFallita && sotto && blocchi >= 4 ? "bozzolo" : tanaFallita && blocchi >= 34 ? "rifugio" : "tana";
 // 24/11 23:25-00:15 UTC: a 64,17,204 il bozzolo falliva 42 volte "(scarico)": cella in un chunk non caricato (x 63). Lì i
 // mostri non si muovono: la cella si salta invece di restare scoperti tutta la notte.
 export const bozzoloOk = (e) => e === "ok" || e === "gia" || e === "occupato" || e === "scarico";
