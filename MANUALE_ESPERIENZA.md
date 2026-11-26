@@ -12,7 +12,7 @@ Come cresce:
   tassi di successo per compito con l'ultimo errore, routine, priorità, diario delle riflessioni, voti e zone
   pericolose. Chi usa il manuale per un'altra applicazione sceglie cosa adottare.
 
-Aggiornato alla versione 2.8.138 (26 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
+Aggiornato alla versione 2.8.139 (26 novembre 2026), dopo circa 30 ore di gioco, 2.200 compiti misurati e 27 rapporti.
 
 ---
 
@@ -311,6 +311,7 @@ Aggiornato alla versione 2.8.138 (26 novembre 2026), dopo circa 30 ore di gioco,
 | Rifugio di pietra fallito 42 volte di fila nello stesso punto (24/11) | un lato confinava con una zona del mondo non caricata e lo contava come errore | se un pezzo non si può fare e non serve, saltalo invece di ricominciare all'infinito |
 | Piccone di ferro rotto scavando pietra dopo aver messo in cassa quello di pietra (25/11) | riordinando il deposito teneva in tasca solo l'attrezzo migliore di ogni tipo | tieni con te anche l'attrezzo modesto che risparmia quello prezioso |
 | Due ore scoperto in miniera riprovando la stessa tana ogni 30 secondi (26/11) | il rifugio di pietra chiedeva 10 blocchi anche dove le pareti di roccia c'erano già | calcola quello che serve davvero sul posto, non il caso peggiore |
+| Soffocato appena chiuso nel rifugio di pietra (26/11) | stava sul bordo della cella e la parete gli è finita addosso | prima di chiuderti, mettiti al centro dello spazio che chiudi |
 
 ---
 

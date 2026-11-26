@@ -1936,6 +1936,8 @@ const ESECUTORI = {
   // le 4 pareti a piedi e testa, il soffitto e il pavimento con i blocchi che ha in tasca, dove si trova.
   bozzolo(bot, c) {
     const l = bot.location, p = { x: Math.floor(l.x), y: Math.floor(l.y), z: Math.floor(l.z) };
+    // 26/11 19:19 UTC: fuori centro (x ~148.9) la parete a x 149 gli è finita addosso: soffocato 3 volte in 0,14 s
+    bot.teleport({ x: p.x + 0.5, y: p.y, z: p.z + 0.5 });
     const celle = celleBozzolo(p);
     for (const q of celle) {
       const blocco = RIEMPITIVI.find((t) => contaOggetti(bot, t) > 0);
